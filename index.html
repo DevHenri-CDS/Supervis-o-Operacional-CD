@@ -1615,7 +1615,7 @@
       <div class="sep-body" id="sep-config">
 
         <div class="sep-bloco">
-          <h3>1 · Cargas 100% montadas</h3>
+          <h3>1 · Cargas (montadas + agrupadas)</h3>
           <div class="sep-linha">
             <input type="text" id="sep-carga-in" list="sep-cargas-list" placeholder="Digite a carga e dê OK" autocomplete="off" style="min-width:230px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sepAddCarga(); }">
             <datalist id="sep-cargas-list"></datalist>
@@ -1623,11 +1623,10 @@
             <button class="btn btn-ghost btn-sm" onclick="sepUsarMarcadas()" title="Usa as cargas marcadas em &quot;Imprimir?&quot; na guia Relatório">Usar cargas marcadas no Relatório</button>
             <button class="btn btn-ghost btn-sm" onclick="sepTodasMontadas()">Todas as montadas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar cargas</button>
-            <label class="sep-opt" title="Desligado: só cargas 100% montadas. Ligado: também mostra cargas que têm parte agrupada."><input type="checkbox" id="sep-inc-agr" onchange="sepSetIncAgr(this.checked)"> Incluir cargas com itens agrupados</label>
           </div>
           <div class="sep-chips" id="sep-cargas-chips"></div>
           <div class="sep-pick-t" id="sep-pick-sum">Cargas montadas disponíveis</div>
-          <div class="sep-legenda"><span class="ok">✔ verde = volume igual ao do piso/distribuição</span><span class="bad">✖ vermelho = volume diferente (ou fora do piso/distribuição)</span><span class="agr">⚠ AGRUPADO = há item agrupado na carga (só aparece com "Incluir cargas com itens agrupados")</span></div>
+          <div class="sep-legenda"><span class="ok">✔ verde = volume igual ao do piso/distribuição</span><span class="bad">✖ vermelho = volume diferente (ou fora do piso/distribuição)</span></div>
           <div class="sep-carga-grid" id="sep-cargas-pick"></div>
         </div>
 
@@ -1659,7 +1658,7 @@
             <button class="btn btn-ghost btn-sm" onclick="sepNova()">Nova separação (limpar tudo)</button>
           </div>
           <div class="sep-est-grid" id="sep-est-box"></div>
-          <span class="hint" style="display:block; margin-top:10px;">Volumes = soma da quantidade (Qtd) dos itens montados Cross-Docking da loja nas cargas escolhidas; Itens = quantidade de itens (códigos) diferentes. Em cada estação <b>digite os números das lojas</b> (ex.: <b>1 2 14 40-46</b>; loja de 3 dígitos vale só os 2 últimos: 214 = loja 14), use <b>de … até</b> para uma faixa ou <b>Escolher na lista</b> para marcar. Uma loja só fica em uma estação. O produtivo de cada estação é escolhido na lista do cadastro acima. A lista traz todas as lojas; as sem volume nas cargas escolhidas ficam marcadas com aviso.</span>
+          <span class="hint" style="display:block; margin-top:10px;">Volumes = soma da quantidade (Qtd) dos itens montados e agrupados Cross-Docking da loja nas cargas escolhidas; Itens = quantidade de itens (códigos) diferentes. Em cada estação <b>digite os números das lojas</b> (ex.: <b>1 2 14 40-46</b>; loja de 3 dígitos vale só os 2 últimos: 214 = loja 14), use <b>de … até</b> para uma faixa ou <b>Escolher na lista</b> para marcar. Uma loja só fica em uma estação. O produtivo de cada estação é escolhido na lista do cadastro acima. A lista traz todas as lojas; as sem volume nas cargas escolhidas ficam marcadas com aviso.</span>
         </div>
 
       </div>
@@ -1669,7 +1668,7 @@
       <div class="panel-header">
         <div class="title-block">
           <h2>FOLHA DE SEPARAÇÃO</h2>
-          <span class="sub">Impressão em uma única folha A4, ajustada automaticamente</span>
+          <span class="sub">Impressão frente e verso (A4): Programação – CD Secos na frente e Produtividade Dia no verso</span>
         </div>
         <div class="no-print" data-ro-ok style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <select id="sep-orient" onchange="sepSetOpc('orient', this.value)" title="Orientação da folha">
@@ -1684,7 +1683,7 @@
             <option value="5">5 por linha</option>
             <option value="6">6 por linha</option>
           </select>
-          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSeparacao()">Imprimir separação</button>
+          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSeparacao()">Imprimir frente e verso</button>
         </div>
       </div>
       <div class="sep-aviso no-print" id="sep-aviso"></div>
@@ -5122,7 +5121,12 @@ function sepRenderRemoto(){
 
 /* itens montados (Cross-Docking) — a base de tudo */
 function sepRowsMontadas(){
-  return crossRawData.filter(r => ehCrossDocking(r) && String(r.status || '').toUpperCase().includes('MONTAD'));
+  /* conta MONTADO + AGRUPADO */
+  return crossRawData.filter(r => {
+    if(!ehCrossDocking(r)) return false;
+    const st = String(r.status || '').toUpperCase();
+    return st.includes('MONTAD') || st.includes('AGRUPAD');
+  });
 }
 function sepCargasDisp(){
   const m = {};
@@ -5131,14 +5135,10 @@ function sepCargasDisp(){
     if(!ehCrossDocking(r)) return;
     const st = String(r.status || '').toUpperCase();
     const k = sepNorm(r.carga); if(!k) return;
-    if(st.includes('MONTAD')){
+    if(st.includes('MONTAD') || st.includes('AGRUPAD')){      // volume total = montado + agrupado
       const o = novo(k);
       if(!o.fornecedor && r.fornecedor) o.fornecedor = r.fornecedor;
       o.itens++; o.volume += Number(r.qtd) || 0;
-    } else if(st.includes('AGRUPAD')){
-      const o = novo(k);
-      if(!o.fornecedor && r.fornecedor) o.fornecedor = r.fornecedor;
-      o.itensAgr++; o.agrup += Number(r.qtd) || 0;
     }
   });
   /* volume da carga em Cargas no Piso / Distribuição */
@@ -5161,8 +5161,8 @@ function sepCompTxt(c){
 }
 
 /* calcula tudo o que a tela e a impressão precisam */
-/* só entram na Separação as cargas 100% montadas (sem item agrupado); "Incluir agrupados" libera as parcialmente agrupadas */
-function sepCargaVisivel(c){ return c.volume > 0 && (!!sepData.incAgr || !c.agrup); }
+/* entram na Separação todas as cargas com volume (montado + agrupado) */
+function sepCargaVisivel(c){ return c.volume > 0; }
 function sepCalc(){
   const todasDisp = sepCargasDisp();
   const todasMap = {}; todasDisp.forEach(c => { todasMap[c.carga] = c; });
@@ -5221,7 +5221,7 @@ function sepAddCarga(valor){
     if(!disp[v]) nao.push(v);
   });
   if(inp) inp.value = '';
-  if(nao.length) showToast('Carga(s) ' + nao.join(', ') + ': não é 100% montada (ative "Incluir agrupados") ou não existe no relatório.', true);
+  if(nao.length) showToast('Carga(s) ' + nao.join(', ') + ': não encontrada no relatório (montado/agrupado).', true);
   sepCommit();
 }
 function sepRemCarga(c){ sepData.cargas = sepData.cargas.filter(x => sepNorm(x) !== sepNorm(c)); sepCommit(); }
@@ -5239,7 +5239,7 @@ function sepUsarMarcadas(){
 }
 function sepTodasMontadas(){
   const d = sepCalc().disp;
-  if(!d.length){ showToast('Não há cargas 100% montadas no relatório.', true); return; }
+  if(!d.length){ showToast('Não há cargas (montadas/agrupadas) no relatório.', true); return; }
   sepData.cargas = d.map(c => c.carga);
   sepCommit();
 }
@@ -5380,7 +5380,7 @@ function renderSep(soft){
 
 function sepRenderCargas(st){
   const dl = document.getElementById('sep-cargas-list');
-  dl.innerHTML = st.disp.map(c => `<option value="${sepEsc(c.carga)}">${sepEsc(c.fornecedor)} · montado ${fmtInt(c.volume)} · agrupado ${fmtInt(c.agrup)}</option>`).join('');
+  dl.innerHTML = st.disp.map(c => `<option value="${sepEsc(c.carga)}">${sepEsc(c.fornecedor)} · volume ${fmtInt(c.volume)} · ${c.itens} item(ns)</option>`).join('');
   const ia = document.getElementById('sep-inc-agr'); if(ia) ia.checked = !!sepData.incAgr;
   const chips = document.getElementById('sep-cargas-chips');
   chips.innerHTML = st.cargasSel.length
@@ -5388,20 +5388,19 @@ function sepRenderCargas(st){
         const d = st.dispMap[c];
         const x = `<button type="button" data-c="${sepEsc(c)}" onclick="sepRemCarga(this.dataset.c)" aria-label="Remover" title="Remover carga">✕</button>`;
         if(!d){
-          const fora = st.foraFiltro.includes(c);
-          return `<span class="sep-chip bad"><span class="sep-chip-t"><b class="cn">${sepEsc(c)}</b><span class="cf">${fora ? 'tem item agrupado — ative &quot;Incluir cargas com itens agrupados&quot;' : 'não encontrada entre as montadas'}</span></span>${x}</span>`;
+          return `<span class="sep-chip bad"><span class="sep-chip-t"><b class="cn">${sepEsc(c)}</b><span class="cf">não encontrada no relatório</span></span>${x}</span>`;
         }
-        return `<span class="sep-chip"><span class="sep-chip-t"><b class="cn">${sepEsc(c)}</b><span class="cf">${sepEsc(d.fornecedor || 'Sem fornecedor')}</span></span><span class="sep-chip-v"><b class="${d.ok ? 'v-ok' : 'v-bad'}" title="${sepEsc(sepCompTxt(d))}">${fmtInt(d.volume)}</b>${d.agrup ? ' <span class="sep-agr">⚠ AGRUPADO ' + fmtInt(d.agrup) + '</span>' : ''}</span>${x}</span>`;
+        return `<span class="sep-chip"><span class="sep-chip-t"><b class="cn">${sepEsc(c)}</b><span class="cf">${sepEsc(d.fornecedor || 'Sem fornecedor')}</span></span><span class="sep-chip-v"><b class="${d.ok ? 'v-ok' : 'v-bad'}" title="${sepEsc(sepCompTxt(d))}">${fmtInt(d.volume)}</b></span>${x}</span>`;
       }).join('')
-    : `<div class="sep-vazio">${st.disp.length ? 'Nenhuma carga escolhida ainda.' : 'Não há cargas 100% montadas (Cross-Docking) no relatório — cole o relatório na guia Relatório.'}</div>`;
-  document.getElementById('sep-pick-sum').textContent = `Cargas ${sepData.incAgr ? 'montadas e parcialmente agrupadas' : '100% montadas'} (${st.disp.length}) · por fornecedor · clique para selecionar`;
+    : `<div class="sep-vazio">${st.disp.length ? 'Nenhuma carga escolhida ainda.' : 'Não há cargas (Cross-Docking) no relatório — cole o relatório na guia Relatório.'}</div>`;
+  document.getElementById('sep-pick-sum').textContent = `Cargas montadas + agrupadas (${st.disp.length}) · por fornecedor · clique para selecionar`;
   const sel = new Set(st.cargasSel);
   const ord = st.disp.slice().sort((a, b) => cmpNat(a.fornecedor, b.fornecedor) || cmpNat(a.carga, b.carga));
   const box = document.getElementById('sep-cargas-pick');
   const topo = box.scrollTop;
   box.innerHTML = ord.length ? ord.map(c =>
-    `<label class="sep-carga-opt ${sel.has(c.carga) ? 'on' : ''} ${c.ok ? 'vok' : 'vbad'}" title="Volume na Separação: ${fmtInt(c.volume)} · ${sepEsc(sepCompTxt(c))}${c.agrup ? ' · AGRUPADO ' + fmtInt(c.agrup) : ''}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${sel.has(c.carga) ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><span class="sep-carga-txt"><b>${sepEsc(c.carga)}</b><span class="forn">${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="meta">Montado: <span class="vol ${c.ok ? 'ok' : 'bad'}">${fmtInt(c.volume)} vol</span> (${c.itens} item(ns)) <span class="cmp ${c.ok ? 'ok' : 'bad'}">${c.ok ? '✔' : '✖'} ${sepEsc(sepCompTxt(c))}</span></span>${c.agrup ? '<span class="meta">Agrupado: <b class="agr-on">' + fmtInt(c.agrup) + ' vol</b>' + (c.itensAgr ? ' (' + c.itensAgr + ' item(ns))' : '') + '</span>' : ''}${c.agrup ? `<span class="sep-agr">⚠ AGRUPADO ${fmtInt(c.agrup)}</span>` : ''}</span></label>`
-  ).join('') : '<div class="sep-vazio">Sem cargas 100% montadas.</div>';
+    `<label class="sep-carga-opt ${sel.has(c.carga) ? 'on' : ''} ${c.ok ? 'vok' : 'vbad'}" title="Volume na Separação: ${fmtInt(c.volume)} · ${sepEsc(sepCompTxt(c))}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${sel.has(c.carga) ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><span class="sep-carga-txt"><b>${sepEsc(c.carga)}</b><span class="forn">${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="meta">Volume: <span class="vol ${c.ok ? 'ok' : 'bad'}">${fmtInt(c.volume)} vol</span> (${c.itens} item(ns)) <span class="cmp ${c.ok ? 'ok' : 'bad'}">${c.ok ? '✔' : '✖'} ${sepEsc(sepCompTxt(c))}</span></span></span></label>`
+  ).join('') : '<div class="sep-vazio">Sem cargas no relatório.</div>';
   box.scrollTop = topo;
 }
 
@@ -5523,12 +5522,9 @@ function sepRenderFolha(st, edit){
   document.getElementById('sep-sheet').innerHTML = sepSheetHtml(st, cols);
 
   const av = [];
-  const _agr = st.encontradas.filter(c => st.dispMap[c].agrup > 0);
-  if(_agr.length) av.push(`Carga(s) com item AGRUPADO: ${_agr.map(c => sepEsc(c) + ' (' + fmtInt(st.dispMap[c].agrup) + ')').join(', ')}.`);
   const _div = st.encontradas.filter(c => !st.dispMap[c].ok);
   if(_div.length) av.push(`Volume diferente do piso/distribuição: ${_div.map(c => sepEsc(c) + ' (' + sepEsc(sepCompTxt(st.dispMap[c])) + ')').join(', ')}.`);
   if(st.naoAchadas.length) av.push(`Carga(s) não encontrada(s) entre as montadas: ${st.naoAchadas.map(sepEsc).join(', ')}.`);
-  if(st.foraFiltro.length) av.push(`Carga(s) com item agrupado, fora da lista (ative "Incluir cargas com itens agrupados"): ${st.foraFiltro.map(sepEsc).join(', ')}.`);
   const _sv = {}; st.ests.forEach(e => e.semVol.forEach(l => { _sv[l] = e.idx + 1; }));
   const _svk = Object.keys(_sv).sort(sepCmpLoja);
   if(_svk.length) av.push(`SEM VOLUME nas cargas escolhidas: ${_svk.map(l => sepEsc(sepNomeLoja(l)) + ' (estação ' + _sv[l] + ')').join(', ')}.`);
@@ -5580,8 +5576,28 @@ function imprimirSeparacao(){
   const melhor = Math.max(...res.map(r => r.s));
   const esc = res.find(r => r.s >= melhor * 0.92) || res[0];
 
+  /* VERSO: Produtividade Dia — mesma folha/orientação da frente, ajustada para caber em 1 página */
+  const probe2 = document.createElement('div');
+  probe2.className = 'sep-paper sep-probe';
+  document.body.appendChild(probe2);
+  let s2 = 1, w2 = availW, h2 = 0;
+  for(let k = 0; k < 8; k++){
+    w2 = Math.round(availW / s2);
+    probe2.style.width = w2 + 'px';
+    probe2.innerHTML = sepProdPaginaHtml();
+    h2 = probe2.scrollHeight;
+    if(h2 * s2 <= availH) break;
+    const ns = Math.max(0.2, availH / h2 * 0.985);
+    if(Math.abs(ns - s2) < 0.003) break;
+    s2 = ns;
+  }
+  if(h2 * s2 > availH) s2 = Math.max(0.2, availH / h2 * 0.985);
+  const verso = sepProdPaginaHtml();
+  probe2.remove();
+
   document.getElementById('sep-print-area').innerHTML =
-    `<div class="sep-fit" style="width:${availW}px;height:${availH}px;"><div class="sep-paper" style="width:${esc.w}px;transform:scale(${esc.s.toFixed(4)});transform-origin:0 0;">${sepSheetHtml(st, esc.cols)}</div></div>`;
+    `<div class="sep-fit" style="width:${availW}px;height:${availH}px;"><div class="sep-paper" style="width:${esc.w}px;transform:scale(${esc.s.toFixed(4)});transform-origin:0 0;">${sepSheetHtml(st, esc.cols)}</div></div>`
+    + `<div class="sep-fit sep-fit-verso" style="width:${availW}px;height:${availH}px;"><div class="sep-paper" style="width:${w2}px;transform:scale(${s2.toFixed(4)});transform-origin:0 0;">${verso}</div></div>`;
 
   const velho = document.getElementById('pp-page-style');
   if(velho) velho.remove();
@@ -7400,6 +7416,20 @@ function renderDistClockOnly(){
 .sep-tab td.sv-t{ color:#ff6b6b; font-size:.68rem; font-weight:800; letter-spacing:.03em; white-space:nowrap; }
 .sep-paper .sep-tab tr.sv td{ background:#ffe9a8 !important; }
 .sep-paper .sep-tab td.sv-t{ color:#000; font-size:9px; font-weight:800; }
+/* ---------- verso da impressão: PRODUTIVIDADE DIA ---------- */
+.spp{ color:#000; font-family:Arial,Helvetica,sans-serif; }
+.spp-title{ font:700 18px Arial,Helvetica,sans-serif; color:#000; letter-spacing:0; margin:0 0 2px; }
+.spp-sub{ font-size:11px; color:#333; margin:0 0 12px; }
+.spp-tab{ width:100%; border-collapse:collapse; font-size:14px; }
+.spp-tab th, .spp-tab td{ border:1px solid #888; padding:6px 10px; color:#000; background:#fff; text-align:left; }
+.spp-tab th{ background:#FF8A1F !important; text-transform:uppercase; font-size:10px; text-align:center; }
+.spp-tab td.c{ text-align:center; width:40px; }
+.spp-tab td.n{ text-align:right; font-weight:700; width:90px; }
+.spp-tab td.bar{ width:44%; }
+.spp-tab td.bar div{ height:14px; background:#FF8A1F; border:1px solid #b35a00; }
+.spp-tab tfoot td{ background:#eee !important; font-weight:700; border-top:2px solid #000; }
+.spp-vazio{ font-size:14px; padding:24px 0; }
+@media print{ #sep-print-area .sep-fit + .sep-fit{ break-before:page; page-break-before:always; } }
 /* ---------- Produtividade: gráfico por produtivo ---------- */
 .spd-chart{ display:flex; flex-direction:column; gap:7px; }
 .spd-brow{ display:grid; grid-template-columns:minmax(120px,220px) minmax(0,1fr) 70px 44px; gap:10px; align-items:center; }
@@ -7751,7 +7781,29 @@ function spdRender(){
   sepFocoRestaurar(foco);
 }
 
-function imprimirSepProd(){
+/* verso da folha: PRODUTIVIDADE DIA (usado na impressão frente e verso) */
+function sepProdPaginaHtml(){
+  const lista = spdLista().filter(r => r.vol > 0);
+  const total = spdSoma(spdLinhas());
+  const max = Math.max(1, ...lista.map(r => r.vol));
+  const d = new Date();
+  const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const por = currentUser ? ' por ' + sepEsc(currentUser.nome) : '';
+  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td></tr>`).join('');
+  return `<div class="spp"><div class="spp-title">PRODUTIVIDADE DIA — CD SECOS</div>
+    <div class="spp-sub">${fmtDia(spdDia)} · impresso às ${hora}${por}</div>`
+    + (lista.length
+      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th></tr></thead>
+         <tbody>${corpo}</tbody>
+         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td></tr></tfoot></table>`
+      : `<div class="spp-vazio">Nenhum volume contabilizado neste dia.</div>`)
+    + `</div>`;
+}
+
+/* a impressão da Produtividade agora é uma só: frente (Programação) + verso (Produtividade Dia) */
+function imprimirSepProd(){ imprimirSeparacao(); }
+
+function imprimirSepProdAntigo(){
   if(!currentUser) return;
   const lista = spdLista().filter(r => r.vol > 0);
   if(!lista.length){ showToast('Não há volume contabilizado neste dia para imprimir.', true); return; }
@@ -7814,7 +7866,7 @@ setInterval(() => {
           <button class="btn btn-ghost btn-sm spd-edit" onclick="spdLancarSeparacao(false)" title="Soma o volume das estações da separação atual na produtividade de hoje">⬇ Contabilizar separação atual</button>
           <label class="spd-edit"><input type="checkbox" id="spd-auto" onchange="spdSetAuto(this.checked)"> Contabilizar ao imprimir a separação</label>
           <label data-ro-ok><input type="checkbox" id="spd-zero" onchange="spdSetZero(this.checked)"> Mostrar cadastrados sem volume</label>
-          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSepProd()">🖨 Imprimir</button>
+          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSepProd()">🖨 Imprimir frente e verso</button>
         </div>
         <h3 class="label-font spd-h3">Volume feito por produtivo</h3>
         <div class="spd-chart" id="spd-chart"></div>

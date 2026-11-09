@@ -1623,7 +1623,7 @@
             <button class="btn btn-ghost btn-sm" onclick="sepUsarMarcadas()" title="Usa as cargas marcadas em &quot;Imprimir?&quot; na guia Relatório">Usar cargas marcadas no Relatório</button>
             <button class="btn btn-ghost btn-sm" onclick="sepTodasMontadas()">Todas as montadas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar cargas</button>
-            <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle()" title="Abre uma janela flutuante com a lista das cargas no piso">🗔 Janela de cargas do piso</button>
+            <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle()" title="Abre uma janela flutuante com a lista das cargas no piso e distribuídas">🗔 Janela de cargas (piso e distribuídas)</button>
           </div>
           <div class="sep-chips" id="sep-cargas-chips"></div>
           <div class="sep-pick-t" id="sep-pick-sum">Cargas montadas disponíveis</div>
@@ -7459,6 +7459,7 @@ function renderDistClockOnly(){
 .sepfl-it input{ accent-color:var(--band-strong); width:15px; height:15px; margin:0; }
 .sepfl-it b{ font-family:'Oswald',sans-serif; color:var(--band); font-weight:600; }
 .sepfl-it .f{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-dim); }
+.sepfl-it .tg{ text-decoration:none; color:var(--ok-text); font-weight:800; font-size:.62rem; margin-right:6px; }
 .sepfl-it .v{ font-weight:700; font-variant-numeric:tabular-nums; }
 .sepfl-it i.sd{ grid-column:2 / -1; font-style:normal; font-size:.62rem; color:var(--danger); font-weight:700; }
 .sepfl-act{ display:flex; gap:6px; flex-wrap:wrap; }
@@ -8121,8 +8122,14 @@ function sepFloatToggle(on){ sepFloatAberto = (on == null) ? !sepFloatAberto : !
 function sepFloatMinimizar(){ sepFloatMin = !sepFloatMin; sepFloatSalvar(); sepFloatRender(); }
 function sepFloatTogLista(){ sepFloatLista = !sepFloatLista; sepFloatSalvar(); sepFloatRender(); if(sepFloatLista){ const b = document.getElementById('sep-fl-busca'); if(b) b.focus(); } }
 function sepPisoCargas(){
+  /* cargas no piso + cargas já distribuídas (a carga que está nos dois aparece uma vez) */
   const m = new Map();
-  (pisoData || []).forEach(r => { const k = sepNorm(r.carga); if(k && !m.has(k)) m.set(k, { carga:k, fornecedor:String(r.fornecedor || ''), volume:Number(r.volume) || 0 }); });
+  (pisoData || []).forEach(r => { const k = sepNorm(r.carga); if(k && !m.has(k)) m.set(k, { carga:k, fornecedor:String(r.fornecedor || ''), volume:Number(r.volume) || 0, dist:false }); });
+  (distData || []).forEach(r => {
+    const k = sepNorm(r.carga); if(!k) return;
+    if(m.has(k)){ m.get(k).dist = true; return; }
+    m.set(k, { carga:k, fornecedor:String(r.descricao || r.fornecedor || ''), volume:Number(r.volume) || 0, dist:true });
+  });
   return Array.from(m.values()).sort((a, b) => cmpNat(a.fornecedor, b.fornecedor) || cmpNat(a.carga, b.carga));
 }
 function sepFloatTodas(){
@@ -8150,7 +8157,7 @@ function sepFloatRender(){
   const disp = {}; sepCargasDisp().forEach(c => { disp[c.carga] = c; });
   const piso = sepPisoCargas();
   const pisoMap = {}; piso.forEach(c => { pisoMap[c.carga] = c; });
-  document.getElementById('sep-fl-trig-t').textContent = 'Cargas no piso (' + piso.length + ')';
+  document.getElementById('sep-fl-trig-t').textContent = 'Cargas no piso e distribuídas (' + piso.length + ')';
   document.getElementById('sep-fl-trig-s').textContent = sepFloatLista ? '▴' : '▾';
   document.getElementById('sep-fl-drop').classList.toggle('on', sepFloatLista);
 
@@ -8160,8 +8167,8 @@ function sepFloatRender(){
     const box = document.getElementById('sep-fl-lista'); const topo = box.scrollTop;
     box.innerHTML = vis.length ? vis.map(c => {
       const d = disp[c.carga], on = sel.has(c.carga);
-      return `<label class="sepfl-it ${on ? 'on' : ''}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${on ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><b>${sepEsc(c.carga)}</b><span class="f" title="${sepEsc(c.fornecedor)}">${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="v">${fmtInt(d ? d.volume : c.volume)}</span>${d ? '' : '<i class="sd">sem dados no relatório/Base</i>'}</label>`;
-    }).join('') : '<div class="sep-vazio" style="padding:10px;">' + (piso.length ? 'Nenhuma carga encontrada.' : 'Não há cargas no piso.') + '</div>';
+      return `<label class="sepfl-it ${on ? 'on' : ''}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${on ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><b>${sepEsc(c.carga)}</b><span class="f" title="${sepEsc(c.fornecedor)}">${c.dist ? '<u class="tg">DIST.</u>' : ''}${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="v">${fmtInt(d ? d.volume : c.volume)}</span>${d ? '' : '<i class="sd">sem dados no relatório/Base</i>'}</label>`;
+    }).join('') : '<div class="sep-vazio" style="padding:10px;">' + (piso.length ? 'Nenhuma carga encontrada.' : 'Não há cargas no piso nem distribuídas.') + '</div>';
     box.scrollTop = topo;
   }
   const lista = Array.from(sel).sort(cmpNat);
@@ -8175,16 +8182,16 @@ function sepFloatRender(){
   if(tab && !document.getElementById('sep-float')){
     tab.insertAdjacentHTML('beforeend', `
     <div id="sep-float" class="no-print" role="dialog" aria-label="Seleção de cargas do piso">
-      <div class="sepfl-h" id="sep-fl-h"><div>CARGAS DO PISO<br><small id="sep-fl-resumo"></small></div>
+      <div class="sepfl-h" id="sep-fl-h"><div>CARGAS DO PISO / DISTRIBUÍDAS<br><small id="sep-fl-resumo"></small></div>
         <div class="bt"><button type="button" id="sep-fl-min" onclick="sepFloatMinimizar()" title="Minimizar">—</button><button type="button" onclick="sepFloatToggle(false)" title="Fechar">✕</button></div></div>
       <div class="sepfl-b">
-        <button type="button" class="sepfl-trig" onclick="sepFloatTogLista()"><span id="sep-fl-trig-t">Cargas no piso</span><span id="sep-fl-trig-s">▾</span></button>
+        <button type="button" class="sepfl-trig" onclick="sepFloatTogLista()"><span id="sep-fl-trig-t">Cargas no piso e distribuídas</span><span id="sep-fl-trig-s">▾</span></button>
         <div class="sepfl-drop" id="sep-fl-drop">
           <input type="search" id="sep-fl-busca" placeholder="Buscar carga ou fornecedor" autocomplete="off" oninput="sepFloatRender()">
           <div id="sep-fl-lista"></div>
         </div>
         <div class="sepfl-act">
-          <button type="button" class="btn btn-ghost btn-sm" onclick="sepFloatTodas()">Todas do piso</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="sepFloatTodas()">Todas</button>
           <button type="button" class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar</button>
         </div>
         <div class="sepfl-chips" id="sep-fl-sel"></div>

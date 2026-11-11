@@ -1359,6 +1359,11 @@
           <input type="number" id="sm-mix-T1" class="summary-input" min="0" value="0" oninput="updateExtra('T1','estocadoMix', this.value)">
           <div class="l">Estocado mix / fracionado (manual)</div>
         </div>
+        <div class="card nr-card">
+          <div class="n" id="nr-vol-T1">0</div>
+          <div class="l">Volume não rastreado nas cargas no piso · <span id="nr-cg-T1">0</span> carga(s) · <span id="nr-sku-T1">0</span> SKU</div>
+          <button type="button" class="btn btn-ghost btn-sm nr-btn" onclick="nrAbrir('T1')" title="Estocado mix: cargas que não passaram pelas cargas no piso">＋ Informar / ver</button>
+        </div>
       </div>
       <div class="table-scroll">
         <table>
@@ -1407,6 +1412,11 @@
           <input type="number" id="sm-mix-T2" class="summary-input" min="0" value="0" oninput="updateExtra('T2','estocadoMix', this.value)">
           <div class="l">Estocado mix / fracionado (manual)</div>
         </div>
+        <div class="card nr-card">
+          <div class="n" id="nr-vol-T2">0</div>
+          <div class="l">Volume não rastreado nas cargas no piso · <span id="nr-cg-T2">0</span> carga(s) · <span id="nr-sku-T2">0</span> SKU</div>
+          <button type="button" class="btn btn-ghost btn-sm nr-btn" onclick="nrAbrir('T2')" title="Estocado mix: cargas que não passaram pelas cargas no piso">＋ Informar / ver</button>
+        </div>
       </div>
       <div class="table-scroll">
         <table>
@@ -1454,6 +1464,11 @@
         <div class="card">
           <input type="number" id="sm-mix-T3" class="summary-input" min="0" value="0" oninput="updateExtra('T3','estocadoMix', this.value)">
           <div class="l">Estocado mix / fracionado (manual)</div>
+        </div>
+        <div class="card nr-card">
+          <div class="n" id="nr-vol-T3">0</div>
+          <div class="l">Volume não rastreado nas cargas no piso · <span id="nr-cg-T3">0</span> carga(s) · <span id="nr-sku-T3">0</span> SKU</div>
+          <button type="button" class="btn btn-ghost btn-sm nr-btn" onclick="nrAbrir('T3')" title="Estocado mix: cargas que não passaram pelas cargas no piso">＋ Informar / ver</button>
         </div>
       </div>
       <div class="table-scroll">
@@ -1621,14 +1636,10 @@
             <datalist id="sep-cargas-list"></datalist>
             <button class="btn btn-primary btn-sm" style="width:auto;" onclick="sepAddCarga()">OK</button>
             <button class="btn btn-ghost btn-sm" onclick="sepUsarMarcadas()" title="Usa as cargas marcadas em &quot;Imprimir?&quot; na guia Relatório">Usar cargas marcadas no Relatório</button>
-            <button class="btn btn-ghost btn-sm" onclick="sepTodasMontadas()">Todas as montadas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar cargas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle()" title="Abre uma janela flutuante com a lista das cargas no piso e distribuídas">🗔 Janela de cargas (piso e distribuídas)</button>
           </div>
           <div class="sep-chips" id="sep-cargas-chips"></div>
-          <div class="sep-pick-t" id="sep-pick-sum">Cargas montadas disponíveis</div>
-          <div class="sep-legenda"><span class="ok">✔ verde = volume igual ao do piso/distribuição</span><span class="bad">✖ vermelho = volume diferente (ou fora do piso/distribuição)</span></div>
-          <div class="sep-carga-grid" id="sep-cargas-pick"></div>
         </div>
 
         <div class="sep-bloco">
@@ -2252,6 +2263,8 @@ function preencherCatalogoTurno(){
 function somenteLeitura(){
   return !!currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv' && currentUser.turno !== turnoPorHorario();
 }
+function nrVol(e){ return ((e && e.naoRastreado) || []).reduce((s,x)=>s+(Number(x.volume)||0),0); }
+function nrSku(e){ return ((e && e.naoRastreado) || []).reduce((s,x)=>s+(Number(x.sku)||0),0); }
 function distExtrasVazio(){ return { qtdProdutivos:0, estocadoFull:0, estocadoMix:0 }; }
 function normalizeDistExtras(e){
   if(!e) return { T1: distExtrasVazio(), T2: distExtrasVazio(), T3: distExtrasVazio() };
@@ -3491,8 +3504,8 @@ function renderDist(){
 
     const extras = distExtras[turno] || distExtrasVazio();
     const volLinhas = linhas.reduce((s,r)=>s+Number(r.volume||0),0);
-    const skuTotal = linhas.reduce((s,r)=>s+Number(r.sku||0),0);
-    const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0);
+    const skuTotal = linhas.reduce((s,r)=>s+Number(r.sku||0),0) + nrSku(extras);
+    const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0) + nrVol(extras);
     const qtdProdutivos = Number(extras.qtdProdutivos||0);
     const hh = qtdProdutivos > 0 ? (volTotal / qtdProdutivos / 7).toFixed(1) : '—';
 
@@ -3534,8 +3547,8 @@ function renderResumoDist(){
     const linhas = distData.filter(r => turnoDaCarga(r) === turno);
     const extras = distExtras[turno] || distExtrasVazio();
     const volLinhas = linhas.reduce((s,r)=>s+Number(r.volume||0),0);
-    const skuTotal = linhas.reduce((s,r)=>s+Number(r.sku||0),0);
-    const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0);
+    const skuTotal = linhas.reduce((s,r)=>s+Number(r.sku||0),0) + nrSku(extras);
+    const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0) + nrVol(extras);
     const qtdProdutivos = Number(extras.qtdProdutivos||0);
 
     const bloco = document.createElement('div');
@@ -3616,8 +3629,8 @@ function renderDistImage(turno, rows, extras, dia){
   const ctx = canvas.getContext('2d');
 
   const volLinhas = rows.reduce((s,r)=>s+Number(r.volume||0),0);
-  const skuTotal = rows.reduce((s,r)=>s+Number(r.sku||0),0);
-  const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0);
+  const skuTotal = rows.reduce((s,r)=>s+Number(r.sku||0),0) + nrSku(extras);
+  const volTotal = volLinhas + Number(extras.estocadoFull||0) + Number(extras.estocadoMix||0) + nrVol(extras);
   const prod = Number(extras.qtdProdutivos||0);
   const hh = prod > 0 ? (volTotal / prod / 7).toFixed(1) : '—';
 
@@ -5409,15 +5422,6 @@ function sepRenderCargas(st){
         return `<span class="sep-chip"><span class="sep-chip-t"><b class="cn">${sepEsc(c)}</b><span class="cf">${sepEsc(d.fornecedor || 'Sem fornecedor')}</span></span><span class="sep-chip-v"><b class="${d.ok ? 'v-ok' : 'v-bad'}" title="${sepEsc(sepCompTxt(d))}">${fmtInt(d.volume)}</b></span>${x}</span>`;
       }).join('')
     : `<div class="sep-vazio">${st.disp.length ? 'Nenhuma carga escolhida ainda.' : 'Não há cargas (Cross-Docking) no relatório — cole o relatório na guia Relatório.'}</div>`;
-  document.getElementById('sep-pick-sum').textContent = `Cargas montadas + agrupadas (${st.disp.length}) · por fornecedor · clique para selecionar`;
-  const sel = new Set(st.cargasSel);
-  const ord = st.disp.slice().sort((a, b) => cmpNat(a.fornecedor, b.fornecedor) || cmpNat(a.carga, b.carga));
-  const box = document.getElementById('sep-cargas-pick');
-  const topo = box.scrollTop;
-  box.innerHTML = ord.length ? ord.map(c =>
-    `<label class="sep-carga-opt ${sel.has(c.carga) ? 'on' : ''} ${c.ok ? 'vok' : 'vbad'}" title="Volume na Separação: ${fmtInt(c.volume)} · ${sepEsc(sepCompTxt(c))}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${sel.has(c.carga) ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><span class="sep-carga-txt"><b>${sepEsc(c.carga)}</b><span class="forn">${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="meta">Volume: <span class="vol ${c.ok ? 'ok' : 'bad'}">${fmtInt(c.volume)} vol</span> (${c.itens} item(ns)) <span class="cmp ${c.ok ? 'ok' : 'bad'}">${c.ok ? '✔' : '✖'} ${sepEsc(sepCompTxt(c))}</span></span></span></label>`
-  ).join('') : '<div class="sep-vazio">Sem cargas no relatório.</div>';
-  box.scrollTop = topo;
 }
 
 /* ---------- cadastro de produtivos (vale para todos; a Produtividade soma o volume por esses nomes) ---------- */
@@ -6260,11 +6264,11 @@ function prodColetar(ym){
     TURNOS.forEach(t => {
       const rs = (rows || []).filter(r => turnoDaCarga(r) === t);
       const e = ex[t] || distExtrasVazio();
-      const extra = Number(e.estocadoFull||0) + Number(e.estocadoMix||0);
+      const extra = Number(e.estocadoFull||0) + Number(e.estocadoMix||0) + nrVol(e);
       if(rs.length === 0 && extra === 0) return;
       (dias[id] = dias[id] || {})[t] = {
         vol: rs.reduce((s,r) => s + Number(r.volume||0), 0) + extra,
-        sku: rs.reduce((s,r) => s + Number(r.sku||0), 0),
+        sku: rs.reduce((s,r) => s + Number(r.sku||0), 0) + nrSku(e),
         cargas: rs.length
       };
     });
@@ -7698,12 +7702,12 @@ function sepSheetHtml(st, cols){
       <div class="sep-card-h"><span class="sep-est">ESTAÇÃO ${e.idx + 1}</span><span class="sep-prod">${e.produtivo ? sepEsc(e.produtivo) : '____________'}</span></div>
       ${cargaCard ? `<div class="sep-card-c">${cargaCard}</div>` : ''}
       <table class="sep-tab">
-        <thead><tr><th>Destino</th><th class="n">Volumes</th><th class="pr">Produtividade</th></tr></thead>
+        <thead><tr><th>Destino</th><th class="n">Volumes</th><th class="pr">Produtividade</th><th class="op">Oportunidades</th></tr></thead>
         <tbody>${todas.map((l, k) => {
           const pr = k === 0 ? `<td class="pr" rowspan="${todas.length}"><div class="sep-pr-v">${fmtInt(e.volumes)}</div><div class="sep-pr-l">Tempo</div><div class="sep-pr-t">${sepTempoVol(e.volumes)}</div></td>` : '';
-          if(semSet.has(l)) return `<tr class="sv"><td class="l">${sepEsc(sepNomeLoja(l))}</td><td class="n sv-t">⚠ SEM VOLUME</td>${pr}</tr>`;
+          const op = k === 0 ? oppCelaHtml(e, todas.length) : ''; if(semSet.has(l)) return `<tr class="sv"><td class="l">${sepEsc(sepNomeLoja(l))}</td><td class="n sv-t">⚠ SEM VOLUME</td>${pr}${op}</tr>`;
           const o = st.porLoja[l];
-          return `<tr><td class="l">${sepEsc(sepNomeLoja(l))}</td><td class="n">${fmtInt(o.volumes)}</td>${pr}</tr>`;
+          return `<tr><td class="l">${sepEsc(sepNomeLoja(l))}</td><td class="n">${fmtInt(o.volumes)}</td>${pr}${op}</tr>`;
         }).join('')}</tbody>
       </table>
       <div class="sep-card-f">${sepPlural(e.lojas.length, 'LOJA', 'LOJAS')} · ${sepPlural(e.volumes, 'VOLUME', 'VOLUMES')} · ${sepPlural(e.itens, 'ITEM', 'ITENS')}${e.semVol.length ? ' · ' + e.semVol.length + ' SEM VOLUME' : ''}</div>
@@ -7744,7 +7748,7 @@ function spdResumo(linhas){
 }
 /* lista final do gráfico: quem tem volume (+ cadastrados sem volume, se ligado) */
 function spdLista(){
-  const lista = spdResumo(spdLinhas()).filter(r => r.vol > 0);
+  const lista = spdResumo(spdLinhas()).filter(r => r.vol > 0 || oppCont(r.nome).n > 0);
   if(spdZero) (sepData.produtivos || []).forEach(n => { if(!lista.some(r => r.nome === n)) lista.push({ nome: n, vol: 0 }); });
   return lista.sort((a, b) => b.vol - a.vol || a.nome.localeCompare(b.nome, 'pt-BR'));
 }
@@ -7867,9 +7871,9 @@ function spdRender(){
     : '<div class="sep-vazio">Nenhum volume contabilizado neste dia. Escolha o produtivo em cada estação e imprima a separação (a produtividade acompanha a programação automaticamente).</div>';
 
   document.getElementById('spd-resumo').innerHTML = lista.length
-    ? `<thead><tr><th>Produtivo</th><th class="c">Volume feito</th><th class="c">% do dia</th>${edit ? '<th></th>' : ''}</tr></thead>
-       <tbody>${lista.map(r => `<tr><td>${sepEsc(r.nome)}${nc(r)}</td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td>${edit ? `<td><button class="btn btn-danger" data-n="${sepEsc(r.nome)}" onclick="spdRemProd(this.dataset.n)" title="Remover o volume deste produtivo no dia">✕</button></td>` : ''}</tr>`).join('')}</tbody>
-       <tfoot><tr><td>TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td>${edit ? '<td></td>' : ''}</tr></tfoot>`
+    ? `<thead><tr><th>Produtivo</th><th class="c">Volume feito</th><th class="c">% do dia</th><th class="c">Oportunidades</th>${edit ? '<th></th>' : ''}</tr></thead>
+       <tbody>${lista.map(r => `<tr><td>${sepEsc(r.nome)}${nc(r)}</td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCelProd(r.nome)}</td>${edit ? `<td><button class="btn btn-danger" data-n="${sepEsc(r.nome)}" onclick="spdRemProd(this.dataset.n)" title="Remover o volume deste produtivo no dia">✕</button></td>` : ''}</tr>`).join('')}</tbody>
+       <tfoot><tr><td>TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td><td class="n">${oppTotalDia()}</td>${edit ? '<td></td>' : ''}</tr></tfoot>`
     : '';
   document.getElementById('st-spd-vol').textContent = fmtInt(total);
   document.getElementById('st-spd-prod').textContent = lista.filter(r => r.vol > 0 && r.nome !== '(SEM NOME)').length;
@@ -7889,13 +7893,13 @@ function sepProdPaginaHtml(){
   const d = new Date();
   const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   const por = currentUser ? ' por ' + sepEsc(currentUser.nome) : '';
-  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td></tr>`).join('');
+  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCont(r.nome).n}</td></tr>`).join('');
   return `<div class="spp"><div class="spp-title">PRODUTIVIDADE DIA — CD SECOS</div>
     <div class="spp-sub">${fmtDia(spdDia)} · impresso às ${hora}${por}</div>`
     + (lista.length
-      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th></tr></thead>
+      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th><th>Oportunid.</th></tr></thead>
          <tbody>${corpo}</tbody>
-         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td></tr></tfoot></table>`
+         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td><td class="n">${oppTotalDia()}</td></tr></tfoot></table>`
       : `<div class="spp-vazio">Nenhum volume contabilizado neste dia.</div>`)
     + `</div>`;
 }
@@ -7911,12 +7915,12 @@ function imprimirSepProdAntigo(){
   const max = Math.max(1, ...lista.map(r => r.vol));
   const d = new Date();
   const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  const corpo = lista.map((r, k) => `<tr><td>${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td></tr>`).join('');
+  const corpo = lista.map((r, k) => `<tr><td>${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCont(r.nome).n}</td></tr>`).join('');
   document.getElementById('sepprod-print-area').innerHTML = `
     <h1>PRODUTIVIDADE DIA — CD SECOS</h1>
     <div class="pp-sub">${fmtDia(spdDia)} · impresso às ${hora} por ${sepEsc(currentUser.nome)}</div>
     <table>
-      <thead><tr><th>#</th><th>Produtivo</th><th>Volume feito</th><th>Volume</th><th>%</th></tr></thead>
+      <thead><tr><th>#</th><th>Produtivo</th><th>Volume feito</th><th>Volume</th><th>%</th><th>Oportunid.</th></tr></thead>
       <tbody>${corpo}</tbody>
       <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td></tr></tfoot>
     </table>`;
@@ -8115,8 +8119,8 @@ function baseCopiar(){
 /* =====================================================================
    JANELA FLUTUANTE — seleção das cargas do piso para a programação
    ===================================================================== */
-let sepFloatAberto = false, sepFloatMin = false, sepFloatLista = false, sepFloatPos = null;
-try{ const _s = JSON.parse(localStorage.getItem('sepFloat') || 'null'); if(_s){ sepFloatAberto = !!_s.open; sepFloatMin = !!_s.min; sepFloatLista = !!_s.lista; sepFloatPos = _s.pos || null; } }catch(e){}
+let sepFloatAberto = true, sepFloatMin = false, sepFloatLista = false, sepFloatPos = null;
+try{ const _s = JSON.parse(localStorage.getItem('sepFloat') || 'null'); if(_s){ sepFloatAberto = true; sepFloatMin = !!_s.min; sepFloatLista = !!_s.lista; sepFloatPos = _s.pos || null; } }catch(e){}
 function sepFloatSalvar(){ try{ localStorage.setItem('sepFloat', JSON.stringify({ open:sepFloatAberto, min:sepFloatMin, lista:sepFloatLista, pos:sepFloatPos })); }catch(e){} }
 function sepFloatToggle(on){ sepFloatAberto = (on == null) ? !sepFloatAberto : !!on; if(sepFloatAberto) sepFloatMin = false; sepFloatSalvar(); sepFloatRender(); }
 function sepFloatMinimizar(){ sepFloatMin = !sepFloatMin; sepFloatSalvar(); sepFloatRender(); }
@@ -8600,6 +8604,292 @@ body.is-admin.logado #cam-float{ display:flex; }
   const _ru = renderUsuarios;
   renderUsuarios = function(){ _ru.apply(this, arguments); try{ camRender(); }catch(e){} };
 })();
+</script>
+
+<!-- =====================================================================
+  PATCH — guias fixas · cargas em 2 colunas · volume não rastreado · Separação (janela fixa) · Oportunidades
+  ===================================================================== -->
+<style id="v5-patch-css">
+/* ---------- 1) guias que acompanham na rolagem ---------- */
+.tabnav{ position:sticky; top:0; z-index:49; background:#070707; box-shadow:0 3px 10px rgba(0,0,0,.45); }
+
+/* ---------- 2) cargas no piso: 2 cargas por linha ---------- */
+@media (min-width:900px){
+  body:not(.tv-mode) #tbody-piso{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--row-gap,8px); overflow:visible; align-items:start; }
+  body:not(.tv-mode) #tbody-piso .pc-head{ display:none; }
+  body:not(.tv-mode) #tbody-piso .piso-grp, body:not(.tv-mode) #tbody-piso .piso-empty{ grid-column:1/-1; }
+  body:not(.tv-mode) #tbody-piso .pc{ min-width:0; grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:8px; column-gap:10px; align-items:end; }
+  body:not(.tv-mode) #tbody-piso .pc .c::before{ content:attr(data-l); display:block; font-size:.56rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:1px; font-family:'Inter',sans-serif; }
+  body:not(.tv-mode) #tbody-piso .pc .c-flag{ display:none; }
+  body:not(.tv-mode) #tbody-piso .pc .c-carga{ grid-column:1; grid-row:1; order:0; font-size:1.05rem; }
+  body:not(.tv-mode) #tbody-piso .pc .c-forn{ grid-column:2 / -1; grid-row:1; order:0; align-self:center; }
+  body:not(.tv-mode) #tbody-piso .pc .c-forn::before, body:not(.tv-mode) #tbody-piso .pc .c-carga::before, body:not(.tv-mode) #tbody-piso .pc .c-act::before{ display:none; }
+  body:not(.tv-mode) #tbody-piso .pc .c-doca, body:not(.tv-mode) #tbody-piso .pc .c-lib, body:not(.tv-mode) #tbody-piso .pc .c-d1, body:not(.tv-mode) #tbody-piso .pc .c-sku{ grid-row:2; text-align:left; }
+  body:not(.tv-mode) #tbody-piso .pc .c-doca{ grid-column:1; } body:not(.tv-mode) #tbody-piso .pc .c-lib{ grid-column:2; }
+  body:not(.tv-mode) #tbody-piso .pc .c-d1{ grid-column:3; } body:not(.tv-mode) #tbody-piso .pc .c-sku{ grid-column:4; }
+  body:not(.tv-mode) #tbody-piso .pc .c-vol{ grid-column:1 / -1; grid-row:3; flex-wrap:nowrap; }
+  body:not(.tv-mode) #tbody-piso .pc .c-vol::before{ width:auto; display:none; }
+  body:not(.tv-mode) #tbody-piso .pc .c-st{ grid-column:1 / 3; grid-row:4; }
+  body:not(.tv-mode) #tbody-piso .pc .c-prod{ grid-column:3 / -1; grid-row:4; }
+  body:not(.tv-mode) #tbody-piso .pc .c-obs{ grid-column:1 / -1; grid-row:5; }
+  body:not(.tv-mode) #tbody-piso .pc .c-prod:has(> .dash), body:not(.tv-mode) #tbody-piso .pc .c-obs:has(> .dash){ display:none; }
+  body:not(.tv-mode) #tbody-piso .pc .c-act{ grid-column:1 / -1; grid-row:6; }
+  body:not(.tv-mode) #tbody-piso .pc .pc-sub{ grid-column:1 / -1; grid-row:7; }
+  body:not(.tv-mode) #tbody-piso .pc > .pc-edit{ grid-column:1 / -1; grid-row:8; }
+}
+
+/* ---------- 3) volume não rastreado (Distribuição) ---------- */
+.nr-card{ border-color:var(--band-strong); }
+.nr-card .n{ color:var(--band); }
+.nr-card .nr-btn{ margin-top:6px; width:100%; }
+
+/* janelas de apoio (volume não rastreado / oportunidades) */
+.v5-back{ display:none; position:fixed; inset:0; z-index:400; background:rgba(0,0,0,.72); align-items:center; justify-content:center; padding:14px; font-family:'Inter',sans-serif; }
+.v5-box{ background:var(--panel); border:1px solid var(--band-strong); border-radius:6px; width:min(720px,100%); max-height:92vh; overflow:auto; box-shadow:0 18px 50px rgba(0,0,0,.7); color:var(--text); }
+.v5-h{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel-header); position:sticky; top:0; }
+.v5-h h3{ margin:0; font-family:'Oswald',sans-serif; font-size:1.05rem; color:var(--band); letter-spacing:.03em; }
+.v5-b{ padding:14px 16px; display:flex; flex-direction:column; gap:12px; }
+.v5-f{ display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end; }
+.v5-f label{ display:block; font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); margin-bottom:3px; }
+.v5-f input{ background:var(--input-bg); border:1px solid var(--line); border-radius:3px; padding:7px 9px; color:var(--text); font-size:.9rem; width:130px; }
+.v5-tab{ width:100%; border-collapse:collapse; font-size:.82rem; }
+.v5-tab th{ text-align:left; font-size:.62rem; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); padding:6px 8px; border-bottom:1px solid var(--line); }
+.v5-tab td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+.v5-tab tfoot td{ font-weight:700; color:var(--band); }
+.v5-vazio{ color:var(--text-dim); font-style:italic; padding:10px 2px; }
+.v5-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.v5-chip{ cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--text); border-radius:14px; padding:5px 12px; font-size:.76rem; font-weight:700; font-family:'Inter',sans-serif; }
+.v5-chip.on{ background:var(--band-strong); color:#120a02; border-color:var(--band-strong); }
+.v5-chip.livre{ border-style:dashed; }
+.v5-sub{ font-size:.74rem; color:var(--text-dim); line-height:1.4; }
+
+/* ---------- 4) oportunidades na programação ---------- */
+.sep-tab th.op, .sep-tab td.op{ width:34%; text-align:left; vertical-align:top; font-size:.7rem; line-height:1.3; padding-left:8px; }
+.opp-btn{ cursor:pointer; border:1px solid var(--band-strong); background:transparent; color:var(--band); border-radius:3px; padding:4px 8px; font-size:.7rem; font-weight:700; font-family:'Inter',sans-serif; width:100%; margin-bottom:5px; }
+.opp-btn:hover{ background:var(--band-strong); color:#120a02; }
+.opp-list .opp-it{ padding:2px 0; border-top:1px dashed var(--line); }
+.opp-list .opp-it b{ color:var(--band); }
+.spd-opp{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px; background:#3a2012; color:#f2935a; font-size:.68rem; font-weight:700; }
+@media print{ .v5-back{ display:none !important; } }
+</style>
+
+<script id="v5-patch-js">
+/* ===== 1) guias fixas: a barra de guias fica logo abaixo do topo ao rolar ===== */
+(function(){
+  function aj(){ const tb = document.getElementById('topbar'), nv = document.getElementById('tabnav'); if(tb && nv) nv.style.top = tb.offsetHeight + 'px'; }
+  window.addEventListener('resize', aj);
+  const tb = document.getElementById('topbar');
+  if(tb && window.ResizeObserver) new ResizeObserver(aj).observe(tb);
+  aj(); setTimeout(aj, 400); setTimeout(aj, 1500);
+})();
+
+/* ===== 2) Distribuição: "Volume não rastreado nas cargas no piso" (estocado mix) ===== */
+let nrTurno = 'T2';
+function nrPode(){ return !!currentUser && (currentUser.role === 'admin' || currentUser.role === 'conferente') && !somenteLeitura(); }
+function nrLista(t){ return ((distExtras[t] || {}).naoRastreado) || []; }
+function nrAtualizar(){
+  TURNOS.forEach(t => {
+    const L = nrLista(t), set = (id, v) => { const el = document.getElementById(id); if(el) el.textContent = v; };
+    set('nr-vol-' + t, fmtInt(nrVol(distExtras[t])));
+    set('nr-cg-' + t, L.reduce((s, x) => s + (Number(x.cargas) || 0), 0));
+    set('nr-sku-' + t, fmtInt(nrSku(distExtras[t])));
+  });
+}
+function nrModal(){
+  let m = document.getElementById('nr-modal');
+  if(m) return m;
+  document.body.insertAdjacentHTML('beforeend', `<div class="v5-back no-print" id="nr-modal" onclick="if(event.target===this) nrFechar()"><div class="v5-box">
+    <div class="v5-h"><h3 id="nr-tit">VOLUME NÃO RASTREADO NAS CARGAS NO PISO</h3><button type="button" class="btn btn-ghost btn-sm" onclick="nrFechar()">✕ Fechar</button></div>
+    <div class="v5-b">
+      <div class="v5-sub">Estocado mix: cargas que não passaram pelas cargas no piso. O volume e o SKU entram no total da distribuição, no resumo e no fechamento.</div>
+      <div class="v5-f" id="nr-form">
+        <div><label>Qtd. de cargas</label><input type="number" min="1" id="nr-qtd" value="1"></div>
+        <div><label>Volume</label><input type="number" min="0" id="nr-vol" value="0"></div>
+        <div><label>SKU</label><input type="number" min="0" id="nr-sku" value="0"></div>
+        <button type="button" class="btn btn-primary btn-sm" style="width:auto;" onclick="nrAdd('somar')" title="Soma esta carga (ou grupo de cargas) ao que já foi informado">＋ Adicionar</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="nrAdd('total')" title="Substitui tudo por este total">Definir como total</button>
+      </div>
+      <div id="nr-tab"></div>
+    </div></div></div>`);
+  return document.getElementById('nr-modal');
+}
+function nrAbrir(t){
+  nrTurno = t; nrModal().style.display = 'flex';
+  document.getElementById('nr-tit').textContent = 'VOLUME NÃO RASTREADO NAS CARGAS NO PISO · ' + t;
+  document.getElementById('nr-form').style.display = nrPode() ? '' : 'none';
+  nrRender();
+}
+function nrFechar(){ const m = document.getElementById('nr-modal'); if(m) m.style.display = 'none'; }
+function nrRender(){
+  const box = document.getElementById('nr-tab'); if(!box) return;
+  const L = nrLista(nrTurno), pode = nrPode();
+  box.innerHTML = L.length
+    ? `<table class="v5-tab"><thead><tr><th>Cargas</th><th>Volume</th><th>SKU</th><th>Quem · quando</th>${pode ? '<th></th>' : ''}</tr></thead><tbody>${
+        L.map(x => `<tr><td>${Number(x.cargas) || 0}</td><td>${fmtInt(Number(x.volume) || 0)}</td><td>${fmtInt(Number(x.sku) || 0)}</td><td>${escapeHtml(x.por || '')} ${escapeHtml(x.em || '')}</td>${pode ? `<td><button class="btn btn-danger btn-sm" type="button" data-id="${escapeHtml(x.id)}" onclick="nrRem(this.dataset.id)">Remover</button></td>` : ''}</tr>`).join('')
+      }</tbody><tfoot><tr><td>${L.reduce((s, x) => s + (Number(x.cargas) || 0), 0)}</td><td>${fmtInt(nrVol(distExtras[nrTurno]))}</td><td>${fmtInt(nrSku(distExtras[nrTurno]))}</td><td colspan="${pode ? 2 : 1}">TOTAL</td></tr></tfoot></table>`
+    : '<div class="v5-vazio">Nada informado neste turno ainda.</div>';
+}
+function nrAdd(modo){
+  if(!nrPode()) return;
+  const q = parseInt(document.getElementById('nr-qtd').value, 10) || 0;
+  const v = Number(document.getElementById('nr-vol').value) || 0;
+  const s = Number(document.getElementById('nr-sku').value) || 0;
+  if(q < 1 || (v <= 0 && s <= 0)){ showToast('Informe a quantidade de cargas e o volume (e/ou SKU).', true); return; }
+  if(!distExtras[nrTurno]) distExtras[nrTurno] = distExtrasVazio();
+  const rec = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), cargas: q, volume: v, sku: s, por: currentUser.nome, em: agoraCurto() };
+  distExtras[nrTurno].naoRastreado = modo === 'total' ? [rec] : nrLista(nrTurno).concat([rec]);
+  ['nr-qtd','nr-vol','nr-sku'].forEach((id, i) => { document.getElementById(id).value = i === 0 ? 1 : 0; });
+  saveDist(); renderDist(); nrRender();
+}
+function nrRem(id){
+  if(!nrPode() || !confirm('Remover este lançamento?')) return;
+  distExtras[nrTurno].naoRastreado = nrLista(nrTurno).filter(x => x.id !== id);
+  saveDist(); renderDist(); nrRender();
+}
+const _renderDistNr = renderDist;
+renderDist = function(){ _renderDistNr.apply(this, arguments); try{ nrAtualizar(); const m = document.getElementById('nr-modal'); if(m && m.style.display === 'flex') nrRender(); }catch(e){} };
+try{ nrAtualizar(); }catch(e){}
+
+/* ===== 3) Oportunidades por estação (Programação CD Secos) ===== */
+let oppHoje = [], oppSpd = [], oppDiaHoje = diaOperacional(), oppEst = null, oppMot = [];
+const OPP_PRESET = ['AVARIA', 'SOBRA', 'FALTA'];
+function oppPode(){ return sepPode() && !somenteLeitura(); }
+function oppLista(dia){ return dia === oppDiaHoje ? oppHoje : oppSpd; }
+function oppNomeProd(o, dia){
+  if(dia === diaOperacional()){ const e = sepData.estacoes[(Number(o.est) || 0) - 1]; if(e && e.produtivo) return spdNomeKey(e.produtivo); }
+  return spdNomeKey(o.produtivo);
+}
+function oppCont(nome){
+  let n = 0, q = 0;
+  oppLista(spdDia).forEach(o => { if(oppNomeProd(o, spdDia) === nome){ n++; q += Number(o.qtd) || 0; } });
+  return { n, q };
+}
+function oppTotalDia(){ return oppLista(spdDia).length; }
+function oppCelProd(nome){ const c = oppCont(nome); return c.n ? `<b>${c.n}</b>${c.q ? ` <small>(${c.q} un.)</small>` : ''}` : '—'; }
+const _spdListaOpp = spdLista;
+spdLista = function(){
+  const l = _spdListaOpp();
+  oppLista(spdDia).forEach(o => { const n = oppNomeProd(o, spdDia); if(!l.some(r => r.nome === n)) l.push({ nome: n, vol: 0 }); });
+  return l.sort((a, b) => b.vol - a.vol || a.nome.localeCompare(b.nome, 'pt-BR'));
+};
+function oppCelaHtml(e, rows){
+  const L = oppHoje.filter(o => Number(o.est) === e.idx + 1);
+  const itens = L.map(o => `<div class="opp-it"><b>${sepEsc(sepNomeLoja(o.loja))}</b> · ${Number(o.qtd) || 0} un. · ${sepEsc((o.motivos || []).join(', '))}</div>`).join('');
+  return `<td class="op" rowspan="${rows}"><button type="button" class="opp-btn no-print" data-e="${e.idx}" onclick="oppAbrir(Number(this.dataset.e))">＋ Oportunidades${L.length ? ' (' + L.length + ')' : ''}</button><div class="opp-list">${itens}</div></td>`;
+}
+function oppAplicar(fn){
+  oppHoje = fn(oppHoje.map(o => Object.assign({}, o)));
+  oppAposMudar();
+  if(window.oppOp) window.oppOp(oppDiaHoje, fn);
+}
+function oppAposMudar(){
+  try{ if(typeof abaAtual !== 'undefined' && abaAtual === 'sep') renderSep(false); }catch(e){}
+  try{ spdRender(); }catch(e){}
+  try{ const m = document.getElementById('opp-modal'); if(m && m.style.display === 'flex') oppRender(); }catch(e){}
+}
+function oppAbrir(idx){
+  oppEst = idx; oppMot = [];
+  let m = document.getElementById('opp-modal');
+  if(!m){ document.body.insertAdjacentHTML('beforeend', '<div class="v5-back no-print" id="opp-modal" onclick="if(event.target===this) oppFechar()"></div>'); m = document.getElementById('opp-modal'); }
+  const st = sepCalc(), e = st.ests[idx] || { lojas: [], semVol: [], produtivo: '' };
+  const lojas = e.lojas.concat(e.semVol).sort(sepCmpLoja);
+  m.innerHTML = `<div class="v5-box">
+    <div class="v5-h"><h3>OPORTUNIDADES — ESTAÇÃO ${idx + 1}${e.produtivo ? ' · ' + sepEsc(e.produtivo) : ''}</h3><button type="button" class="btn btn-ghost btn-sm" onclick="oppFechar()">✕ Fechar</button></div>
+    <div class="v5-b">
+      <div class="v5-f" id="opp-form" style="${oppPode() ? '' : 'display:none'}">
+        <div><label>Loja</label><input type="text" id="opp-loja" list="opp-lojas-dl" placeholder="Loja" autocomplete="off"><datalist id="opp-lojas-dl">${lojas.map(l => `<option value="${sepEsc(l)}">${sepEsc(sepNomeLoja(l))}</option>`).join('')}</datalist></div>
+        <div><label>Qtd</label><input type="number" min="1" id="opp-qtd" value="1" style="width:90px;"></div>
+        <div style="flex:1; min-width:240px;"><label>Motivo(s) — pode marcar vários</label>
+          <div class="v5-chips" id="opp-mot-chips"></div></div>
+        <div><label>Outro motivo (escrever)</label><input type="text" id="opp-mot-livre" maxlength="40" placeholder="Digite e Enter" style="width:180px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); oppAddLivre(); }"></div>
+        <button type="button" class="btn btn-primary btn-sm" style="width:auto;" onclick="oppSalvar()">＋ Adicionar</button>
+      </div>
+      <div id="opp-tab"></div>
+      <div class="v5-sub">Ficam ao lado da programação até a rotação das 06:00 e contam na Produtividade Dia de cada produtivo.</div>
+    </div></div>`;
+  m.style.display = 'flex';
+  oppChips(); oppRender();
+}
+function oppFechar(){ const m = document.getElementById('opp-modal'); if(m) m.style.display = 'none'; }
+function oppChips(){
+  const box = document.getElementById('opp-mot-chips'); if(!box) return;
+  const extras = oppMot.filter(x => !OPP_PRESET.includes(x));
+  box.innerHTML = OPP_PRESET.map(p => `<button type="button" class="v5-chip ${oppMot.includes(p) ? 'on' : ''}" data-m="${p}" onclick="oppToggleMot(this.dataset.m)">${p}</button>`).join('')
+    + extras.map(x => `<button type="button" class="v5-chip on livre" data-m="${sepEsc(x)}" onclick="oppToggleMot(this.dataset.m)" title="Remover">${sepEsc(x)} ✕</button>`).join('');
+}
+function oppToggleMot(m){ oppMot = oppMot.includes(m) ? oppMot.filter(x => x !== m) : oppMot.concat([m]); oppChips(); }
+function oppAddLivre(){
+  const inp = document.getElementById('opp-mot-livre'); if(!inp) return;
+  const t = inp.value.trim().replace(/\s+/g, ' ').toUpperCase().slice(0, 40);
+  if(t && !oppMot.includes(t)) oppMot.push(t);
+  inp.value = ''; oppChips();
+}
+function oppSalvar(){
+  if(!oppPode()) return;
+  oppAddLivre();
+  const loja = String(document.getElementById('opp-loja').value || '').trim().toUpperCase();
+  const qtd = parseInt(document.getElementById('opp-qtd').value, 10) || 0;
+  if(!loja || qtd < 1 || !oppMot.length){ showToast('Informe a loja, a quantidade e pelo menos um motivo.', true); return; }
+  const e = sepData.estacoes[oppEst] || {};
+  const rec = { id: spdId(), est: oppEst + 1, produtivo: e.produtivo || '', loja, qtd, motivos: oppMot.slice(), por: currentUser ? currentUser.nome : '', em: agoraCurto() };
+  oppAplicar(arr => arr.concat([rec]));
+  oppMot = []; document.getElementById('opp-loja').value = ''; document.getElementById('opp-qtd').value = 1; oppChips();
+}
+function oppRem(id){
+  if(!oppPode() || !confirm('Remover esta oportunidade?')) return;
+  oppAplicar(arr => arr.filter(o => o.id !== id));
+}
+function oppRender(){
+  const box = document.getElementById('opp-tab'); if(!box || oppEst == null) return;
+  const L = oppHoje.filter(o => Number(o.est) === oppEst + 1), pode = oppPode();
+  box.innerHTML = L.length
+    ? `<table class="v5-tab"><thead><tr><th>Loja</th><th>Qtd</th><th>Motivo(s)</th><th>Quem · quando</th>${pode ? '<th></th>' : ''}</tr></thead><tbody>${
+        L.map(o => `<tr><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td>${pode ? `<td><button class="btn btn-danger btn-sm" type="button" data-id="${sepEsc(o.id)}" onclick="oppRem(this.dataset.id)">Remover</button></td>` : ''}</tr>`).join('')
+      }</tbody></table>`
+    : '<div class="v5-vazio">Nenhuma oportunidade nesta estação.</div>';
+}
+</script>
+
+<script type="module" id="v5-patch-fb">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  const db = getFirestore(getApp());
+  const erro = (p, err) => { console.error(p, err); if(typeof showToast === 'function') showToast('⚠️ ' + p + ' ' + (err && err.message ? err.message : err), true); };
+
+  /* oportunidades: um documento por dia operacional (vira às 06:00 → o dia novo começa vazio ao lado da programação) */
+  window.oppOp = async function(dia, fn){
+    if(typeof somenteLeitura === 'function' && somenteLeitura()) return;
+    const ref = doc(db, 'painelCD', 'sepoport_' + dia);
+    try{
+      await runTransaction(db, async tx => {
+        const s = await tx.get(ref);
+        tx.set(ref, { dia, itens: fn(s.exists() ? (s.data().itens || []) : []), atualizadoEm: new Date().toLocaleString('pt-BR') });
+      });
+    } catch(err){ erro('Erro ao salvar as oportunidades:', err); }
+  };
+  let unHoje = null, unSpd = null;
+  function ouvirHoje(){
+    if(unHoje){ unHoje(); unHoje = null; }
+    oppDiaHoje = diaOperacional(); oppHoje = [];
+    unHoje = onSnapshot(doc(db, 'painelCD', 'sepoport_' + oppDiaHoje), snap => {
+      oppHoje = snap.exists() ? (snap.data().itens || []) : [];
+      oppAposMudar();
+    }, err => erro('Erro ao ler as oportunidades:', err));
+  }
+  function ouvirSpd(dia){
+    if(unSpd){ unSpd(); unSpd = null; }
+    oppSpd = [];
+    if(dia === oppDiaHoje){ oppAposMudar(); return; }
+    unSpd = onSnapshot(doc(db, 'painelCD', 'sepoport_' + dia), snap => {
+      if(dia !== spdDia) return;
+      oppSpd = snap.exists() ? (snap.data().itens || []) : [];
+      try{ spdRender(); }catch(e){}
+    }, err => erro('Erro ao ler as oportunidades do dia:', err));
+  }
+  const spdOuvirOrig = window.spdOuvir;
+  window.spdOuvir = function(dia){ if(spdOuvirOrig) spdOuvirOrig(dia); ouvirSpd(dia); };
+  ouvirHoje(); ouvirSpd(spdDia);
+  setInterval(() => { if(diaOperacional() !== oppDiaHoje){ ouvirHoje(); ouvirSpd(spdDia); oppAposMudar(); } }, 30000);
 </script>
 
 </body>

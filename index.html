@@ -1674,7 +1674,7 @@
       <div class="panel-header">
         <div class="title-block">
           <h2>FOLHA DE SEPARAÇÃO</h2>
-          <span class="sub">Impressão frente e verso (A4): Programação – CD Secos na frente e Produtividade Dia no verso</span>
+          <span class="sub">Impressão em conjunto (A4): Programação – CD Secos na 1ª página e Oportunidades por produtivo na 2ª página</span>
         </div>
         <div class="no-print" data-ro-ok style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <select id="sep-orient" onchange="sepSetOpc('orient', this.value)" title="Orientação da folha">
@@ -1689,7 +1689,7 @@
             <option value="5">5 por linha</option>
             <option value="6">6 por linha</option>
           </select>
-          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSeparacao()">Imprimir frente e verso</button>
+          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSeparacao()">Imprimir programação + oportunidades</button>
         </div>
       </div>
       <div class="sep-aviso no-print" id="sep-aviso"></div>
@@ -5620,7 +5620,7 @@ function imprimirSeparacao(){
   const melhor = Math.max(...res.map(r => r.s));
   const esc = res.find(r => r.s >= melhor * 0.92) || res[0];
 
-  /* VERSO: Produtividade Dia — mesma folha/orientação da frente, ajustada para caber em 1 página */
+  /* 2ª PÁGINA: Oportunidades por produtivo — mesma folha/orientação da programação, ajustada para caber em 1 página */
   const probe2 = document.createElement('div');
   probe2.className = 'sep-paper sep-probe';
   document.body.appendChild(probe2);
@@ -5628,7 +5628,7 @@ function imprimirSeparacao(){
   for(let k = 0; k < 8; k++){
     w2 = Math.round(availW / s2);
     probe2.style.width = w2 + 'px';
-    probe2.innerHTML = sepProdPaginaHtml();
+    probe2.innerHTML = sepOppPaginaHtml();
     h2 = probe2.scrollHeight;
     if(h2 * s2 <= availH) break;
     const ns = Math.max(0.2, availH / h2 * 0.985);
@@ -5636,7 +5636,7 @@ function imprimirSeparacao(){
     s2 = ns;
   }
   if(h2 * s2 > availH) s2 = Math.max(0.2, availH / h2 * 0.985);
-  const verso = sepProdPaginaHtml();
+  const verso = sepOppPaginaHtml();
   probe2.remove();
 
   document.getElementById('sep-print-area').innerHTML =
@@ -8806,6 +8806,99 @@ renderDist = function(){
   window.cadLer = async function(){ const s = await getDoc(ref); cadLista = s.exists() ? (s.data().lista || []) : []; cadPronto = true; return cadLista; };
   window.cadSalvar = function(lista){ setDoc(ref, { lista, atualizadoEm: new Date().toLocaleString('pt-BR'), atualizadoPor: currentUser ? currentUser.nome : '' }).catch(err => erro('Erro ao salvar o cadastro:', err)); };
   onSnapshot(ref, snap => { cadLista = snap.exists() ? (snap.data().lista || []) : []; cadPronto = true; cadAposMudar(); }, err => erro('Erro ao ler o cadastro:', err));
+</script>
+
+
+<!-- PATCH v7 — Oportunidades por produtivo (tabela na guia Separação + 2ª página da impressão da programação) -->
+<style id="v7-patch-css">
+.spo{ color:#000; font-family:Arial,Helvetica,sans-serif; }
+.spo-title{ font:700 18px Arial,Helvetica,sans-serif; color:#000; letter-spacing:0; margin:0 0 2px; }
+.spo-sub{ font-size:11px; color:#333; margin:0 0 10px; }
+.spo-tab{ width:100%; border-collapse:collapse; font-size:12px; }
+.spo-tab th, .spo-tab td{ border:1px solid #888; padding:4px 8px; color:#000; background:#fff; text-align:left; vertical-align:top; }
+.spo-tab th{ background:#FF8A1F !important; text-transform:uppercase; font-size:10px; text-align:center; }
+.spo-tab td.n{ text-align:center; font-weight:700; width:52px; }
+.spo-tab tr.spo-g td{ background:#e6e6e6 !important; font-size:13px; }
+.spo-tab tr.spo-g td span{ float:right; font-size:11px; font-weight:400; }
+.spo-tab td.spo-v{ font-style:italic; color:#555 !important; }
+.spo-tab tfoot td{ background:#eee !important; font-weight:700; border-top:2px solid #000; }
+.spo-vazio{ font-size:14px; padding:24px 0; }
+/* tela (guia Separação) */
+#opp-pn-tab .v5-tab tr.opp-g td{ background:#1a120a; color:var(--band); font-weight:700; border-top:2px solid var(--band-strong); }
+#opp-pn-tab .v5-tab tr.opp-g td span{ float:right; font-weight:400; font-size:.74rem; color:var(--text-dim); }
+#opp-pn-tab .v5-tab td.opp-v{ color:var(--text-dim); font-style:italic; }
+#opp-pn-tab .v5-tab td.n{ text-align:center; font-weight:700; }
+</style>
+<script id="v7-patch-js">
+/* agrupa as oportunidades do dia por estação/produtivo, com base na programação CD Secos */
+function oppGrupos(){
+  const st = sepCalc(), ativos = st.ests.filter(sepEstAtiva), mapa = new Map();
+  ativos.forEach(e => mapa.set(e.idx + 1, { est: e.idx + 1, prod: e.produtivo || '', vol: e.volumes || 0, L: [] }));
+  oppHoje.forEach(o => {
+    const n = Number(o.est) || 0;
+    if(!mapa.has(n)){ const e = (sepData.estacoes || [])[n - 1]; mapa.set(n, { est: n, prod: (e && e.produtivo) || o.produtivo || '', vol: 0, L: [] }); }
+    mapa.get(n).L.push(o);
+  });
+  return Array.from(mapa.values()).sort((a, b) => a.est - b.est);
+}
+function oppLinhasTabela(G, tela){
+  const cab = g => `<tr class="${tela ? 'opp-g' : 'spo-g'}"><td colspan="5"><b>${g.est ? 'ESTAÇÃO ' + g.est : 'SEM ESTAÇÃO'}</b> · PRODUTIVO: ${g.prod ? sepEsc(g.prod) : '____________'}<span>${fmtInt(g.vol)} volumes · ${g.L.length} oportunidade(s)</span></td></tr>`;
+  return G.map(g => cab(g) + (g.L.length
+    ? g.L.map(o => `<tr><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${sepEsc(oppItemTxt(o))}</td><td class="n">${Number(o.qtd) || 0}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td></tr>`).join('')
+    : `<tr><td colspan="5" class="${tela ? 'opp-v' : 'spo-v'}">Sem oportunidades</td></tr>`)).join('');
+}
+const OPP_THEAD = '<thead><tr><th>Loja</th><th>Item</th><th>Qtd</th><th>Motivo(s)</th><th>Quem · quando</th></tr></thead>';
+function oppTotais(G){ let n = 0, q = 0; G.forEach(g => g.L.forEach(o => { n++; q += Number(o.qtd) || 0; })); return { n, q }; }
+
+/* 2ª página da impressão da programação */
+function sepOppPaginaHtml(){
+  const G = oppGrupos(), t = oppTotais(G);
+  const d = new Date(), hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  const por = currentUser ? ' por ' + sepEsc(currentUser.nome) : '';
+  const { curto } = todayLabel();
+  return `<div class="spo"><div class="spo-title">OPORTUNIDADES — CD SECOS</div>
+    <div class="spo-sub">${curto} · impresso às ${hora}${por} · ${G.length} estação(ões) · ${t.n} oportunidade(s) · ${fmtInt(t.q)} un.</div>`
+    + (G.length
+      ? `<table class="spo-tab">${OPP_THEAD}<tbody>${oppLinhasTabela(G, false)}</tbody><tfoot><tr><td colspan="2">TOTAL DO DIA</td><td class="n">${fmtInt(t.q)}</td><td colspan="2">${t.n} oportunidade(s)</td></tr></tfoot></table>`
+      : `<div class="spo-vazio">Nenhuma estação montada na programação.</div>`)
+    + `</div>`;
+}
+
+/* painel na guia Separação: tabela de oportunidades de cada produtivo */
+(function(){
+  const ref = document.getElementById('panel-sep-folha');
+  if(ref && !document.getElementById('panel-sep-opp')){
+    ref.insertAdjacentHTML('afterend', `
+    <section class="panel" id="panel-sep-opp">
+      <div class="panel-header">
+        <div class="title-block"><h2>OPORTUNIDADES POR PRODUTIVO</h2><span class="sub" id="opp-pn-sub"></span></div>
+        <div class="stat-row">
+          <div class="stat"><div class="n" id="st-opp-n">0</div><div class="l">Oportunidades</div></div>
+          <div class="stat"><div class="n" id="st-opp-q">0</div><div class="l">Unidades</div></div>
+        </div>
+      </div>
+      <div class="spd-body">
+        <div class="table-scroll" id="opp-pn-tab"></div>
+        <span class="hint" style="margin:0;">Montada a partir da programação CD Secos (estação e produtivo). Lance cada oportunidade pelo botão “＋ Oportunidades” da estação na folha. Sai na 2ª página da impressão da programação.</span>
+      </div>
+    </section>`);
+  }
+})();
+function oppPainelRender(){
+  const box = document.getElementById('opp-pn-tab'); if(!box || !currentUser) return;
+  const G = oppGrupos(), t = oppTotais(G);
+  document.getElementById('st-opp-n').textContent = t.n;
+  document.getElementById('st-opp-q').textContent = fmtInt(t.q);
+  document.getElementById('opp-pn-sub').textContent = (typeof fmtDia === 'function' ? fmtDia(oppDiaHoje) : '') + ' · atualiza ao vivo · zera na virada do dia (06:00)';
+  box.innerHTML = G.length
+    ? `<table class="v5-tab">${OPP_THEAD}<tbody>${oppLinhasTabela(G, true)}</tbody><tfoot><tr><td colspan="2">TOTAL DO DIA</td><td class="n">${fmtInt(t.q)}</td><td colspan="2">${t.n} oportunidade(s)</td></tr></tfoot></table>`
+    : '<div class="v5-vazio">Monte as estações na programação para ver as oportunidades de cada produtivo.</div>';
+}
+const _renderSepOpp = renderSep;
+renderSep = function(soft){ const r = _renderSepOpp.apply(this, arguments); try{ oppPainelRender(); }catch(e){} return r; };
+const _dockItensOpp = dockItens;
+dockItens = function(){ const it = _dockItensOpp(); if(abaAtual === 'sep'){ const k = it.findIndex(x => x.t === 'panel-sep-prod'); const novo = { l:'Oportunidades', t:'panel-sep-opp' }; if(k >= 0) it.splice(k, 0, novo); else it.push(novo); } return it; };
+try{ oppPainelRender(); }catch(e){}
 </script>
 
 </body>

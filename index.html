@@ -1629,24 +1629,13 @@
       </div>
       <div class="sep-body" id="sep-config">
 
+        <datalist id="sep-cargas-list"></datalist><div id="sep-cargas-chips" hidden></div>
         <div class="sep-bloco">
-          <h3>1 · Cargas (montadas + agrupadas)</h3>
-          <div class="sep-linha">
-            <input type="text" id="sep-carga-in" list="sep-cargas-list" placeholder="Digite a carga e dê OK" autocomplete="off" style="min-width:230px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sepAddCarga(); }">
-            <datalist id="sep-cargas-list"></datalist>
-            <button class="btn btn-primary btn-sm" style="width:auto;" onclick="sepAddCarga()">OK</button>
-            <button class="btn btn-ghost btn-sm" onclick="sepUsarMarcadas()" title="Usa as cargas marcadas em &quot;Imprimir?&quot; na guia Relatório">Usar cargas marcadas no Relatório</button>
-            <button class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar cargas</button>
-            <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle()" title="Abre uma janela flutuante com a lista das cargas no piso e distribuídas">🗔 Janela de cargas (piso e distribuídas)</button>
-          </div>
-          <div class="sep-chips" id="sep-cargas-chips"></div>
-        </div>
-
-        <div class="sep-bloco">
-          <h3>2 · Cadastro de produtivos</h3>
+          <h3>1 · Cadastro de produtivos</h3>
           <div class="sep-linha">
             <input type="text" id="sep-prod-in" maxlength="30" placeholder="Nome do produtivo e dê OK" autocomplete="off" style="min-width:230px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sepAddProdutivo(); }">
             <button class="btn btn-primary btn-sm" style="width:auto;" onclick="sepAddProdutivo()">Cadastrar</button>
+            <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle(true)" title="Abre a janela flutuante para escolher as cargas da programação">🗔 Janela de cargas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepImportarProdutivos()" title="Cadastra os nomes que já estão nas estações e na produtividade do dia">Importar nomes já usados</button>
           </div>
           <div class="sep-chips sep-chips-prod" id="sep-prod-chips"></div>
@@ -1654,7 +1643,7 @@
         </div>
 
         <div class="sep-bloco">
-          <h3>3 · Estações</h3>
+          <h3>2 · Estações</h3>
           <div class="sep-linha">
             <span class="lb">Nº de estações</span>
             <input type="number" id="sep-n-est" min="1" max="60" value="6" onchange="sepSetNum('nEst', this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sepCriarEst(); }">
@@ -5408,10 +5397,10 @@ function renderSep(soft){
 }
 
 function sepRenderCargas(st){
-  const dl = document.getElementById('sep-cargas-list');
+  const dl = document.getElementById('sep-cargas-list') || {};
   dl.innerHTML = st.disp.map(c => `<option value="${sepEsc(c.carga)}">${sepEsc(c.fornecedor)} · volume ${fmtInt(c.volume)} · ${c.itens} item(ns)</option>`).join('');
   const ia = document.getElementById('sep-inc-agr'); if(ia) ia.checked = !!sepData.incAgr;
-  const chips = document.getElementById('sep-cargas-chips');
+  const chips = document.getElementById('sep-cargas-chips') || {};
   chips.innerHTML = st.cargasSel.length
     ? st.cargasSel.map(c => {
         const d = st.dispMap[c];
@@ -6031,7 +6020,7 @@ function imprimirAuditoria(){
       <div class="au-cracha-l"><small>SKU:</small>${fmtInt(sku || 0)}</div>
       <div class="au-cracha-l"><small>AGING:</small>${escapeHtml(liberacao || '—')}</div>
     </div></div></section>`;
-  document.getElementById('audit-print-area').innerHTML = cracha + paginas;
+  document.getElementById('audit-print-area').innerHTML = ((currentUser && currentUser.role === 'conferente') ? '' : cracha) + paginas;
 
   const velho = document.getElementById('pp-page-style');
   if(velho) velho.remove();
@@ -7863,7 +7852,7 @@ function spdRender(){
 
   document.getElementById('spd-chart').innerHTML = lista.length
     ? lista.map((r, k) => `<div class="spd-brow ${r.vol ? '' : 'zero'}">
-        <div class="spd-bn" title="${sepEsc(r.nome)}"><span class="spd-rk">${k + 1}</span>${sepEsc(r.nome)}${nc(r)}</div>
+        <div class="spd-bn" title="${sepEsc(r.nome)}"><span class="spd-rk">${k + 1}</span>${sepEsc(r.nome)}${nc(r)}${oppBadge(r.nome)}</div>
         <div class="spd-bt"><div class="spd-bf" style="width:${r.vol ? Math.max(1.5, r.vol / max * 100) : 0}%"></div></div>
         <div class="spd-bv">${fmtInt(r.vol)}</div>
         <div class="spd-bp">${total ? Math.round(r.vol / total * 100) : 0}%</div>
@@ -8670,7 +8659,7 @@ body.is-admin.logado #cam-float{ display:flex; }
 .opp-list .opp-it{ padding:2px 0; border-top:1px dashed var(--line); }
 .opp-list .opp-it b{ color:var(--band); }
 .spd-opp{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px; background:#3a2012; color:#f2935a; font-size:.68rem; font-weight:700; }
-@media print{ .v5-back{ display:none !important; } }
+@media print{ .v5-back{ display:none !important; } .spp-opp{ margin-top:14px; } .spp-opp .v5-tab th, .spp-opp .v5-tab td{ color:#000 !important; border:1px solid #888; background:#fff; } .spp-opp h3{ color:#000; font-size:13px; } }
 </style>
 
 <script id="v5-patch-js">
@@ -8848,6 +8837,30 @@ function oppRender(){
       }</tbody></table>`
     : '<div class="v5-vazio">Nenhuma oportunidade nesta estação.</div>';
 }
+
+function oppBadge(nome){ const c = oppCont(nome); return c.n ? `<span class="spd-opp" title="Oportunidades do dia">${c.n} oport.</span>` : ''; }
+function oppDetalheHtml(){
+  const dia = spdDia, L = oppLista(dia);
+  if(!L.length) return '';
+  const lin = L.map(o => `<tr><td>${sepEsc(oppNomeProd(o, dia))}</td><td>${o.est ? 'Est. ' + sepEsc(o.est) : '—'}</td><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td></tr>`).join('');
+  return `<h3 class="label-font spd-h3 opp-det">Oportunidades do dia (loja · qtd · motivo)</h3><div class="table-scroll opp-det"><table class="v5-tab"><thead><tr><th>Produtivo</th><th>Estação</th><th>Loja</th><th>Qtd</th><th>Motivo(s)</th><th>Quem · quando</th></tr></thead><tbody>${lin}</tbody></table></div>`;
+}
+const _spdRenderOpp = spdRender;
+spdRender = function(){
+  _spdRenderOpp.apply(this, arguments);
+  try{
+    const tb = document.getElementById('spd-resumo'); if(!tb) return;
+    const wrap = tb.closest('.table-scroll') || tb.parentNode;
+    let box = document.getElementById('spd-opp-det');
+    if(!box){ box = document.createElement('div'); box.id = 'spd-opp-det'; wrap.insertAdjacentElement('afterend', box); }
+    box.innerHTML = oppDetalheHtml();
+  }catch(e){}
+};
+const _sepProdPag = sepProdPaginaHtml;
+sepProdPaginaHtml = function(){
+  const h = _sepProdPag.apply(this, arguments), d = oppDetalheHtml();
+  return d ? h.replace(/<\/div>\s*$/, '<div class="spp-opp">' + d + '</div></div>') : h;
+};
 </script>
 
 <script type="module" id="v5-patch-fb">

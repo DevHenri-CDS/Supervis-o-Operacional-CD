@@ -2086,8 +2086,9 @@
 <!-- ===================== USUÁRIOS ONLINE (visualizador flutuante, só Administrador) ===================== -->
 <div id="users-float" class="no-print" data-ro-ok>
   <div class="uf-box">
-    <div class="uf-head"><span>USUÁRIOS</span><label><input type="checkbox" id="uf-todos" onchange="renderUsuarios()"> mostrar offline</label></div>
+    <div class="uf-head"><span class="uf-tabs"><button type="button" class="uf-tab on" id="uf-tab-on" onclick="ufTab('on')">Online</button><button type="button" class="uf-tab" id="uf-tab-cad" onclick="ufTab('cad')">Cadastrados</button></span><label id="uf-todos-l"><input type="checkbox" id="uf-todos" onchange="renderUsuarios()"> mostrar offline</label></div>
     <div class="uf-list" id="uf-list"></div>
+    <div id="uf-cad"></div>
   </div>
   <button type="button" class="uf-pill" onclick="toggleUsersFloat()" title="Quem está online agora"><span class="uf-dot off" id="uf-dot"></span><span><b id="uf-count">0</b> online</span></button>
 </div>
@@ -2386,6 +2387,9 @@ async function doLogin(){
   setLoginLockState({ tentativas:0, bloqueadoAte:0 });
 
   errBox.textContent = 'Verificando acesso…';
+  const cadChk = await cadVerificar(nome, role);
+  if(!cadChk.ok){ errBox.textContent = cadChk.motivo; return; }
+  if(cadChk.turno) turnoLogin = cadChk.turno;
   const check = await checkAndRegisterUser(nome, celular, role, turnoLogin);
   if(!check.ok){
     errBox.textContent = check.motivo || 'Acesso bloqueado.';
@@ -7882,13 +7886,13 @@ function sepProdPaginaHtml(){
   const d = new Date();
   const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   const por = currentUser ? ' por ' + sepEsc(currentUser.nome) : '';
-  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCont(r.nome).n}</td></tr>`).join('');
+  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td></tr>`).join('');
   return `<div class="spp"><div class="spp-title">PRODUTIVIDADE DIA — CD SECOS</div>
     <div class="spp-sub">${fmtDia(spdDia)} · impresso às ${hora}${por}</div>`
     + (lista.length
-      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th><th>Oportunid.</th></tr></thead>
+      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th></tr></thead>
          <tbody>${corpo}</tbody>
-         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td><td class="n">${oppTotalDia()}</td></tr></tfoot></table>`
+         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td></tr></tfoot></table>`
       : `<div class="spp-vazio">Nenhum volume contabilizado neste dia.</div>`)
     + `</div>`;
 }
@@ -7927,7 +7931,7 @@ function imprimirSepProdAntigo(){
 const _dockItensOrig = dockItens;
 dockItens = function(){
   const it = _dockItensOrig();
-  if(abaAtual === 'sep'){ it.push({ l:'Produtividade', t:'panel-sep-prod' }); it.push({ l:'Base', t:'panel-sep-base' }); }
+  if(abaAtual === 'sep'){ it.push({ l:'Produtividade', t:'panel-sep-prod' }); }
   return it;
 };
 
@@ -7940,309 +7944,7 @@ setInterval(() => {
   }
 }, 60000);
 
-/* monta o painel novo logo abaixo da folha de separação */
-(function(){
-  const ref = document.getElementById('panel-sep-folha');
-  if(ref && !document.getElementById('panel-sep-prod')){
-    ref.insertAdjacentHTML('afterend', `
-    <section class="panel" id="panel-sep-prod">
-      <div class="panel-header">
-        <div class="title-block"><h2>PRODUTIVIDADE DIA</h2><span class="sub" id="spd-sub"></span></div>
-        <div class="stat-row">
-          <div class="stat"><div class="n" id="st-spd-vol">0</div><div class="l">Volume do dia</div></div>
-          <div class="stat"><div class="n" id="st-spd-prod">0</div><div class="l">Produtivos</div></div>
-        </div>
-      </div>
-      <div class="spd-body">
-        <div class="spd-bar no-print">
-          <label data-ro-ok>Dia <input type="date" id="spd-dia" onchange="spdMudarDia(this.value)"></label>
-          <button class="btn btn-ghost btn-sm spd-edit" onclick="spdRecalcularDia()" title="Apaga os registros de hoje e refaz só pela programação atual">↻ Recalcular o dia</button>
-          <label data-ro-ok><input type="checkbox" id="spd-zero" onchange="spdSetZero(this.checked)"> Mostrar cadastrados sem volume</label>
-          <button class="btn btn-primary" style="width:auto;" onclick="imprimirSepProd()">🖨 Imprimir frente e verso</button>
-        </div>
-        <div class="sep-aviso no-print spd-edit" id="spd-legacy" style="margin:0;"></div>
-        <h3 class="label-font spd-h3">Volume feito por produtivo</h3>
-        <div class="spd-chart" id="spd-chart"></div>
-        <h3 class="label-font spd-h3">Resumo</h3>
-        <div class="table-scroll"><table class="spd-tab" id="spd-resumo"></table></div>
-        <span class="hint" style="margin:0;">O volume vem da programação atual (soma das lojas de cada estação, montado + agrupado) e é somado pelo produtivo escolhido na estação (cadastro na guia Separação, bloco 2). Cada carga é contabilizada uma vez: se a programação mudar, o volume dela é recalculado, sem somar em duplicidade. Compartilhado ao vivo.</span>
-      </div>
-    </section>`);
-  }
-  if(!document.getElementById('sepprod-print-area')){
-    const d = document.createElement('div'); d.id = 'sepprod-print-area'; document.body.appendChild(d);
-  }
-  spdRender();
-})();
-
-/* =====================================================================
-   BASE — cargas no piso / distribuídas, vindas do Relatório
-   • a cada relatório colado (guia Relatório), as linhas das cargas que estão no PISO ou na DISTRIBUIÇÃO
-     são gravadas aqui; cargas de colagens anteriores continuam (a carga que vem de novo é atualizada)
-   • zera na virada do dia (06:00), no mesmo momento em que a distribuição é salva em Fechamentos
-   ===================================================================== */
-let baseRows = [];        // linhas acumuladas do dia
-let baseDia = '';         // dia operacional a que a Base pertence
-let baseVer = 0;          // muda a cada alteração (evita redesenhar à toa)
-let baseChave = '';
-function baseOrigemTxt(o){ return o === 'ambas' ? 'PISO + DIST.' : (o === 'distribuida' ? 'DISTRIBUÍDA' : 'PISO'); }
-function baseOrigemCls(o){ return o === 'ambas' ? 'amb' : (o === 'distribuida' ? 'dist' : 'piso'); }
-
-function baseCapturar(rows){
-  const hoje = diaOperacional();
-  let resetou = false;
-  if(baseDia !== hoje){ baseRows = []; baseDia = hoje; resetou = true; }   // base de outro dia: recomeça do zero
-  const noPiso = new Set((pisoData || []).map(r => sepNorm(r.carga)).filter(Boolean));
-  const naDist = new Set((distData || []).map(r => sepNorm(r.carga)).filter(Boolean));
-  const agora = new Date().toLocaleString('pt-BR');
-  const por = currentUser ? currentUser.nome : '';
-  const jaSalvas = new Set(baseRows.map(r => sepNorm(r.carga)));
-  const porCarga = {};
-  rows.forEach(r => { const k = sepNorm(r.carga); if(k) (porCarga[k] = porCarga[k] || []).push(r); });
-  const add = []; let novas = 0, jaTinha = 0, aguardando = 0;
-  Object.keys(porCarga).forEach(k => {
-    const p = noPiso.has(k), d = naDist.has(k);
-    if(!p && !d) return;                                   // só cargas que estão no piso ou na distribuição
-    if(jaSalvas.has(k)){ jaTinha++; return; }              // já salva como montada: nunca é substituída
-    const linhas = porCarga[k];
-    const st = r => String(r.status || '').toUpperCase();
-    if(linhas.some(r => st(r).includes('AGRUPAD'))){ aguardando++; return; }   // tem item agrupado: espera ficar 100% montada
-    if(!linhas.some(r => st(r).includes('MONTAD'))) return;
-    const o = (p && d) ? 'ambas' : (d ? 'distribuida' : 'piso');
-    linhas.forEach(r => { const l = Object.assign({}, r, { origem:o, captadoEm:agora, captadoPor:por }); delete l.aging; add.push(l); });
-    novas++;
-  });
-  if(add.length){ baseRows = baseRows.concat(add); }
-  if(add.length || resetou){ baseVer++; if(window.baseSalvar) window.baseSalvar(baseRows, baseDia); }
-  baseRender(true);
-  const tot = new Set(baseRows.map(r => sepNorm(r.carga))).size;
-  const partes = [novas + ' carga(s) montada(s) salva(s)'];
-  if(jaTinha) partes.push(jaTinha + ' já estavam salvas');
-  if(aguardando) partes.push(aguardando + ' com item agrupado (aguardam ficar 100% montadas)');
-  showToast((novas ? '✔ Base: ' : 'Base: ') + partes.join(' · ') + ' · total na Base: ' + tot, !novas && !jaTinha && !aguardando);
-}
-
-function baseFiltradas(){
-  const q = (document.getElementById('base-busca') || {}).value || '';
-  const org = (document.getElementById('base-origem') || {}).value || '';
-  const sts = (document.getElementById('base-status') || {}).value || '';
-  const cross = !document.getElementById('base-cross') || document.getElementById('base-cross').checked;
-  const termo = normalizeHeader(q);
-  const noPiso = new Set((pisoData || []).map(r => sepNorm(r.carga)));
-  const naDist = new Set((distData || []).map(r => sepNorm(r.carga)));
-  baseRows.forEach(r => { const k = sepNorm(r.carga); const p = noPiso.has(k), d = naDist.has(k); if(p || d) r.origem = (p && d) ? 'ambas' : (d ? 'distribuida' : 'piso'); });
-  return baseRows.filter(r => {
-    if(cross && !ehCrossDocking(r)) return false;
-    if(org && !(r.origem === org || (r.origem === 'ambas' && (org === 'piso' || org === 'distribuida')))) return false;
-    if(sts && !String(r.status || '').toUpperCase().includes(sts)) return false;
-    if(termo){
-      const txt = normalizeHeader([r.carga, r.fornecedor, r.destino, r.cod, r.descricao, r.master, r.agrupadora].join(' '));
-      if(!txt.includes(termo)) return false;
-    }
-    return true;
-  });
-}
-
-function baseRender(force){
-  const panel = document.getElementById('panel-sep-base');
-  if(!panel || !currentUser) return;
-  const chave = baseVer + '|' + ['base-busca','base-origem','base-status'].map(i => (document.getElementById(i) || {}).value).join('|') + '|' + ((document.getElementById('base-cross') || {}).checked);
-  if(!force && chave === baseChave) return;
-  baseChave = chave;
-
-  const rows = baseFiltradas();
-  const porCarga = new Map();
-  rows.forEach(r => {
-    const k = sepNorm(r.carga);
-    const o = porCarga.get(k) || { carga:k, fornecedor:'', origem:r.origem, recebimento:'', lojas:new Set(), itens:new Set(), vol:0, quando:'' };
-    if(!o.fornecedor && r.fornecedor) o.fornecedor = r.fornecedor;
-    if(!o.recebimento && r.recebimento) o.recebimento = r.recebimento;
-    o.lojas.add(sepKey(r.destino)); o.itens.add(String(r.cod || r.descricao || '').trim());
-    o.vol += Number(r.qtd) || 0; o.quando = r.captadoEm || o.quando;
-    porCarga.set(k, o);
-  });
-  const lista = Array.from(porCarga.values()).sort((a, b) => cmpNat(a.fornecedor, b.fornecedor) || cmpNat(a.carga, b.carga));
-  const totVol = lista.reduce((s, c) => s + c.vol, 0);
-  const totItens = lista.reduce((s, c) => s + c.itens.size, 0);
-
-  document.getElementById('st-base-cargas').textContent = lista.length;
-  document.getElementById('st-base-vol').textContent = fmtInt(totVol);
-  document.getElementById('st-base-itens').textContent = fmtInt(totItens);
-  document.getElementById('base-sub').textContent = (baseDia ? fmtDia(baseDia) : 'sem dados') + ' · só cargas 100% montadas · salva uma vez, sem substituir · zera na virada do dia (06:00)';
-  /* cargas no piso/distribuição que ainda têm item agrupado e por isso ainda não entraram */
-  const salvas = new Set(baseRows.map(r => sepNorm(r.carga)));
-  const noP = new Set((pisoData || []).concat(distData || []).map(r => sepNorm(r.carga)));
-  const aguard = new Set();
-  crossRawData.forEach(r => { const k = sepNorm(r.carga); if(k && noP.has(k) && !salvas.has(k) && String(r.status || '').toUpperCase().includes('AGRUPAD')) aguard.add(k); });
-  document.getElementById('base-pend').textContent = aguard.size ? 'Aguardando ficar 100% montada (têm item agrupado): ' + Array.from(aguard).sort(cmpNat).join(', ') : '';
-
-  document.getElementById('base-resumo').innerHTML = lista.length
-    ? `<thead><tr><th>Carga</th><th>Fornecedor</th><th>Origem</th><th>Recebimento</th><th class="c">Lojas</th><th class="c">Itens</th><th class="c">Volume</th><th>Salva em</th></tr></thead>
-       <tbody>${lista.map(c => `<tr data-c="${sepEsc(c.carga)}" onclick="baseFiltrarCarga(this.dataset.c)" title="Clique para ver as linhas desta carga"><td><b>${sepEsc(c.carga)}</b></td><td>${sepEsc(c.fornecedor)}</td><td><span class="base-tag ${baseOrigemCls(c.origem)}">${baseOrigemTxt(c.origem)}</span></td><td>${sepEsc(c.recebimento)}</td><td class="n">${c.lojas.size}</td><td class="n">${c.itens.size}</td><td class="n">${fmtInt(c.vol)}</td><td>${sepEsc(c.quando)}</td></tr>`).join('')}</tbody>
-       <tfoot><tr><td colspan="5">TOTAL</td><td class="n">${fmtInt(totItens)}</td><td class="n">${fmtInt(totVol)}</td><td></td></tr></tfoot>`
-    : '<tbody><tr><td><div class="sep-vazio">A Base está vazia. Cole um relatório na guia Relatório: as cargas que estiverem no piso ou na distribuição são gravadas aqui.</div></td></tr></tbody>';
-
-  const LIM = 1500, vis = rows.slice().sort((a, b) => cmpNat(sepNorm(a.carga), sepNorm(b.carga)) || sepCmpLoja(sepKey(a.destino), sepKey(b.destino)) || cmpNat(a.cod, b.cod)).slice(0, LIM);
-  document.getElementById('base-detalhe').innerHTML = rows.length
-    ? `<thead><tr><th>Carga</th><th>Fornecedor</th><th>Origem</th><th>Destino</th><th>Cód</th><th>Descrição</th><th>Emb.</th><th class="c">Qtd</th><th>Status</th><th>Pedido</th></tr></thead>
-       <tbody>${vis.map(r => `<tr><td>${sepEsc(r.carga)}</td><td>${sepEsc(r.fornecedor)}</td><td><span class="base-tag ${baseOrigemCls(r.origem)}">${baseOrigemTxt(r.origem)}</span></td><td>${sepEsc(r.destino)}</td><td>${sepEsc(r.cod)}</td><td>${sepEsc(r.descricao)}</td><td>${sepEsc(r.embalagem)}</td><td class="n">${fmtInt(Number(r.qtd) || 0)}</td><td>${sepEsc(r.status)}</td><td>${sepEsc(r.pedido)}</td></tr>`).join('')}</tbody>`
-    : '';
-  document.getElementById('base-hint').textContent = rows.length > LIM ? `Mostrando as primeiras ${fmtInt(LIM)} de ${fmtInt(rows.length)} linhas — use a busca para filtrar (o botão Copiar leva todas).` : '';
-}
-function baseFiltrarCarga(c){
-  const b = document.getElementById('base-busca'); if(!b) return;
-  b.value = c; baseRender(true);
-  const d = document.getElementById('base-detalhe'); if(d) d.scrollIntoView({ behavior:'smooth', block:'start' });
-}
-function baseCopiar(){
-  const rows = baseFiltradas();
-  if(!rows.length){ showToast('A Base está vazia (ou o filtro não achou nada).', true); return; }
-  const cab = ['Carga','Fornecedor','Origem','Destino','Cód','Descrição','Embalagem','Qtd','Status','Pedido','Master','Agrupadora','Recebimento'];
-  const lin = rows.map(r => [r.carga, r.fornecedor, baseOrigemTxt(r.origem), r.destino, r.cod, r.descricao, r.embalagem, r.qtd, r.status, r.pedido, r.master, r.agrupadora, r.recebimento].map(v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ')).join('\t'));
-  const txt = [cab.join('\t')].concat(lin).join('\n');
-  (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(txt) : Promise.reject()).then(
-    () => showToast('✔ ' + rows.length + ' linha(s) da Base copiadas — cole no Excel.', false),
-    () => showToast('Não consegui copiar. Tente de novo.', true));
-}
-
-/* =====================================================================
-   JANELA FLUTUANTE — seleção das cargas do piso para a programação
-   ===================================================================== */
-let sepFloatAberto = true, sepFloatMin = false, sepFloatLista = false, sepFloatPos = null;
-try{ const _s = JSON.parse(localStorage.getItem('sepFloat') || 'null'); if(_s){ sepFloatAberto = true; sepFloatMin = !!_s.min; sepFloatLista = !!_s.lista; sepFloatPos = _s.pos || null; } }catch(e){}
-function sepFloatSalvar(){ try{ localStorage.setItem('sepFloat', JSON.stringify({ open:sepFloatAberto, min:sepFloatMin, lista:sepFloatLista, pos:sepFloatPos })); }catch(e){} }
-function sepFloatToggle(on){ sepFloatAberto = (on == null) ? !sepFloatAberto : !!on; if(sepFloatAberto) sepFloatMin = false; sepFloatSalvar(); sepFloatRender(); }
-function sepFloatMinimizar(){ sepFloatMin = !sepFloatMin; sepFloatSalvar(); sepFloatRender(); }
-function sepFloatTogLista(){ sepFloatLista = !sepFloatLista; sepFloatSalvar(); sepFloatRender(); if(sepFloatLista){ const b = document.getElementById('sep-fl-busca'); if(b) b.focus(); } }
-function sepPisoCargas(){
-  /* cargas no piso + cargas já distribuídas (a carga que está nos dois aparece uma vez) */
-  const m = new Map();
-  (pisoData || []).forEach(r => { const k = sepNorm(r.carga); if(k && !m.has(k)) m.set(k, { carga:k, fornecedor:String(r.fornecedor || ''), volume:Number(r.volume) || 0, dist:false }); });
-  (distData || []).forEach(r => {
-    const k = sepNorm(r.carga); if(!k) return;
-    if(m.has(k)){ m.get(k).dist = true; return; }
-    m.set(k, { carga:k, fornecedor:String(r.descricao || r.fornecedor || ''), volume:Number(r.volume) || 0, dist:true });
-  });
-  return Array.from(m.values()).sort((a, b) => cmpNat(a.fornecedor, b.fornecedor) || cmpNat(a.carga, b.carga));
-}
-function sepFloatTodas(){
-  const set = new Set((sepData.cargas || []).map(sepNorm));
-  sepPisoCargas().forEach(c => set.add(c.carga));
-  sepData.cargas = Array.from(set).sort(cmpNat);
-  sepCommit();
-}
-function sepFloatRender(){
-  const el = document.getElementById('sep-float'); if(!el) return;
-  const ok = sepFloatAberto && !!currentUser && sepPode() && !somenteLeitura();
-  el.style.display = ok ? 'flex' : 'none';
-  if(!ok) return;
-  el.classList.toggle('min', sepFloatMin);
-  if(sepFloatPos){
-    const x = Math.max(0, Math.min(innerWidth - 80, sepFloatPos.x)), y = Math.max(0, Math.min(innerHeight - 40, sepFloatPos.y));
-    el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.right = 'auto';
-  }
-  const st = sepCalc();
-  document.getElementById('sep-fl-resumo').textContent = st.encontradas.length + ' carga(s) · ' + fmtInt(st.totVol) + ' vol';
-  document.getElementById('sep-fl-min').textContent = sepFloatMin ? '▢' : '—';
-  if(sepFloatMin) return;
-
-  const sel = new Set((sepData.cargas || []).map(sepNorm));
-  const disp = {}; sepCargasDisp().forEach(c => { disp[c.carga] = c; });
-  const piso = sepPisoCargas();
-  const pisoMap = {}; piso.forEach(c => { pisoMap[c.carga] = c; });
-  document.getElementById('sep-fl-trig-t').textContent = 'Cargas no piso e distribuídas (' + piso.length + ')';
-  document.getElementById('sep-fl-trig-s').textContent = sepFloatLista ? '▴' : '▾';
-  document.getElementById('sep-fl-drop').classList.toggle('on', sepFloatLista);
-
-  if(sepFloatLista){
-    const termo = normalizeHeader((document.getElementById('sep-fl-busca') || {}).value || '');
-    const vis = piso.filter(c => !termo || normalizeHeader(c.carga + ' ' + c.fornecedor).includes(termo));
-    const box = document.getElementById('sep-fl-lista'); const topo = box.scrollTop;
-    box.innerHTML = vis.length ? vis.map(c => {
-      const d = disp[c.carga], on = sel.has(c.carga);
-      return `<label class="sepfl-it ${on ? 'on' : ''}"><input type="checkbox" data-c="${sepEsc(c.carga)}" ${on ? 'checked' : ''} onchange="sepToggleCarga(this.dataset.c, this.checked)"><b>${sepEsc(c.carga)}</b><span class="f" title="${sepEsc(c.fornecedor)}">${c.dist ? '<u class="tg">DIST.</u>' : ''}${sepEsc(c.fornecedor || 'Sem fornecedor')}</span><span class="v">${fmtInt(d ? d.volume : c.volume)}</span>${d ? '' : '<i class="sd">sem dados no relatório/Base</i>'}</label>`;
-    }).join('') : '<div class="sep-vazio" style="padding:10px;">' + (piso.length ? 'Nenhuma carga encontrada.' : 'Não há cargas no piso nem distribuídas.') + '</div>';
-    box.scrollTop = topo;
-  }
-  const lista = Array.from(sel).sort(cmpNat);
-  document.getElementById('sep-fl-sel').innerHTML = lista.length ? lista.map(c => {
-    const f = (disp[c] && disp[c].fornecedor) || (pisoMap[c] && pisoMap[c].fornecedor) || '';
-    return `<div class="sepfl-chip"><b>${sepEsc(c)}</b><span title="${sepEsc(f)}">${sepEsc(f || '—')}</span><button type="button" data-c="${sepEsc(c)}" onclick="sepRemCarga(this.dataset.c)" title="Remover">✕</button></div>`;
-  }).join('') : '<div class="sep-vazio">Nenhuma carga selecionada na programação.</div>';
-}
-(function(){
-  const tab = document.getElementById('tab-sep');
-  if(tab && !document.getElementById('sep-float')){
-    tab.insertAdjacentHTML('beforeend', `
-    <div id="sep-float" class="no-print" role="dialog" aria-label="Seleção de cargas do piso">
-      <div class="sepfl-h" id="sep-fl-h"><div>CARGAS DO PISO / DISTRIBUÍDAS<br><small id="sep-fl-resumo"></small></div>
-        <div class="bt"><button type="button" id="sep-fl-min" onclick="sepFloatMinimizar()" title="Minimizar">—</button><button type="button" onclick="sepFloatToggle(false)" title="Fechar">✕</button></div></div>
-      <div class="sepfl-b">
-        <button type="button" class="sepfl-trig" onclick="sepFloatTogLista()"><span id="sep-fl-trig-t">Cargas no piso e distribuídas</span><span id="sep-fl-trig-s">▾</span></button>
-        <div class="sepfl-drop" id="sep-fl-drop">
-          <input type="search" id="sep-fl-busca" placeholder="Buscar carga ou fornecedor" autocomplete="off" oninput="sepFloatRender()">
-          <div id="sep-fl-lista"></div>
-        </div>
-        <div class="sepfl-act">
-          <button type="button" class="btn btn-ghost btn-sm" onclick="sepFloatTodas()">Todas</button>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="sepLimparCargas()">Limpar</button>
-        </div>
-        <div class="sepfl-chips" id="sep-fl-sel"></div>
-      </div>
-    </div>`);
-    const el = document.getElementById('sep-float'), h = document.getElementById('sep-fl-h');
-    h.addEventListener('pointerdown', e => {
-      if(e.target.closest('button')) return;
-      const r = el.getBoundingClientRect(), dx = e.clientX - r.left, dy = e.clientY - r.top;
-      try{ h.setPointerCapture(e.pointerId); }catch(_){}
-      const mv = ev => {
-        const x = Math.max(0, Math.min(innerWidth - 80, ev.clientX - dx)), y = Math.max(0, Math.min(innerHeight - 40, ev.clientY - dy));
-        el.style.left = x + 'px'; el.style.top = y + 'px'; el.style.right = 'auto'; sepFloatPos = { x, y };
-      };
-      const up = () => { h.removeEventListener('pointermove', mv); h.removeEventListener('pointerup', up); sepFloatSalvar(); };
-      h.addEventListener('pointermove', mv); h.addEventListener('pointerup', up);
-    });
-  }
-  sepFloatRender();
-})();
-/* mantém a Base e a janela flutuante atualizadas quando a Separação redesenha */
-const _renderSepBase = renderSep;
-renderSep = function(soft){ _renderSepBase(soft); try{ baseRender(); }catch(e){} try{ sepFloatRender(); }catch(e){} };
-
-/* monta o painel novo logo abaixo da folha de separação */
-(function(){
-  const refB = document.getElementById('panel-sep-prod') || document.getElementById('panel-sep-folha');
-  if(refB && !document.getElementById('panel-sep-base')){
-    refB.insertAdjacentHTML('afterend', `
-    <section class="panel" id="panel-sep-base">
-      <div class="panel-header">
-        <div class="title-block"><h2>BASE — CARGAS NO PISO / DISTRIBUÍDAS</h2><span class="sub" id="base-sub"></span></div>
-        <div class="stat-row">
-          <div class="stat"><div class="n" id="st-base-cargas">0</div><div class="l">Cargas</div></div>
-          <div class="stat"><div class="n" id="st-base-vol">0</div><div class="l">Volume</div></div>
-          <div class="stat"><div class="n" id="st-base-itens">0</div><div class="l">Itens</div></div>
-        </div>
-      </div>
-      <div class="spd-body">
-        <div class="spd-bar no-print" data-ro-ok>
-          <input type="search" id="base-busca" class="base-busca" placeholder="Buscar carga, fornecedor, loja, código ou descrição" autocomplete="off" oninput="baseRender()">
-          <select id="base-origem" class="base-sel" onchange="baseRender()"><option value="">Origem: todas</option><option value="piso">No piso</option><option value="distribuida">Distribuída</option></select>
-          <select id="base-status" class="base-sel" onchange="baseRender()"><option value="">Status: todos</option><option value="MONTAD">Montada</option><option value="AGRUPAD">Agrupada</option></select>
-          <label><input type="checkbox" id="base-cross" checked onchange="baseRender()"> Só Cross-Docking</label>
-          <button class="btn btn-ghost btn-sm" onclick="baseCopiar()">Copiar tabela</button>
-        </div>
-        <h3 class="label-font spd-h3">Resumo por carga</h3>
-        <div class="table-scroll"><table class="spd-tab" id="base-resumo"></table></div>
-        <h3 class="label-font spd-h3">Linhas do relatório</h3>
-        <div class="table-scroll"><table class="spd-tab" id="base-detalhe"></table></div>
-        <span class="hint" id="base-hint" style="margin:0;"></span>
-        <span class="hint" id="base-pend" style="margin:0; color:var(--warn-text);"></span>
-        <span class="hint" style="margin:0;">A cada relatório colado, a carga que está no piso ou na distribuição e não tem nenhum item agrupado é salva aqui com todas as informações dela montada. Depois de salva, não é mais substituída por novos relatórios. Cargas com item agrupado entram quando ficarem 100% montadas. A Base zera na virada do dia (06:00), quando a distribuição é salva em Fechamentos. A Auditoria usa esta Base.</span>
-      </div>
-    </section>`);
-  }
-  baseRender(true);
-})();
+/* painel BASE removido da guia Separação (a captação interna das cargas continua) */
 </script>
 
 <script type="module" id="sep-patch-fb">
@@ -8883,11 +8585,7 @@ spdRender = function(){
     box.innerHTML = oppDetalheHtml();
   }catch(e){}
 };
-const _sepProdPag = sepProdPaginaHtml;
-sepProdPaginaHtml = function(){
-  const h = _sepProdPag.apply(this, arguments), d = oppDetalheHtml();
-  return d ? h.replace(/<\/div>\s*$/, '<div class="spp-opp">' + d + '</div></div>') : h;
-};
+/* Oportunidades não saem mais na impressão da programação (frente e verso) */
 </script>
 
 <script type="module" id="v5-patch-fb">
@@ -8930,6 +8628,143 @@ sepProdPaginaHtml = function(){
   window.spdOuvir = function(dia){ if(spdOuvirOrig) spdOuvirOrig(dia); ouvirSpd(dia); };
   ouvirHoje(); ouvirSpd(spdDia);
   setInterval(() => { if(diaOperacional() !== oppDiaHoje){ ouvirHoje(); ouvirSpd(spdDia); oppAposMudar(); } }, 30000);
+</script>
+
+<!-- PATCH v6 — cadastro de conferentes · aba Cadastrados · travas por turno · oportunidades fora da impressão da programação -->
+<style id="v6-patch-css">
+/* oportunidades: não saem na impressão da programação */
+.sep-paper .sep-tab th.op, .sep-paper .sep-tab td.op, .sep-paper .op-vazio{ display:none !important; }
+.sep-paper .sep-tab.tem-op td.pr, .sep-paper .sep-tab.tem-op th.pr{ width:36%; }
+@media print{ .sep-tab th.op, .sep-tab td.op, .opp-btn{ display:none !important; } .sep-tab.tem-op td.pr, .sep-tab.tem-op th.pr{ width:36%; } }
+/* caixa de usuários com abas */
+.uf-tabs{ display:flex; gap:4px; }
+.uf-tab{ cursor:pointer; background:transparent; border:1px solid var(--line); color:var(--text-dim); border-radius:3px; padding:3px 9px; font-family:'Oswald',sans-serif; font-size:.74rem; letter-spacing:.03em; }
+.uf-tab.on{ background:var(--band-strong); color:#120a02; border-color:var(--band-strong); }
+.uf-box.wide{ width:420px; max-height:min(70vh,520px); }
+#uf-cad{ display:none; overflow-y:auto; padding:8px 10px; font-size:.76rem; }
+.uf-cad-t{ font-family:'Oswald',sans-serif; color:var(--band); font-size:.82rem; margin-bottom:6px; }
+.uf-cad-f{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-bottom:8px; }
+.uf-cad-f input, .uf-cad-f select, .uf-cad-r select{ background:var(--input-bg); border:1px solid var(--line); color:var(--text); border-radius:3px; padding:5px 6px; font-size:.76rem; min-width:0; }
+.uf-cad-f input{ grid-column:1 / -1; }
+.uf-cad-f button{ grid-column:1 / -1; }
+.uf-cad-r{ display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px solid #1a120a; }
+.uf-cad-r .nm{ flex:1; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.uf-cad-r .fn{ font-size:.66rem; color:var(--text-dim); }
+.turno-trava{ opacity:.55; }
+</style>
+
+<script id="v6-patch-js">
+/* ===== cadastro de usuários (feito pelo Administrador) ===== */
+let cadLista = [], cadPronto = false, ufAba = 'on';
+const CAD_FUNCOES = [['conferente','Conferente'],['encarregado','Encarregado'],['supervisor','Supervisor'],['operador','Operador']];
+function cadAcha(nome){ const id = slugifyName(nome || ''); return cadLista.find(x => x.id === id) || null; }
+async function cadVerificar(nome, role){
+  if(role === 'tv' || role === 'admin') return { ok: true };           // TV e Administrador não dependem de cadastro
+  let lista = cadLista;
+  if(window.cadLer){ try{ lista = await window.cadLer(); }catch(e){ if(!cadPronto && role === 'conferente') return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' }; } }
+  else if(role === 'conferente' && !cadPronto) return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' };
+  const c = lista.find(x => x.id === slugifyName(nome));
+  if(role === 'conferente' && (!c || c.funcao !== 'conferente')) return { ok: false, motivo: 'Conferente só entra com cadastro feito pelo Administrador.' };
+  return { ok: true, turno: c ? c.turno : '' };
+}
+function cadAposMudar(){
+  try{
+    if(currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv'){
+      const c = cadAcha(currentUser.nome);
+      if(currentUser.role === 'conferente' && cadPronto && (!c || c.funcao !== 'conferente')){ forceLogout('Seu cadastro de conferente foi removido pelo Administrador.'); return; }
+      if(c && c.turno && c.turno !== currentUser.turno){ currentUser.turno = c.turno; turnoAtivo = c.turno; distTabAtiva = c.turno; aplicarSomenteLeitura(); renderAll(); }
+    }
+    if(ufAba === 'cad') cadRender();
+  }catch(e){}
+}
+function ufTab(a){
+  ufAba = a;
+  const box = document.querySelector('#users-float .uf-box'); if(!box) return;
+  box.classList.toggle('wide', a === 'cad');
+  document.getElementById('uf-tab-on').classList.toggle('on', a === 'on');
+  document.getElementById('uf-tab-cad').classList.toggle('on', a === 'cad');
+  document.getElementById('uf-list').style.display = a === 'on' ? '' : 'none';
+  document.getElementById('uf-todos-l').style.display = a === 'on' ? '' : 'none';
+  document.getElementById('uf-cad').style.display = a === 'cad' ? 'block' : 'none';
+  if(a === 'cad') cadRender(); else renderUsuarios();
+}
+function cadRender(){
+  const box = document.getElementById('uf-cad'); if(!box || !souAdmin()) return;
+  const foco = document.activeElement && box.contains(document.activeElement) ? document.activeElement.id : '';
+  const v = ['cad-nome','cad-turno','cad-func'].map(id => (document.getElementById(id) || {}).value);
+  const fOpts = CAD_FUNCOES.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  const lista = cadLista.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+  box.innerHTML = `<div class="uf-cad-t">CONFERENTE(S) · CADASTRADOS</div>
+    <div class="uf-cad-f">
+      <input type="text" id="cad-nome" placeholder="Nome do usuário" maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); cadAdd(); }">
+      <select id="cad-turno"><option>T1</option><option>T2</option><option>T3</option></select>
+      <select id="cad-func">${fOpts}</select>
+      <button type="button" class="btn btn-primary btn-sm" onclick="cadAdd()">＋ Cadastrar</button>
+    </div>
+    ${lista.length ? lista.map(c => `<div class="uf-cad-r"><div class="nm" title="${escapeHtml(c.nome)}">${escapeHtml(c.nome)}<div class="fn">${escapeHtml(ROLE_LABELS[c.funcao] || c.funcao)}</div></div>
+      <select data-id="${escapeHtml(c.id)}" onchange="cadSetTurno(this.dataset.id, this.value)">${['T1','T2','T3'].map(t => `<option ${t === c.turno ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      <div class="uf-act"><button class="bad" data-id="${escapeHtml(c.id)}" title="Remover cadastro" onclick="cadRem(this.dataset.id)">✕</button></div></div>`).join('') : '<div class="uf-vazio">Nenhum usuário cadastrado.</div>'}`;
+  if(v[0] != null){ document.getElementById('cad-nome').value = v[0]; if(v[1]) document.getElementById('cad-turno').value = v[1]; if(v[2]) document.getElementById('cad-func').value = v[2]; }
+  if(foco){ const el = document.getElementById(foco); if(el) el.focus(); }
+}
+function cadGravar(lista){ cadLista = lista; if(window.cadSalvar) window.cadSalvar(lista); cadRender(); }
+function cadAdd(){
+  if(!souAdmin()) return;
+  const nome = String(document.getElementById('cad-nome').value || '').trim().replace(/\s+/g, ' ');
+  if(!nome){ showToast('Digite o nome do usuário.', true); return; }
+  const id = slugifyName(nome); if(!id){ showToast('Nome inválido.', true); return; }
+  const rec = { id, nome, turno: document.getElementById('cad-turno').value, funcao: document.getElementById('cad-func').value };
+  cadGravar(cadLista.filter(x => x.id !== id).concat([rec]));
+  document.getElementById('cad-nome').value = '';
+}
+function cadSetTurno(id, t){ if(!souAdmin()) return; cadGravar(cadLista.map(x => x.id === id ? Object.assign({}, x, { turno: t }) : x)); }
+function cadRem(id){ if(!souAdmin() || !confirm('Remover este cadastro? Se for conferente, ele deixa de conseguir entrar.')) return; cadGravar(cadLista.filter(x => x.id !== id)); }
+const _renderUsuariosV6 = renderUsuarios;
+renderUsuarios = function(){ _renderUsuariosV6.apply(this, arguments); try{ if(ufAba === 'cad') cadRender(); }catch(e){} };
+
+/* ===== travas por turno: quem não é Administrador só altera informações do próprio turno ===== */
+function podeTurno(t){
+  if(!currentUser) return false;
+  if(currentUser.role === 'admin') return true;
+  if(!t || currentUser.role === 'tv') return false;
+  return currentUser.turno === t;
+}
+function avisoTurno(t){ showToast('🔒 Você é do ' + (currentUser ? currentUser.turno : '') + ' — não pode alterar informações do ' + t + '.', true); }
+(function(){
+  const guardaLinha = nome => { const o = window[nome]; if(typeof o !== 'function') return; window[nome] = function(i){ const r = distData[i]; const t = r ? turnoDaCarga(r) : turnoAtivo; if(!podeTurno(t)){ avisoTurno(t); return; } return o.apply(this, arguments); }; };
+  ['updateDist','removeDistRow','devolverAoPiso'].forEach(guardaLinha);
+  const guardaTurnoArg = nome => { const o = window[nome]; window[nome] = function(t){ if(!podeTurno(t)){ avisoTurno(t); return; } return o.apply(this, arguments); }; };
+  guardaTurnoArg('updateExtra');
+  const guardaAtivo = nome => { const o = window[nome]; window[nome] = function(){ if(!podeTurno(turnoAtivo)){ avisoTurno(turnoAtivo); return; } return o.apply(this, arguments); }; };
+  ['marcarDistribuido','distribuirCarga'].forEach(guardaAtivo);
+  const nrA = window.nrAdd, nrR = window.nrRem;
+  window.nrAdd = function(){ if(!podeTurno(nrTurno)){ avisoTurno(nrTurno); return; } return nrA.apply(this, arguments); };
+  window.nrRem = function(){ if(!podeTurno(nrTurno)){ avisoTurno(nrTurno); return; } return nrR.apply(this, arguments); };
+})();
+/* visual: as guias de Distribuição de outros turnos ficam travadas para consulta */
+const _renderDistV6 = renderDist;
+renderDist = function(){
+  _renderDistV6.apply(this, arguments);
+  try{
+    TURNOS.forEach(t => {
+      const p = document.getElementById('panel-dist-' + t); if(!p) return;
+      const trava = !!currentUser && !podeTurno(t);
+      p.classList.toggle('turno-trava', trava && currentUser.role !== 'tv');
+      if(currentUser && currentUser.role !== 'tv') p.querySelectorAll('input, select').forEach(el => { if(trava){ if(!el.disabled){ el.disabled = true; el.dataset.tTrava = '1'; } } else if(el.dataset.tTrava){ el.disabled = false; delete el.dataset.tTrava; } });
+    });
+  }catch(e){}
+};
+</script>
+
+<script type="module" id="v6-patch-fb">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  const db = getFirestore(getApp());
+  const ref = doc(db, 'painelCD', 'cadastrados');
+  const erro = (p, err) => { console.error(p, err); if(typeof showToast === 'function') showToast('⚠️ ' + p + ' ' + (err && err.message ? err.message : err), true); };
+  window.cadLer = async function(){ const s = await getDoc(ref); cadLista = s.exists() ? (s.data().lista || []) : []; cadPronto = true; return cadLista; };
+  window.cadSalvar = function(lista){ setDoc(ref, { lista, atualizadoEm: new Date().toLocaleString('pt-BR'), atualizadoPor: currentUser ? currentUser.nome : '' }).catch(err => erro('Erro ao salvar o cadastro:', err)); };
+  onSnapshot(ref, snap => { cadLista = snap.exists() ? (snap.data().lista || []) : []; cadPronto = true; cadAposMudar(); }, err => erro('Erro ao ler o cadastro:', err));
 </script>
 
 </body>

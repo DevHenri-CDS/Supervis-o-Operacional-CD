@@ -7690,8 +7690,8 @@ function sepSheetHtml(st, cols){
     <div class="sep-card">
       <div class="sep-card-h"><span class="sep-est">ESTAÇÃO ${e.idx + 1}</span><span class="sep-prod">${e.produtivo ? sepEsc(e.produtivo) : '____________'}</span></div>
       ${cargaCard ? `<div class="sep-card-c">${cargaCard}</div>` : ''}
-      <table class="sep-tab">
-        <thead><tr><th>Destino</th><th class="n">Volumes</th><th class="pr">Produtividade</th><th class="op">Oportunidades</th></tr></thead>
+      <table class="sep-tab${oppDoEst(e.idx).length ? ' tem-op' : ''}">
+        <thead><tr><th>Destino</th><th class="n">Volumes</th><th class="pr">Produtividade</th><th class="op${oppDoEst(e.idx).length ? '' : ' op-vazio'}">Oportunidades</th></tr></thead>
         <tbody>${todas.map((l, k) => {
           const pr = k === 0 ? `<td class="pr" rowspan="${todas.length}"><div class="sep-pr-v">${fmtInt(e.volumes)}</div><div class="sep-pr-l">Tempo</div><div class="sep-pr-t">${sepTempoVol(e.volumes)}</div></td>` : '';
           const op = k === 0 ? oppCelaHtml(e, todas.length) : ''; if(semSet.has(l)) return `<tr class="sv"><td class="l">${sepEsc(sepNomeLoja(l))}</td><td class="n sv-t">⚠ SEM VOLUME</td>${pr}${op}</tr>`;
@@ -8659,7 +8659,13 @@ body.is-admin.logado #cam-float{ display:flex; }
 .opp-list .opp-it{ padding:2px 0; border-top:1px dashed var(--line); }
 .opp-list .opp-it b{ color:var(--band); }
 .spd-opp{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:10px; background:#3a2012; color:#f2935a; font-size:.68rem; font-weight:700; }
-@media print{ .v5-back{ display:none !important; } .spp-opp{ margin-top:14px; } .spp-opp .v5-tab th, .spp-opp .v5-tab td{ color:#000 !important; border:1px solid #888; background:#fff; } .spp-opp h3{ color:#000; font-size:13px; } }
+/* impressão: a coluna Oportunidades só aparece na estação que tem informação */
+.sep-paper .op-vazio, .sep-paper th.op-vazio{ display:none !important; }
+.sep-paper .sep-tab th.op, .sep-paper .sep-tab td.op{ width:38%; text-align:left; vertical-align:top; font-size:8px; line-height:1.25; padding:2px 5px; border-left:1px solid #999; overflow-wrap:anywhere; }
+.sep-paper .sep-tab th.op{ font-size:8px; }
+.sep-paper .sep-tab.tem-op td.pr, .sep-paper .sep-tab.tem-op th.pr{ width:24%; }
+.sep-paper .opp-list .opp-it{ border-top:1px dashed #999; color:#000; } .sep-paper .opp-list .opp-it b{ color:#000; }
+@media print{ .op-vazio{ display:none !important; } .v5-back{ display:none !important; } .spp-opp{ margin-top:14px; } .spp-opp .v5-tab th, .spp-opp .v5-tab td{ color:#000 !important; border:1px solid #888; background:#fff; } .spp-opp h3{ color:#000; font-size:13px; } }
 </style>
 
 <script id="v5-patch-js">
@@ -8761,10 +8767,12 @@ spdLista = function(){
   oppLista(spdDia).forEach(o => { const n = oppNomeProd(o, spdDia); if(!l.some(r => r.nome === n)) l.push({ nome: n, vol: 0 }); });
   return l.sort((a, b) => b.vol - a.vol || a.nome.localeCompare(b.nome, 'pt-BR'));
 };
+function oppItemTxt(o){ return [o.cod, o.item].filter(Boolean).join(' — ') || '—'; }
+function oppDoEst(idx){ return oppHoje.filter(o => Number(o.est) === idx + 1); }
 function oppCelaHtml(e, rows){
   const L = oppHoje.filter(o => Number(o.est) === e.idx + 1);
-  const itens = L.map(o => `<div class="opp-it"><b>${sepEsc(sepNomeLoja(o.loja))}</b> · ${Number(o.qtd) || 0} un. · ${sepEsc((o.motivos || []).join(', '))}</div>`).join('');
-  return `<td class="op" rowspan="${rows}"><button type="button" class="opp-btn no-print" data-e="${e.idx}" onclick="oppAbrir(Number(this.dataset.e))">＋ Oportunidades${L.length ? ' (' + L.length + ')' : ''}</button><div class="opp-list">${itens}</div></td>`;
+  const itens = L.map(o => `<div class="opp-it"><b>${sepEsc(sepNomeLoja(o.loja))}</b> · ${Number(o.qtd) || 0} un. · ${(o.cod || o.item) ? sepEsc(oppItemTxt(o)) + ' · ' : ''}${sepEsc((o.motivos || []).join(', '))}</div>`).join('');
+  return `<td class="op${L.length ? '' : ' op-vazio'}" rowspan="${rows}"><button type="button" class="opp-btn no-print" data-e="${e.idx}" onclick="oppAbrir(Number(this.dataset.e))">＋ Oportunidades${L.length ? ' (' + L.length + ')' : ''}</button><div class="opp-list">${itens}</div></td>`;
 }
 function oppAplicar(fn){
   oppHoje = fn(oppHoje.map(o => Object.assign({}, o)));
@@ -8788,6 +8796,8 @@ function oppAbrir(idx){
       <div class="v5-f" id="opp-form" style="${oppPode() ? '' : 'display:none'}">
         <div><label>Loja</label><input type="text" id="opp-loja" list="opp-lojas-dl" placeholder="Loja" autocomplete="off"><datalist id="opp-lojas-dl">${lojas.map(l => `<option value="${sepEsc(l)}">${sepEsc(sepNomeLoja(l))}</option>`).join('')}</datalist></div>
         <div><label>Qtd</label><input type="number" min="1" id="opp-qtd" value="1" style="width:90px;"></div>
+        <div><label>Cód. do item</label><input type="text" id="opp-cod" placeholder="Código" autocomplete="off" style="width:130px;" oninput="oppBuscaItem()"></div>
+        <div style="flex:1; min-width:220px;"><label>Item <span id="opp-item-st" style="text-transform:none; letter-spacing:0;"></span></label><input type="text" id="opp-item" placeholder="Nome do item (automático pelo código)" autocomplete="off" style="width:100%;" oninput="this.dataset.man='1'"></div>
         <div style="flex:1; min-width:240px;"><label>Motivo(s) — pode marcar vários</label>
           <div class="v5-chips" id="opp-mot-chips"></div></div>
         <div><label>Outro motivo (escrever)</label><input type="text" id="opp-mot-livre" maxlength="40" placeholder="Digite e Enter" style="width:180px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); oppAddLivre(); }"></div>
@@ -8813,6 +8823,22 @@ function oppAddLivre(){
   if(t && !oppMot.includes(t)) oppMot.push(t);
   inp.value = ''; oppChips();
 }
+function oppItemPorCod(cod){
+  const k = String(cod || '').trim().replace(/^0+(?=\d)/, '');
+  if(!k) return '';
+  const rows = (typeof sepFonteRows === 'function') ? sepFonteRows() : (crossRawData || []);
+  for(const r of rows){
+    if(String(r.cod == null ? '' : r.cod).trim().replace(/^0+(?=\d)/, '') === k && r.descricao) return String(r.descricao).trim();
+  }
+  return '';
+}
+function oppBuscaItem(){
+  const cod = document.getElementById('opp-cod').value, it = document.getElementById('opp-item'), st = document.getElementById('opp-item-st');
+  if(!String(cod).trim()){ st.textContent = ''; if(it.dataset.auto === '1'){ it.value = ''; it.dataset.auto = ''; } return; }
+  const d = oppItemPorCod(cod);
+  if(d){ it.value = d; it.dataset.auto = '1'; it.dataset.man = ''; st.textContent = '· do relatório'; st.style.color = 'var(--ok-text)'; }
+  else { if(it.dataset.auto === '1'){ it.value = ''; it.dataset.auto = ''; } st.textContent = '· não está no relatório — preencha o nome'; st.style.color = 'var(--warn-text)'; }
+}
 function oppSalvar(){
   if(!oppPode()) return;
   oppAddLivre();
@@ -8820,9 +8846,10 @@ function oppSalvar(){
   const qtd = parseInt(document.getElementById('opp-qtd').value, 10) || 0;
   if(!loja || qtd < 1 || !oppMot.length){ showToast('Informe a loja, a quantidade e pelo menos um motivo.', true); return; }
   const e = sepData.estacoes[oppEst] || {};
-  const rec = { id: spdId(), est: oppEst + 1, produtivo: e.produtivo || '', loja, qtd, motivos: oppMot.slice(), por: currentUser ? currentUser.nome : '', em: agoraCurto() };
+  const cod = String(document.getElementById('opp-cod').value || '').trim(), item = String(document.getElementById('opp-item').value || '').trim();
+  const rec = { id: spdId(), est: oppEst + 1, produtivo: e.produtivo || '', loja, qtd, cod, item, motivos: oppMot.slice(), por: currentUser ? currentUser.nome : '', em: agoraCurto() };
   oppAplicar(arr => arr.concat([rec]));
-  oppMot = []; document.getElementById('opp-loja').value = ''; document.getElementById('opp-qtd').value = 1; oppChips();
+  oppMot = []; document.getElementById('opp-loja').value = ''; document.getElementById('opp-qtd').value = 1; ['opp-cod','opp-item'].forEach(id => { const el = document.getElementById(id); el.value = ''; el.dataset.auto = ''; el.dataset.man = ''; }); document.getElementById('opp-item-st').textContent = ''; oppChips();
 }
 function oppRem(id){
   if(!oppPode() || !confirm('Remover esta oportunidade?')) return;
@@ -8832,8 +8859,8 @@ function oppRender(){
   const box = document.getElementById('opp-tab'); if(!box || oppEst == null) return;
   const L = oppHoje.filter(o => Number(o.est) === oppEst + 1), pode = oppPode();
   box.innerHTML = L.length
-    ? `<table class="v5-tab"><thead><tr><th>Loja</th><th>Qtd</th><th>Motivo(s)</th><th>Quem · quando</th>${pode ? '<th></th>' : ''}</tr></thead><tbody>${
-        L.map(o => `<tr><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td>${pode ? `<td><button class="btn btn-danger btn-sm" type="button" data-id="${sepEsc(o.id)}" onclick="oppRem(this.dataset.id)">Remover</button></td>` : ''}</tr>`).join('')
+    ? `<table class="v5-tab"><thead><tr><th>Loja</th><th>Qtd</th><th>Item</th><th>Motivo(s)</th><th>Quem · quando</th>${pode ? '<th></th>' : ''}</tr></thead><tbody>${
+        L.map(o => `<tr><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc(oppItemTxt(o))}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td>${pode ? `<td><button class="btn btn-danger btn-sm" type="button" data-id="${sepEsc(o.id)}" onclick="oppRem(this.dataset.id)">Remover</button></td>` : ''}</tr>`).join('')
       }</tbody></table>`
     : '<div class="v5-vazio">Nenhuma oportunidade nesta estação.</div>';
 }
@@ -8842,8 +8869,8 @@ function oppBadge(nome){ const c = oppCont(nome); return c.n ? `<span class="spd
 function oppDetalheHtml(){
   const dia = spdDia, L = oppLista(dia);
   if(!L.length) return '';
-  const lin = L.map(o => `<tr><td>${sepEsc(oppNomeProd(o, dia))}</td><td>${o.est ? 'Est. ' + sepEsc(o.est) : '—'}</td><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td></tr>`).join('');
-  return `<h3 class="label-font spd-h3 opp-det">Oportunidades do dia (loja · qtd · motivo)</h3><div class="table-scroll opp-det"><table class="v5-tab"><thead><tr><th>Produtivo</th><th>Estação</th><th>Loja</th><th>Qtd</th><th>Motivo(s)</th><th>Quem · quando</th></tr></thead><tbody>${lin}</tbody></table></div>`;
+  const lin = L.map(o => `<tr><td>${sepEsc(oppNomeProd(o, dia))}</td><td>${o.est ? 'Est. ' + sepEsc(o.est) : '—'}</td><td>${sepEsc(sepNomeLoja(o.loja))}</td><td>${Number(o.qtd) || 0}</td><td>${sepEsc(oppItemTxt(o))}</td><td>${sepEsc((o.motivos || []).join(', '))}</td><td>${sepEsc(o.por || '')} ${sepEsc(o.em || '')}</td></tr>`).join('');
+  return `<h3 class="label-font spd-h3 opp-det">Oportunidades do dia (loja · qtd · motivo)</h3><div class="table-scroll opp-det"><table class="v5-tab"><thead><tr><th>Produtivo</th><th>Estação</th><th>Loja</th><th>Qtd</th><th>Item</th><th>Motivo(s)</th><th>Quem · quando</th></tr></thead><tbody>${lin}</tbody></table></div>`;
 }
 const _spdRenderOpp = spdRender;
 spdRender = function(){

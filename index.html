@@ -1190,7 +1190,6 @@
       </div>
       <button class="btn btn-ghost btn-sm so-admin" onclick="openAbasModal()" title="Renomear as guias (só Administrador)">✎ Guias</button>
       <span class="tag" id="sync-status">Nuvem: conectando…</span>
-      <button class="btn btn-ghost btn-sm" id="demo-btn" onclick="loadDemo()" style="display:none;">Carregar exemplo</button>
       <button class="btn btn-ghost btn-sm" onclick="openQrModal()">Código do site</button>
       <button class="btn btn-ghost btn-sm" onclick="logout()">Sair</button>
     </div>
@@ -2091,6 +2090,7 @@
     <div id="uf-cad"></div>
   </div>
   <button type="button" class="uf-pill" onclick="toggleUsersFloat()" title="Quem está online agora"><span class="uf-dot off" id="uf-dot"></span><span><b id="uf-count">0</b> online</span></button>
+  <button type="button" class="uf-pill uf-pill-cad" id="uf-pill-cad" onclick="cadAbrir()" title="Cadastrar usuário, turno e função para liberar o acesso ao portal">＋ Conferente(s) · Cadastro</button>
 </div>
 
 <!-- área usada só na impressão de "Cargas no Piso" -->
@@ -2416,7 +2416,6 @@ async function doLogin(){
   document.getElementById('btn-colar-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-foto-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-limpar-piso').style.display = isAdmin ? 'inline-block' : 'none';
-  document.getElementById('demo-btn').style.display = isAdmin ? 'inline-block' : 'none';
   document.body.classList.add('logado');
   document.body.classList.toggle('is-admin', isAdmin);
 
@@ -8650,6 +8649,10 @@ spdRender = function(){
 .uf-cad-r{ display:flex; align-items:center; gap:6px; padding:5px 0; border-bottom:1px solid #1a120a; }
 .uf-cad-r .nm{ flex:1; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .uf-cad-r .fn{ font-size:.66rem; color:var(--text-dim); }
+.uf-cad-f label{ display:flex; flex-direction:column; gap:2px; font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); min-width:0; }
+.uf-cad-f label:first-child{ grid-column:1 / -1; }
+.uf-cad-f label input, .uf-cad-f label select{ text-transform:none; letter-spacing:0; font-weight:400; }
+.uf-pill-cad{ margin-left:6px; }
 .turno-trava{ opacity:.55; }
 </style>
 
@@ -8677,6 +8680,7 @@ function cadAposMudar(){
     if(ufAba === 'cad') cadRender();
   }catch(e){}
 }
+function cadAbrir(){ const f = document.getElementById('users-float'); if(!f || !souAdmin()) return; f.classList.add('open'); ufTab('cad'); setTimeout(() => { const n = document.getElementById('cad-nome'); if(n) n.focus(); }, 50); }
 function ufTab(a){
   ufAba = a;
   const box = document.querySelector('#users-float .uf-box'); if(!box) return;
@@ -8694,13 +8698,14 @@ function cadRender(){
   const v = ['cad-nome','cad-turno','cad-func'].map(id => (document.getElementById(id) || {}).value);
   const fOpts = CAD_FUNCOES.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
   const lista = cadLista.slice().sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
-  box.innerHTML = `<div class="uf-cad-t">CONFERENTE(S) · CADASTRADOS</div>
+  box.innerHTML = `<div class="uf-cad-t">CONFERENTE(S) · LIBERAÇÃO DE ACESSO AO PORTAL</div>
     <div class="uf-cad-f">
-      <input type="text" id="cad-nome" placeholder="Nome do usuário" maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); cadAdd(); }">
-      <select id="cad-turno"><option>T1</option><option>T2</option><option>T3</option></select>
-      <select id="cad-func">${fOpts}</select>
-      <button type="button" class="btn btn-primary btn-sm" onclick="cadAdd()">＋ Cadastrar</button>
+      <label>Usuário<input type="text" id="cad-nome" placeholder="Nome do usuário" maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); cadAdd(); }"></label>
+      <label>Turno<select id="cad-turno"><option>T1</option><option>T2</option><option>T3</option></select></label>
+      <label>Função<select id="cad-func">${fOpts}</select></label>
+      <button type="button" class="btn btn-primary btn-sm" onclick="cadAdd()">＋ Cadastrar e liberar acesso</button>
     </div>
+    <div class="uf-cad-t" style="margin-top:4px">CADASTRADOS (${lista.length})</div>
     ${lista.length ? lista.map(c => `<div class="uf-cad-r"><div class="nm" title="${escapeHtml(c.nome)}">${escapeHtml(c.nome)}<div class="fn">${escapeHtml(ROLE_LABELS[c.funcao] || c.funcao)}</div></div>
       <select data-id="${escapeHtml(c.id)}" onchange="cadSetTurno(this.dataset.id, this.value)">${['T1','T2','T3'].map(t => `<option ${t === c.turno ? 'selected' : ''}>${t}</option>`).join('')}</select>
       <div class="uf-act"><button class="bad" data-id="${escapeHtml(c.id)}" title="Remover cadastro" onclick="cadRem(this.dataset.id)">✕</button></div></div>`).join('') : '<div class="uf-vazio">Nenhum usuário cadastrado.</div>'}`;

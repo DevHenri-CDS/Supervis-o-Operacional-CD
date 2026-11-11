@@ -1674,7 +1674,7 @@
       <div class="panel-header">
         <div class="title-block">
           <h2>FOLHA DE SEPARAÇÃO</h2>
-          <span class="sub">Impressão em conjunto (A4): Programação – CD Secos na 1ª página e Oportunidades por produtivo na 2ª página</span>
+          <span class="sub">Impressão em conjunto (A4): Programação – CD Secos na 1ª página; Oportunidades por produtivo e Produtividade do dia na 2ª página</span>
         </div>
         <div class="no-print" data-ro-ok style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
           <select id="sep-orient" onchange="sepSetOpc('orient', this.value)" title="Orientação da folha">
@@ -8882,7 +8882,8 @@ spdRender = function(){
     const wrap = tb.closest('.table-scroll') || tb.parentNode;
     let box = document.getElementById('spd-opp-det');
     if(!box){ box = document.createElement('div'); box.id = 'spd-opp-det'; wrap.insertAdjacentElement('afterend', box); }
-    box.innerHTML = oppDetalheHtml();
+    box.innerHTML = '';   /* oculto na guia Separação (pedido 11/11/2026) */
+    box.style.display = 'none';
   }catch(e){}
 };
 const _sepProdPag = sepProdPaginaHtml;
@@ -9130,7 +9131,19 @@ function sepOppPaginaHtml(){
     + (G.length
       ? `<table class="spo-tab">${OPP_THEAD}<tbody>${oppLinhasTabela(G, false)}</tbody><tfoot><tr><td colspan="2">TOTAL DO DIA</td><td class="n">${fmtInt(t.q)}</td><td colspan="2">${t.n} oportunidade(s)</td></tr></tfoot></table>`
       : `<div class="spo-vazio">Nenhuma estação montada na programação.</div>`)
+    + sepProdDiaBlocoHtml()
     + `</div>`;
+}
+
+/* PRODUTIVIDADE DIA — bloco logo abaixo das oportunidades (2ª página da impressão) */
+function sepProdDiaBlocoHtml(){
+  const lista = spdLista().filter(r => r.vol > 0);
+  const total = spdSoma(spdLinhas());
+  const max = Math.max(1, ...lista.map(r => r.vol));
+  const cab = `<div class="spo-title" style="margin-top:14px;">PRODUTIVIDADE DO DIA — CD SECOS</div><div class="spo-sub">${fmtDia(spdDia)}</div>`;
+  if(!lista.length) return cab + `<div class="spo-vazio" style="padding:8px 0;">Nenhum volume contabilizado neste dia.</div>`;
+  const corpo = lista.map((r, k) => `<tr><td class="n">${k + 1}</td><td>${sepEsc(r.nome)}</td><td style="width:34%;"><div style="height:10px;width:${Math.max(1.5, r.vol / max * 100)}%;background:#FF8A1F;-webkit-print-color-adjust:exact;print-color-adjust:exact;"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCont(r.nome).n}</td></tr>`).join('');
+  return cab + `<table class="spo-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th><th>Oportunid.</th></tr></thead><tbody>${corpo}</tbody><tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td><td class="n">${oppTotalDia()}</td></tr></tfoot></table>`;
 }
 
 /* painel na guia Separação: tabela de oportunidades de cada produtivo */
@@ -9148,7 +9161,7 @@ function sepOppPaginaHtml(){
       </div>
       <div class="spd-body">
         <div class="table-scroll" id="opp-pn-tab"></div>
-        <span class="hint" style="margin:0;">Montada a partir da programação CD Secos (estação e produtivo). Lance cada oportunidade pelo botão “＋ Oportunidades” da estação na folha. Sai na 2ª página da impressão da programação.</span>
+        <span class="hint" style="margin:0;">Montada a partir da programação CD Secos (estação e produtivo). Lance cada oportunidade pelo botão “＋ Oportunidades” da estação na folha. Sai na 2ª página da impressão da programação, junto com a Produtividade do dia.</span>
       </div>
     </section>`);
   }

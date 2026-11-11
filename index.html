@@ -1117,15 +1117,21 @@
   #tv-aviso{ display:none; position:fixed; inset:0; z-index:99999; background:rgba(8,12,20,.94); overflow:hidden; padding:3vh 3vw; pointer-events:none; }
   #tv-aviso.on{ display:block; animation:tvavIn .35s ease-out; }
   @keyframes tvavIn{ from{ opacity:0; transform:scale(.97); } to{ opacity:1; transform:none; } }
-  .tvav-titulo{ text-align:center; font-family:'Oswald',sans-serif; font-size:clamp(3rem,9vw,7rem); letter-spacing:.08em; color:#3dff8a; text-shadow:0 0 28px rgba(61,255,138,.6); margin:0 0 3vh; animation:tvavPulse 1.1s ease-in-out infinite; }
+  .tvav-titulo{ text-align:center; font-family:'Oswald',sans-serif; font-size:clamp(2.4rem,6.5vw,5rem); letter-spacing:.08em; color:#3dff8a; text-shadow:0 0 28px rgba(61,255,138,.6); margin:0 0 2vh; animation:tvavPulse 1.1s ease-in-out infinite; }
   @keyframes tvavPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.05); } }
-  .tvav-card{ display:grid; grid-template-columns:1.1fr 2fr repeat(3,auto); gap:14px 34px; align-items:center; padding:2.2vh 2vw; margin:0 auto 2vh; max-width:1700px; border-radius:14px; background:#13202e; border:2px solid #3dff8a; box-shadow:0 0 26px rgba(61,255,138,.3); }
-  .tvav-card small{ display:block; font-family:'Inter',sans-serif; font-size:.8rem; font-weight:800; letter-spacing:.12em; color:#7fb8a0; margin-bottom:4px; }
-  .tvav-carga{ font-family:'Oswald',sans-serif; font-size:clamp(2.2rem,5vw,4.2rem); line-height:1; color:#fff; }
-  .tvav-forn{ font-size:clamp(1.4rem,2.8vw,2.6rem); font-weight:800; line-height:1.1; color:#fff; }
-  .tvav-n{ text-align:center; }
-  .tvav-n b{ display:block; font-family:'Oswald',sans-serif; font-size:clamp(2.2rem,4.6vw,4rem); line-height:1; color:#ffd24d; }
-  .tvav-n span{ font-size:.9rem; font-weight:800; text-transform:uppercase; color:#cfd8e3; }
+  #tv-aviso.on{ display:flex; flex-direction:column; }
+  #tv-aviso-body{ flex:1; min-height:0; display:grid; grid-template-columns:repeat(var(--tvav-col,1), minmax(0,1fr)); gap:1.6vh 2vw; align-content:start; max-width:1800px; width:100%; margin:0 auto; padding-bottom:10px; }
+  .tvav-col{ display:flex; flex-direction:column; gap:var(--tvav-gap,1.2vh); min-width:0; }
+  .tvav-hd, .tvav-row{ display:grid; grid-template-columns:1.1fr 3fr .9fr 1fr .9fr; gap:0 1.4vw; align-items:center; }
+  .tvav-hd{ font-family:'Inter',sans-serif; font-size:clamp(.7rem,1.1vw,1rem); font-weight:800; letter-spacing:.12em; color:#7fb8a0; padding:0 1.2vw; }
+  .tvav-hd span:nth-child(n+3){ text-align:center; }
+  .tvav-row{ padding:var(--tvav-pad,1.4vh) 1.2vw; border-radius:12px; background:#13202e; border:2px solid #3dff8a; box-shadow:0 0 18px rgba(61,255,138,.25); }
+  .tvav-row > div{ min-width:0; }
+  .tvav-carga{ font-family:'Oswald',sans-serif; font-size:var(--tvav-fs,3rem); line-height:1; color:#fff; }
+  .tvav-forn{ font-size:calc(var(--tvav-fs,3rem) * .62); font-weight:800; line-height:1.1; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tvav-n{ text-align:center; font-family:'Oswald',sans-serif; font-size:var(--tvav-fs,3rem); line-height:1; color:#ffd24d; white-space:nowrap; }
+  .tvav-n i{ font-style:normal; font-family:'Inter',sans-serif; font-size:.32em; font-weight:800; text-transform:uppercase; color:#cfd8e3; margin-left:.25em; }
+  .tvav-mais{ text-align:center; color:#cfd8e3; font-size:1.2rem; font-weight:800; padding:6px; }
   .tvav-barra{ position:fixed; left:0; right:0; bottom:0; height:8px; background:rgba(255,255,255,.08); }
   .tvav-barra i{ display:block; height:100%; width:100%; background:#3dff8a; }
   #panel-tv-fech .prod-kpi .v{ font-size:1.7rem; }
@@ -1134,7 +1140,7 @@
 <body>
 <div id="toast-layer"></div>
 <div id="nuvem-banner" role="alert"></div>
-<div id="tv-aviso"><h1 class="tvav-titulo">🖨 IMPRESSA!</h1><div id="tv-aviso-body"></div><div class="tvav-barra"><i id="tv-aviso-barra"></i></div></div>
+<div id="tv-aviso"><h1 class="tvav-titulo" id="tv-aviso-titulo">🖨 IMPRESSA!</h1><div id="tv-aviso-body"></div><div class="tvav-barra"><i id="tv-aviso-barra"></i></div></div>
 
 
 <!-- ===================== LOGIN ===================== -->
@@ -2563,50 +2569,76 @@ function renderTvFech(){
 }
 
 /* ---- TV: aviso "IMPRESSA!" (carga nova em PENDENTE DE ETIQUETAGEM) ---- */
-let tvAvisoUltimo = null, tvAvisoFila = [], tvAvisoTimer = 0, tvAvisoAberto = false, tvAvisoVistoMem = '';
-function tvAvisoJaVisto(id){
-  try{ return localStorage.getItem('tvAvisoVisto') === id; }catch(e){ return tvAvisoVistoMem === id; }
+let tvAvisoUltimo = null, tvAvisoRec = [], tvAvisoCargas = [], tvAvisoTimer = 0, tvAvisoAberto = false, tvAvisoVistosMem = [];
+function tvAvisoVistos(){
+  try{ const a = JSON.parse(localStorage.getItem('tvAvisosVistos') || '[]'); if(Array.isArray(a)) return a.concat(tvAvisoVistosMem); }catch(e){}
+  return tvAvisoVistosMem.slice();
 }
-function tvAvisoMarcarVisto(id){
-  tvAvisoVistoMem = id;
-  try{ localStorage.setItem('tvAvisoVisto', id); }catch(e){}
+function tvAvisoMarcarVistos(ids){
+  tvAvisoVistosMem = tvAvisoVistosMem.concat(ids).slice(-80);
+  try{ localStorage.setItem('tvAvisosVistos', JSON.stringify(tvAvisoVistos().slice(-80))); }catch(e){}
 }
-function tvReceberAviso(u){ tvAvisoUltimo = u; tvChecarAviso(); }
+function tvReceberAviso(u, rec){ tvAvisoUltimo = u; tvAvisoRec = Array.isArray(rec) ? rec : []; tvChecarAviso(); }
+/* junta TODOS os avisos ainda não vistos numa lista só (não perde carga quando chegam avisos seguidos) */
 function tvChecarAviso(){
-  const u = tvAvisoUltimo;
-  if(!tvAtivo || !u || !u.id || tvAvisoJaVisto(u.id)) return;
-  tvAvisoMarcarVisto(u.id);
-  if(Date.now() - Number(u.ts || 0) > 20 * 60000) return;   // aviso antigo (TV reaberta depois): não mostra
-  tvAvisoFila.push(u);
-  if(!tvAvisoAberto) tvAvisoMostrar();
+  if(!tvAtivo) return;
+  const todos = tvAvisoRec.slice();
+  if(tvAvisoUltimo && !todos.some(x => x && x.id === tvAvisoUltimo.id)) todos.push(tvAvisoUltimo);
+  const vistos = new Set(tvAvisoVistos());
+  const novos = todos.filter(x => x && x.id && !vistos.has(x.id));
+  if(!novos.length) return;
+  tvAvisoMarcarVistos(novos.map(x => x.id));
+  const recentes = novos.filter(x => Date.now() - Number(x.ts || 0) <= 20 * 60000);   // aviso antigo (TV reaberta depois): não mostra
+  if(!recentes.length) return;
+  recentes.forEach(x => (x.cargas || []).forEach(c => {
+    const k = String(c.carga).trim();
+    if(!tvAvisoCargas.some(y => String(y.carga).trim() === k)) tvAvisoCargas.push(c);
+  }));
+  tvAvisoMostrar();
 }
 function tvAvisoMostrar(){
-  const u = tvAvisoFila.shift();
-  const box = document.getElementById('tv-aviso');
-  if(!u || !box){ tvAvisoAberto = false; if(box) box.classList.remove('on'); return; }
+  const box = document.getElementById('tv-aviso'), corpo = document.getElementById('tv-aviso-body');
+  const L = tvAvisoCargas;
+  if(!L.length || !box || !corpo){ tvAvisoAberto = false; if(box) box.classList.remove('on'); return; }
   tvAvisoAberto = true;
-  const cards = (u.cargas || []).map(c => {
-    const n = Math.abs(Number(c.d1) || 0);
-    return `<div class="tvav-card">
-      <div class="tvav-carga"><small>CARGA</small>${escapeHtml(c.carga)}</div>
-      <div class="tvav-forn"><small>FORNECEDOR</small>${escapeHtml(c.fornecedor)}</div>
-      <div class="tvav-n"><small>AGING</small><b>${n}</b><span>${n === 1 ? 'dia' : 'dias'}</span></div>
-      <div class="tvav-n"><small>VOLUME</small><b>${fmtInt(c.volume || 0)}</b></div>
-      <div class="tvav-n"><small>SKU</small><b>${fmtInt(c.sku || 0)}</b></div>
+  const n = L.length;
+  const col = n <= 6 ? 1 : (n <= 14 ? 2 : 3);
+  const MAX = col * 8, vis = L.slice(0, MAX), resto = n - vis.length;
+  const porCol = Math.ceil(vis.length / col);
+  const fs = porCol <= 2 ? 3.4 : (porCol <= 3 ? 2.6 : (porCol <= 4 ? 2.1 : (porCol <= 6 ? 1.6 : 1.3)));
+  corpo.style.setProperty('--tvav-col', col);
+  corpo.style.setProperty('--tvav-fs', fs + 'rem');
+  corpo.style.setProperty('--tvav-pad', (porCol <= 3 ? 1.6 : 0.9) + 'vh');
+  const linha = c => {
+    const d = Math.abs(Number(c.d1) || 0);
+    return `<div class="tvav-row">
+      <div class="tvav-carga">${escapeHtml(c.carga)}</div>
+      <div class="tvav-forn">${escapeHtml(c.fornecedor)}</div>
+      <div class="tvav-n">${d}<i>${d === 1 ? 'dia' : 'dias'}</i></div>
+      <div class="tvav-n">${fmtInt(c.volume || 0)}</div>
+      <div class="tvav-n">${fmtInt(c.sku || 0)}</div>
     </div>`;
-  }).join('');
-  document.getElementById('tv-aviso-body').innerHTML = cards;
+  };
+  const hd = '<div class="tvav-hd"><span>CARGA</span><span>FORNECEDOR</span><span>AGING</span><span>VOLUME</span><span>SKU</span></div>';
+  let h = '';
+  for(let i = 0; i < col; i++){
+    const parte = vis.slice(i * porCol, (i + 1) * porCol);
+    if(parte.length) h += `<div class="tvav-col">${hd}${parte.map(linha).join('')}</div>`;
+  }
+  if(resto > 0) h += `<div class="tvav-mais" style="grid-column:1/-1">+ ${resto} carga(s) — veja no painel</div>`;
+  corpo.innerHTML = h;
+  const tit = document.getElementById('tv-aviso-titulo'); if(tit) tit.textContent = '🖨 IMPRESSA!' + (n > 1 ? ' (' + n + ' cargas)' : '');
   box.classList.add('on');
   clearTimeout(tvAvisoTimer);
-  const dur = Math.min(30000, 12000 + Math.max(0, (u.cargas || []).length - 1) * 3000);   // some sozinho: 12 s (+3 s por carga extra, máx. 30 s)
+  const dur = Math.min(30000, 12000 + Math.max(0, n - 1) * 3000);   // some sozinho: 12 s (+3 s por carga extra, máx. 30 s); aviso novo reinicia o tempo
   const bar = document.getElementById('tv-aviso-barra');
   if(bar){ bar.style.transition = 'none'; bar.style.width = '100%'; void bar.offsetWidth; bar.style.transition = 'width ' + dur + 'ms linear'; bar.style.width = '0'; }
   tvAvisoTimer = setTimeout(tvAvisoFechar, dur);
 }
 function tvAvisoFechar(){
   clearTimeout(tvAvisoTimer);
-  if(tvAvisoFila.length) tvAvisoMostrar();
-  else { tvAvisoAberto = false; const b = document.getElementById('tv-aviso'); if(b) b.classList.remove('on'); }
+  tvAvisoCargas = []; tvAvisoAberto = false;
+  const b = document.getElementById('tv-aviso'); if(b) b.classList.remove('on');
 }
 
 function tvProxima(){ tvPausado = false; tvAtualizaPausa(); tvMostrar(tvIdx + 1); }
@@ -2675,7 +2707,7 @@ function tvStop(){
   TV_PAINEIS.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('tv-off', 'tv-enter'); });
   document.getElementById('tab-rec').style.display = 'none';
   document.getElementById('tab-piso').style.display = 'block';
-  clearTimeout(tvAvisoTimer); tvAvisoAberto = false; tvAvisoFila = [];
+  clearTimeout(tvAvisoTimer); tvAvisoAberto = false; tvAvisoCargas = [];
   { const b = document.getElementById('tv-aviso'); if(b) b.classList.remove('on'); }
   window.scrollTo(0, 0);
 }
@@ -6880,13 +6912,13 @@ function renderDistClockOnly(){
         const novas = rows.filter(r => !ja.has(String(r.carga).trim()));
         if(!novas.length) return;
         novas.forEach(r => ja.add(String(r.carga).trim()));
-        tx.set(avisoRef, {
-          avisadas: Array.from(ja).slice(-800),
-          ultimo: {
-            id: Date.now() + '-' + Math.random().toString(36).slice(2, 7), ts: Date.now(),
-            cargas: novas.map(r => ({ carga: String(r.carga).trim(), fornecedor: r.fornecedor || '', d1: Number(r.d1) || 0, volume: Number(r.volume) || 0, sku: Number(r.sku) || 0 }))
-          }
-        });
+        const agora = Date.now();
+        const entrada = {
+          id: agora + '-' + Math.random().toString(36).slice(2, 7), ts: agora,
+          cargas: novas.map(r => ({ carga: String(r.carga).trim(), fornecedor: r.fornecedor || '', d1: Number(r.d1) || 0, volume: Number(r.volume) || 0, sku: Number(r.sku) || 0 }))
+        };
+        const rec = (d.recentes || []).filter(x => x && agora - Number(x.ts || 0) < 30 * 60000).slice(-20).concat([entrada]);
+        tx.set(avisoRef, { avisadas: Array.from(ja).slice(-800), ultimo: entrada, recentes: rec });
       });
     } catch(err){
       // não perde o aviso: guarda e reenvia quando a nuvem voltar
@@ -6897,8 +6929,8 @@ function renderDistClockOnly(){
   setTimeout(tentarAvisoPendente, 8000);   // reenvia avisos que ficaram pendentes de uma sessão anterior
   onSnapshot(avisoRef, snap => {
     if(!snap.exists()) return;
-    const u = snap.data().ultimo;
-    if(u && typeof tvReceberAviso === 'function') tvReceberAviso(u);
+    const dd = snap.data(), u = dd.ultimo;
+    if(u && typeof tvReceberAviso === 'function') tvReceberAviso(u, dd.recentes);
   }, err => reportError('Erro ao ler aviso de carga impressa:', err));
 
   // ---------- nomes das guias (editáveis pelo Administrador, valem para todos) ----------

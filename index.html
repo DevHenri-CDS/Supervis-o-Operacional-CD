@@ -7917,13 +7917,13 @@ function sepProdPaginaHtml(){
   const d = new Date();
   const hora = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   const por = currentUser ? ' por ' + sepEsc(currentUser.nome) : '';
-  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td></tr>`).join('');
+  const corpo = lista.map((r, k) => `<tr><td class="c">${k + 1}</td><td>${sepEsc(r.nome)}</td><td class="bar"><div style="width:${Math.max(1.5, r.vol / max * 100)}%"></div></td><td class="n">${fmtInt(r.vol)}</td><td class="n">${total ? Math.round(r.vol / total * 100) : 0}%</td><td class="n">${oppCont(r.nome).n}</td></tr>`).join('');
   return `<div class="spp"><div class="spp-title">PRODUTIVIDADE DIA — CD SECOS</div>
     <div class="spp-sub">${fmtDia(spdDia)} · impresso às ${hora}${por}</div>`
     + (lista.length
-      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th></tr></thead>
+      ? `<table class="spp-tab"><thead><tr><th>#</th><th>Produtivo</th><th>Produtividade</th><th>Volume</th><th>%</th><th>Oportunid.</th></tr></thead>
          <tbody>${corpo}</tbody>
-         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td></tr></tfoot></table>`
+         <tfoot><tr><td colspan="3">TOTAL DO DIA</td><td class="n">${fmtInt(total)}</td><td class="n">100%</td><td class="n">${oppTotalDia()}</td></tr></tfoot></table>`
       : `<div class="spp-vazio">Nenhum volume contabilizado neste dia.</div>`)
     + `</div>`;
 }
@@ -8616,7 +8616,11 @@ spdRender = function(){
     box.innerHTML = oppDetalheHtml();
   }catch(e){}
 };
-/* Oportunidades não saem mais na impressão da programação (frente e verso) */
+const _sepProdPag = sepProdPaginaHtml;
+sepProdPaginaHtml = function(){
+  const h = _sepProdPag.apply(this, arguments), d = oppDetalheHtml();
+  return d ? h.replace(/<\/div>\s*$/, '<div class="spp-opp">' + d + '</div></div>') : h;
+};
 </script>
 
 <script type="module" id="v5-patch-fb">

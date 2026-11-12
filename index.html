@@ -488,6 +488,57 @@
   }
   @media print{ #panel-piso::before{ display:none; } }
 
+  /* ---------- OPERADOR: celular, aviso em tela cheia e calculadora Etiquetar ---------- */
+  #op-view{ display:none; max-width:900px; margin:0 auto; padding-bottom:40px; }
+  .op-head h2{ font-family:'Oswald',sans-serif; font-weight:700; font-size:1.7rem; margin:0; color:var(--band); text-transform:uppercase; }
+  .op-sub{ font-size:.85rem; color:var(--text-dim); margin:4px 0 12px; }
+  .op-busca input{ width:100%; padding:13px 14px; font-size:1rem; border:1px solid var(--line); border-radius:6px; background:var(--input-bg); color:var(--text); margin-bottom:12px; }
+  .op-grp{ margin:16px 0 8px; padding:8px 12px; border-radius:4px; background:#140c04; font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:.06em; font-size:.9rem; color:var(--band); border-left:5px solid var(--band-strong); }
+  .op-grp.g1{ color:var(--text-dim); border-left-color:#6a5f52; } .op-grp.g2{ color:var(--info-text); border-left-color:var(--info-text); }
+  .opc{ background:var(--panel); border:1px solid var(--line); border-left:6px solid var(--band-strong); border-radius:8px; padding:14px; margin-bottom:12px; }
+  .opc.prio{ border-left-color:var(--danger); background:#1d0f0d; } .opc.ok{ border-left-color:var(--ok-text); opacity:.8; }
+  .opc-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
+  .opc-carga{ font-family:'Oswald',sans-serif; font-weight:700; font-size:1.6rem; color:var(--band); }
+  .opc .pill{ display:inline-block; padding:6px 11px; border-radius:4px; font-size:.78rem; font-weight:700; }
+  .opc .st-aguardando{ background:#2a2a2a; color:#d0d0d0; } .opc .st-pendente{ background:#3a2c0e; color:#f3b75a; } .opc .st-processo{ background:#12293d; color:#7cc4ff; } .opc .st-parcial-etq{ background:#3a2012; color:#f2935a; } .opc .st-etiquetada{ background:#12301f; color:#6fdc9a; } .opc .st-parcial-dist{ background:#0f302d; color:#5ad1c9; } .opc .st-conferencia{ background:#2c1b3d; color:#c98aff; } .opc .st-nao-analisado{ background:#3d1815; color:#ff9a90; }
+  .opc-forn{ font-weight:700; font-size:1.05rem; margin:8px 0; } .opc-forn small{ display:block; font-weight:500; color:var(--text-dim); font-size:.8rem; }
+  .opc-nums{ display:flex; gap:10px; margin-bottom:10px; } .opc-nums div{ flex:1; background:#080808; border:1px solid var(--line); border-radius:6px; padding:8px; text-align:center; }
+  .opc-nums b{ display:block; font-family:'Oswald',sans-serif; font-size:1.5rem; color:var(--band); line-height:1.1; } .opc-nums i{ font-style:normal; font-size:.66rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+  .opc-acts{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; }
+  .opb{ flex:1; min-height:54px; min-width:140px; border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:8px; font-family:'Oswald',sans-serif; font-weight:600; font-size:1.05rem; cursor:pointer; }
+  .opb-calc{ background:var(--band); border-color:var(--band); color:#000; } .opb-on{ background:#12301f; border-color:var(--ok-text); color:var(--ok-text); }
+  .op-full{ position:fixed; inset:0; z-index:9999; display:none; overflow:auto; }
+  #op-aviso{ background:#FF8A1F; color:#000; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center; animation:opPisca 1s steps(2) 6; }
+  @keyframes opPisca{ 50%{ background:#ffb45a; } }
+  .opav-ico{ font-size:4rem; } #opav-t{ font-family:'Oswald',sans-serif; font-size:2.6rem; margin:0 0 14px; }
+  #opav-body{ width:100%; max-width:640px; max-height:55vh; overflow:auto; } .opav-row{ background:#000; color:var(--text); border-radius:8px; padding:12px; margin-bottom:8px; }
+  .opav-carga{ font-family:'Oswald',sans-serif; font-size:2.2rem; font-weight:700; color:var(--band); } .opav-forn{ font-weight:700; font-size:1.1rem; } .opav-n{ color:var(--text-dim); margin-top:4px; } .opav-n b{ color:var(--text); } .opav-mais{ font-weight:700; }
+  #opav-ok{ margin-top:16px; background:#000; color:var(--band); border-color:#000; min-height:64px; font-size:1.4rem; max-width:640px; width:100%; flex:none; }
+  #op-calc{ background:var(--bg); color:var(--text); }
+  .opcl-head{ position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; background:#000; border-bottom:2px solid var(--band-strong); }
+  .opcl-t{ font-family:'Oswald',sans-serif; font-size:1.4rem; color:var(--band); } #opcl-sub{ font-size:.85rem; color:var(--text-dim); } .opcl-head .opb{ flex:none; min-height:44px; min-width:100px; }
+  .opcl-body{ max-width:560px; margin:0 auto; padding:14px; }
+  #opcl-busca{ width:100%; padding:13px 14px; font-size:1rem; border:1px solid var(--line); border-radius:6px; background:var(--input-bg); color:var(--text); margin-bottom:10px; }
+  .opcl-itens{ max-height:30vh; overflow:auto; margin-bottom:10px; } .opcl-it{ display:block; width:100%; text-align:left; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:6px; padding:10px 12px; margin-bottom:6px; font-size:.9rem; cursor:pointer; }
+  .opcl-it small{ display:block; color:var(--text-dim); } .opcl-it.on{ border-color:var(--band); }
+  .opcl-card{ background:var(--panel); border:1px solid var(--line); border-top:3px solid var(--band-strong); border-radius:6px; padding:12px; margin-bottom:10px; } .opcl-card .k{ font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+  .opcl-card .big{ font-family:'Oswald',sans-serif; font-size:2.2rem; color:var(--band); line-height:1.1; } .opcl-lojas{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .opcl-lojas span{ background:#080808; border:1px solid var(--line); border-radius:4px; padding:3px 8px; font-size:.8rem; }
+  #opcl-disp{ background:#000; border:1px solid var(--line); border-radius:6px; padding:14px; font-family:'Oswald',sans-serif; font-size:2.2rem; text-align:right; min-height:64px; word-break:break-all; }
+  #opcl-res{ margin:8px 0; padding:12px; border-radius:6px; font-weight:700; font-size:1.05rem; display:none; } #opcl-res.ok{ display:block; background:#12301f; color:var(--ok-text); } #opcl-res.mais{ display:block; background:#3a2c0e; color:var(--warn-text); } #opcl-res.menos{ display:block; background:#3d1815; color:var(--danger); } #opcl-res.inf{ display:block; background:#12293d; color:#7cc4ff; }
+  .opcl-ins{ display:flex; gap:8px; margin:8px 0; } .opcl-ins .opb{ min-height:44px; font-size:.85rem; }
+  .opcl-pad{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; } .opcl-pad button{ min-height:60px; font-size:1.4rem; font-family:'Oswald',sans-serif; background:var(--panel); color:var(--text); border:1px solid var(--line); border-radius:8px; cursor:pointer; }
+  .opcl-pad .op{ color:var(--band); } .opcl-pad .eq{ background:var(--band); color:#000; } .opcl-pad .conf{ grid-column:span 2; background:#12301f; color:var(--ok-text); border-color:var(--ok-text); font-size:1.1rem; }
+  @media (min-width:720px){ #op-lista{ display:grid; grid-template-columns:1fr 1fr; gap:0 12px; } #op-lista .op-grp{ grid-column:1/-1; } }
+
+  /* pré-visualização do Operador (celular) para o Administrador */
+  #op-prevbar{ display:none; position:fixed; left:0; right:0; bottom:0; z-index:10000; background:#000; border-top:2px solid var(--band-strong); padding:10px 14px; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; font-size:.85rem; }
+  #op-prevbar button{ background:var(--band); color:#000; border:none; border-radius:4px; padding:8px 14px; font-family:'Oswald',sans-serif; font-weight:600; cursor:pointer; }
+  body.op-preview #op-prevbar{ display:flex; }
+  body.op-preview #tabnav, body.op-preview #bloco-distribuicao, body.op-preview main > *:not(#op-view){ display:none !important; }
+  body.op-preview #op-view{ display:block !important; max-width:410px; margin:14px auto 70px; padding:16px; border:10px solid #2a2a2a; border-radius:30px; background:#000; }
+  body.op-preview #op-lista{ display:block !important; }
+  body.op-preview .op-full{ left:50%; right:auto; width:410px; max-width:100vw; transform:translateX(-50%); }
+
   /* cabeçalho + indicadores */
   .piso-head{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin:0 0 var(--gap); }
   .piso-head h2{ font-family:'Oswald',sans-serif; font-weight:700; font-size:1.9rem; line-height:1.05; margin:0; color:var(--band); text-transform:uppercase; letter-spacing:.01em; }
@@ -1153,6 +1204,21 @@
 <body>
 <div id="toast-layer"></div>
 <div id="nuvem-banner" role="alert"></div>
+<div id="op-prevbar"><span>👁 Visualizando como <b>Operador</b> (celular) — nada é gravado aqui</span><button type="button" onclick="opPreviewAviso()">🔔 Testar aviso</button><button type="button" onclick="opPreviewToggle()">✕ Sair da visualização</button></div>
+<div id="op-aviso" class="op-full" data-ro-ok><div class="opav-ico">🖨</div><h1 id="opav-t">IMPRESSA!</h1><div id="opav-body"></div><button type="button" id="opav-ok" class="opb" onclick="opAvisoOk()">OK, VI</button></div>
+<div id="op-calc" class="op-full" data-ro-ok>
+  <div class="opcl-head"><div><div class="opcl-t">🏷 ETIQUETAR</div><div id="opcl-sub"></div></div><button type="button" class="opb" onclick="opCalcFechar()">✕ Fechar</button></div>
+  <div class="opcl-body">
+    <input id="opcl-busca" type="search" placeholder="Buscar item: código ou descrição" autocomplete="off" oninput="opCalcBuscar(this.value)">
+    <div id="opcl-itens" class="opcl-itens"></div>
+    <div id="opcl-sel"></div>
+    <div id="opcl-carga"></div>
+    <div id="opcl-disp">0</div>
+    <div id="opcl-res"></div>
+    <div class="opcl-ins"><button type="button" class="opb" onclick="opInserir('item')">↧ Total do item</button><button type="button" class="opb" onclick="opInserir('carga')">↧ Total da carga</button></div>
+    <div class="opcl-pad" id="opcl-pad"></div>
+  </div>
+</div>
 <div id="tv-aviso"><h1 class="tvav-titulo" id="tv-aviso-titulo">🖨 IMPRESSA!</h1><div id="tv-aviso-body"></div><div class="tvav-barra"><i id="tv-aviso-barra"></i></div></div>
 
 
@@ -1208,6 +1274,7 @@
         <button type="button" data-b="largas" onclick="setBordas('largas')">Largas</button>
       </div>
       <button class="btn btn-ghost btn-sm so-admin" onclick="openAbasModal()" title="Renomear as guias (só Administrador)">✎ Guias</button>
+      <button class="btn btn-ghost btn-sm so-admin" onclick="opPreviewToggle()" title="Ver como o Operador enxerga no celular">📱 Ver como Operador</button>
       <span class="tag" id="sync-status">Nuvem: conectando…</span>
       <button class="btn btn-ghost btn-sm" onclick="openQrModal()">Código do site</button>
       <button class="btn btn-ghost btn-sm" onclick="logout()">Sair</button>
@@ -1322,6 +1389,8 @@
         <span class="t-num" id="ft-sku-total">0</span><span class="t-lbl">SKU</span>
       </div>
     </section>
+
+    <div id="op-view"></div>
 
     <div id="bloco-distribuicao">
 
@@ -2438,6 +2507,7 @@ async function doLogin(){
 
   applySectorVisibility();
   switchTab('piso');
+  if(role === 'operador'){ tvAudioDestravar(); setTimeout(opChecarAviso, 400); }
   renderAll();
   aplicarSomenteLeitura();
   watchOwnUserStatus(forceLogout);
@@ -2579,6 +2649,198 @@ function renderTvFech(){
   }).join('');
 }
 
+/* ===== OPERADOR: lista para celular, aviso em tela cheia (carga impressa) e calculadora "Etiquetar" ===== */
+const OP_GRUPOS = [['PENDENTE DE ETIQUETAGEM','PENDENTES DE ETIQUETAGEM'],['AGUARDANDO IMPRESSÃO','AGUARDANDO IMPRESSÃO']];
+let opBusca = '';
+function opSetBusca(v){ opBusca = String(v || '').trim().toLowerCase(); renderOperador(); }
+function opStatusLabel(st){ return (typeof STATUS_LABELS !== 'undefined' && STATUS_LABELS[st]) || st; }
+function opCard(row, i){
+  const marc = row.marcadoEtq, d = Math.abs(Number(row.d1) || 0);
+  return `<div class="opc ${row.prioridade ? 'prio' : ''} ${marc ? 'ok' : ''}">
+    <div class="opc-top"><span class="opc-carga">${escapeHtml(row.carga)}</span><span class="pill ${STATUS_SLUGS[row.status] || ''}">${escapeHtml(opStatusLabel(row.status))}</span></div>
+    <div class="opc-forn">${escapeHtml(row.fornecedor)}${row.doca ? `<small>Doca ${escapeHtml(row.doca)}</small>` : ''}</div>
+    <div class="opc-nums"><div><b>${fmtInt(row.volume || 0)}</b><i>volumes</i></div><div><b>${fmtInt(row.sku || 0)}</b><i>SKU</i></div><div><b>${d}</b><i>${d === 1 ? 'dia' : 'dias'}</i></div></div>
+    ${row.prioridade ? `<div class="prio-note">⚑ ${escapeHtml(row.prioridade.nota)}</div>` : ''}
+    <div class="opc-acts"><button type="button" class="opb opb-calc" data-ro-ok onclick="opEtiquetar(${i})">🏷 Etiquetar</button>
+    <button type="button" class="opb ${marc ? 'opb-on' : ''}" onclick="toggleMarcaEtiquetada(${i}, ${marc ? 'false' : 'true'})">${marc ? '✔ Etiquetada' : 'Marcar etiquetada'}</button></div>
+    ${marc ? `<div class="marca-ok">✔ ${escapeHtml(marc.por)} · ${escapeHtml(marc.em)}</div>` : ''}
+  </div>`;
+}
+function renderOperador(){
+  const box = document.getElementById('op-view'), pp = document.getElementById('panel-piso');
+  if(!box) return;
+  if(currentUser && currentUser.role === 'operador'){ if(pp) pp.style.display = 'none'; box.style.display = 'block'; }
+  if(!box.querySelector('#op-lista')){
+    box.innerHTML = `<div class="op-head"><h2>Cargas no piso</h2><div class="op-sub" id="op-sub"></div></div><div class="op-busca" data-ro-ok><input type="search" id="op-busca" placeholder="Buscar carga ou fornecedor" autocomplete="off" oninput="opSetBusca(this.value)"></div><div id="op-lista"></div>`;
+  }
+  const permitidos = STATUS_VISIVEL.operador;
+  const todas = pisoData.map((row, i) => ({ row, i })).filter(({ row }) => !permitidos || permitidos.includes(row.status));
+  let L = todas;
+  if(opBusca) L = L.filter(v => (String(v.row.carga || '') + ' ' + String(v.row.fornecedor || '')).toLowerCase().includes(opBusca));
+  const grupo = st => { const k = OP_GRUPOS.findIndex(g => g[0] === st); return k === -1 ? OP_GRUPOS.length : k; };
+  document.getElementById('op-sub').textContent = todas.length + ' carga(s) · ' + todas.filter(v => !v.row.marcadoEtq).length + ' sem marcação de etiquetada';
+  let h = '';
+  for(let g = 0; g <= OP_GRUPOS.length; g++){
+    const itens = L.filter(v => grupo(v.row.status) === g).sort((a, b) => (a.row.marcadoEtq ? 1 : 0) - (b.row.marcadoEtq ? 1 : 0) || (b.row.prioridade ? 1 : 0) - (a.row.prioridade ? 1 : 0));
+    if(!itens.length) continue;
+    h += `<div class="op-grp g${g}">${g < OP_GRUPOS.length ? OP_GRUPOS[g][1] : 'OUTRAS'} — ${itens.length}</div>` + itens.map(v => opCard(v.row, v.i)).join('');
+  }
+  document.getElementById('op-lista').innerHTML = h || '<div class="piso-empty">Nenhuma carga no momento.</div>';
+}
+
+/* Administrador: pré-visualiza a tela do Operador (moldura de celular); nada é gravado */
+let opPreview = false;
+function opPreviewToggle(){
+  opPreview = !opPreview;
+  document.body.classList.toggle('op-preview', opPreview);
+  if(opPreview) renderOperador(); else { opAvisoOk(); opCalcFechar(); }
+  window.scrollTo(0, 0);
+}
+function opPreviewAviso(){
+  const L = (pisoData || []).filter(r => r.status === 'PENDENTE DE ETIQUETAGEM').slice(0, 2);
+  const base = L.length ? L : (pisoData || []).slice(0, 2);
+  if(!base.length){ showToast('Não há cargas no piso para simular o aviso.', true); return; }
+  opAvisoCargas = base.map(r => ({ carga: r.carga, fornecedor: r.fornecedor, d1: r.d1, volume: r.volume, sku: r.sku }));
+  opAvisoMostrar();
+}
+
+/* aviso em TELA CHEIA quando chega carga impressa (PENDENTE DE ETIQUETAGEM) — fica até o operador tocar em OK */
+let opAvisoDados = null, opAvisoCargas = [], opVistosMem = [];
+function opReceberAviso(u, rec){ opAvisoDados = { u, rec }; opChecarAviso(); }
+function opChecarAviso(){
+  if(!currentUser || currentUser.role !== 'operador' || !opAvisoDados) return;
+  const u = opAvisoDados.u, todos = Array.isArray(opAvisoDados.rec) ? opAvisoDados.rec.slice() : [];
+  if(u && !todos.some(x => x && x.id === u.id)) todos.push(u);
+  let vistos = opVistosMem.slice();
+  try{ vistos = vistos.concat(JSON.parse(localStorage.getItem('opAvisosVistos') || '[]')); }catch(e){}
+  const novos = todos.filter(x => x && x.id && !vistos.includes(x.id));
+  if(!novos.length) return;
+  opVistosMem = opVistosMem.concat(novos.map(x => x.id)).slice(-80);
+  try{ localStorage.setItem('opAvisosVistos', JSON.stringify(vistos.concat(novos.map(x => x.id)).slice(-80))); }catch(e){}
+  const recentes = novos.filter(x => Date.now() - Number(x.ts || 0) <= 20 * 60000);   // aviso antigo: não mostra
+  if(!recentes.length) return;
+  recentes.forEach(x => (x.cargas || []).forEach(c => {
+    const k = String(c.carga).trim();
+    if(!opAvisoCargas.some(y => String(y.carga).trim() === k)) opAvisoCargas.push(c);
+  }));
+  opAvisoMostrar();
+}
+function opAvisoMostrar(){
+  const box = document.getElementById('op-aviso'), corpo = document.getElementById('opav-body');
+  if(!box || !corpo) return;
+  const L = opAvisoCargas, n = L.length;
+  document.getElementById('opav-t').textContent = n > 1 ? 'IMPRESSAS! (' + n + ' cargas)' : 'IMPRESSA!';
+  corpo.innerHTML = L.slice(0, 12).map(c => { const d = Math.abs(Number(c.d1) || 0);
+    return `<div class="opav-row"><div class="opav-carga">${escapeHtml(c.carga)}</div><div class="opav-forn">${escapeHtml(c.fornecedor)}</div><div class="opav-n"><b>${fmtInt(c.volume || 0)}</b> volumes · <b>${fmtInt(c.sku || 0)}</b> SKU · <b>${d}</b> ${d === 1 ? 'dia' : 'dias'} no D-1</div></div>`; }).join('')
+    + (n > 12 ? `<div class="opav-mais">+ ${n - 12} carga(s) — veja na lista</div>` : '');
+  box.style.display = 'flex';
+  try{ tvSomImpressa(); }catch(e){}
+  try{ if(navigator.vibrate) navigator.vibrate([300, 150, 300, 150, 300]); }catch(e){}
+}
+function opAvisoOk(){ opAvisoCargas = []; const b = document.getElementById('op-aviso'); if(b) b.style.display = 'none'; }
+
+/* "Etiquetar": calculadora com apoio da Base (mesmo relatório gravado na guia Separação) */
+let opCalcCarga = '', opCalcRows = [], opCalcSel = '', opCalcQ = '', opExpr = '', opResMsg = null, opItensCache = [];
+function opNorm(t){ return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+function opItens(){
+  const m = {};
+  opCalcRows.forEach(r => {
+    const k = String(r.cod || '').trim() + '|' + String(r.embalagem || '').trim();
+    const o = m[k] || (m[k] = { k, cod: String(r.cod || '').trim(), desc: r.descricao || '', emb: String(r.embalagem || '').trim(), total: 0, lojas: {} });
+    const q = Number(r.qtd) || 0, l = String(r.destino || '').trim() || '—';
+    o.total += q; o.lojas[l] = (o.lojas[l] || 0) + q;
+  });
+  return Object.values(m).sort((a, b) => String(a.desc).localeCompare(String(b.desc), 'pt-BR'));
+}
+function opEtiquetar(i){
+  const r = pisoData[i]; if(!r) return;
+  opCalcCarga = sepNorm(r.carga);
+  opCalcRows = (typeof baseRows !== 'undefined' ? baseRows : []).filter(x => sepNorm(x.carga) === opCalcCarga);
+  opCalcSel = ''; opCalcQ = ''; opExpr = ''; opResMsg = null;
+  document.getElementById('opcl-sub').textContent = 'Carga ' + (r.carga || '') + ' · ' + (r.fornecedor || '');
+  document.getElementById('opcl-busca').value = '';
+  const pad = document.getElementById('opcl-pad');
+  if(!pad.firstChild){
+    const T = [['C','op'],['⌫','op'],['÷','op'],['×','op'],['7'],['8'],['9'],['−','op'],['4'],['5'],['6'],['+','op'],['1'],['2'],['3'],['=','eq'],['0'],[','],['CONFERIR','conf']];
+    pad.innerHTML = T.map(([k, c]) => `<button type="button" class="${c || ''}" onclick="opKey('${k}')">${k === 'CONFERIR' ? '✔ Conferir' : k}</button>`).join('');
+  }
+  document.getElementById('op-calc').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+  opCalcRender();
+}
+function opCalcFechar(){ document.getElementById('op-calc').style.display = 'none'; document.body.style.overflow = ''; }
+function opCalcBuscar(v){ opCalcQ = opNorm(v).trim(); opCalcRender(); }
+function opSelItem(idx){ const it = opItensCache[idx]; if(it){ opCalcSel = it.k; opResMsg = null; opCalcRender(); } }
+function opItemSel(){ return opItens().find(x => x.k === opCalcSel) || null; }
+function opEval(){
+  const s = opExpr.replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-').replace(/,/g, '.');
+  if(!s || !/^[0-9+\-*\/.() ]+$/.test(s)) return null;
+  try{ const v = Function('"use strict";return (' + s + ')')(); return isFinite(v) ? v : null; }catch(e){ return null; }
+}
+function opNum(v){ return Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 6 }); }
+function opInserir(tipo){
+  const it = opItemSel();
+  const v = tipo === 'item' ? (it ? it.total : null) : opCalcRows.reduce((s, r) => s + (Number(r.qtd) || 0), 0);
+  if(v == null){ opResMsg = { c:'inf', t:'Selecione um item primeiro.' }; } else { opExpr += String(v); opResMsg = null; }
+  opCalcRender();
+}
+function opKey(k){
+  if(k === 'C'){ opExpr = ''; opResMsg = null; }
+  else if(k === '⌫'){ opExpr = opExpr.slice(0, -1); }
+  else if(k === '='){ const v = opEval(); if(v !== null) opExpr = String(Math.round(v * 1e6) / 1e6).replace('.', ','); opResMsg = null; }
+  else if(k === 'CONFERIR'){
+    const v = opEval(), it = opItemSel();
+    if(v === null) opResMsg = { c:'inf', t:'Digite a contagem de etiquetas na calculadora.' };
+    else if(!it) opResMsg = { c:'inf', t:'Selecione o item que você está conferindo.' };
+    else { const d = Math.round((v - it.total) * 1e6) / 1e6;
+      opResMsg = d === 0 ? { c:'ok', t:'✔ CONFERE — ' + opNum(it.total) + ' etiquetas.' }
+        : d > 0 ? { c:'mais', t:'▲ A MAIS: ' + opNum(d) + ' etiqueta(s) sobrando (contou ' + opNum(v) + ' de ' + opNum(it.total) + ').' }
+        : { c:'menos', t:'▼ A MENOS: faltam ' + opNum(-d) + ' etiqueta(s) (contou ' + opNum(v) + ' de ' + opNum(it.total) + ').' }; }
+  } else { opExpr += k; opResMsg = null; }
+  opCalcRender();
+}
+function opCalcRender(){
+  const itens = opItens();
+  const tot = opCalcRows.reduce((s, r) => s + (Number(r.qtd) || 0), 0);
+  let lista = itens;
+  if(opCalcQ){ const ts = opCalcQ.split(/\s+/); lista = itens.filter(it => { const t = opNorm(it.cod + ' ' + it.desc); return ts.every(x => t.includes(x)); }); }
+  opItensCache = itens;
+  const el = id => document.getElementById(id);
+  el('opcl-itens').innerHTML = !itens.length
+    ? '<div class="opcl-card">Esta carga ainda não está na Base (só entram cargas 100% montadas). A calculadora funciona normalmente.</div>'
+    : (lista.slice(0, 40).map(it => `<button type="button" class="opcl-it ${it.k === opCalcSel ? 'on' : ''}" onclick="opSelItem(${itens.indexOf(it)})"><b>${escapeHtml(it.cod)}</b> · ${escapeHtml(it.desc)}<small>${it.emb ? 'Emb. ' + escapeHtml(it.emb) + ' · ' : ''}${opNum(it.total)} etiquetas</small></button>`).join('') || '<div class="opcl-card">Nenhum item encontrado.</div>');
+  const it = opItemSel();
+  el('opcl-sel').innerHTML = it ? `<div class="opcl-card"><div class="k">${escapeHtml(it.cod)} · ${escapeHtml(it.desc)}</div><div class="k">Total de etiquetas / volume do item</div><div class="big">${opNum(it.total)}</div><div class="opcl-lojas">${Object.keys(it.lojas).sort(cmpNat).map(l => `<span>${escapeHtml(l)}: <b>${opNum(it.lojas[l])}</b></span>`).join('')}</div></div>` : '';
+  el('opcl-carga').innerHTML = itens.length ? `<div class="opcl-card"><div class="k">Volume total da carga</div><div class="big">${opNum(tot)}</div><div class="k">${itens.length} item(ns)</div></div>` : '';
+  el('opcl-disp').textContent = opExpr || '0';
+  const r = el('opcl-res'); r.className = opResMsg ? opResMsg.c : ''; r.textContent = opResMsg ? opResMsg.t : '';
+}
+
+/* ---- TV: som do aviso "IMPRESSA!" (toca a cada notificação, só no login da TV) ---- */
+const TV_SOM_VOLUME = 0.35;   // 0 a 1 — aumente se o galpão for barulhento
+let tvAudioCtx = null;
+function tvAudioDestravar(){   // o navegador só libera o som depois de um clique/tecla: chamado no login da TV e em qualquer toque
+  try{
+    if(!tvAudioCtx) tvAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if(tvAudioCtx.state === 'suspended') tvAudioCtx.resume();
+  }catch(e){}
+}
+function tvSomImpressa(){
+  try{
+    tvAudioDestravar();
+    const ctx = tvAudioCtx; if(!ctx) return;
+    const base = ctx.currentTime + 0.05;
+    [0, 0.9].forEach(rep => [[1046.5, 0], [1318.5, 0.15], [1568, 0.3]].forEach(([f, dt]) => {   // "ta-ta-tá" ascendente, duas vezes
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = base + rep + dt;
+      o.type = 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(TV_SOM_VOLUME, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.5);
+    }));
+  }catch(e){}
+}
 /* ---- TV: aviso "IMPRESSA!" (carga nova em PENDENTE DE ETIQUETAGEM) ---- */
 let tvAvisoUltimo = null, tvAvisoRec = [], tvAvisoCargas = [], tvAvisoTimer = 0, tvAvisoAberto = false, tvAvisoVistosMem = [];
 function tvAvisoVistos(){
@@ -2601,6 +2863,7 @@ function tvChecarAviso(){
   tvAvisoMarcarVistos(novos.map(x => x.id));
   const recentes = novos.filter(x => Date.now() - Number(x.ts || 0) <= 20 * 60000);   // aviso antigo (TV reaberta depois): não mostra
   if(!recentes.length) return;
+  tvSomImpressa();
   recentes.forEach(x => (x.cargas || []).forEach(c => {
     const k = String(c.carga).trim();
     if(!tvAvisoCargas.some(y => String(y.carga).trim() === k)) tvAvisoCargas.push(c);
@@ -2698,6 +2961,9 @@ function tvStart(){
   clearInterval(tvClockTimer); tvClockTimer = setInterval(tvRelogio, 15000);
   document.addEventListener('keydown', tvTecla);
   document.addEventListener('mousemove', tvMostrarControles);
+  tvAudioDestravar();
+  document.addEventListener('pointerdown', tvAudioDestravar);
+  document.addEventListener('keydown', tvAudioDestravar);
   document.addEventListener('visibilitychange', tvVisivel);
   tvManterTelaLigada();
   tvMostrar(0);
@@ -3004,6 +3270,7 @@ function applySectorVisibility(){
   const op = currentUser && currentUser.role === 'operador';
   document.getElementById('bloco-distribuicao').style.display = op ? 'none' : 'block';
   document.getElementById('tabnav').style.display = op ? 'none' : 'flex';
+  { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp && op) pp.style.display = 'none'; }
   document.getElementById('tab-btn-fech').style.display = podeVerFechamentos() ? 'inline-block' : 'none';
 }
 
@@ -3170,6 +3437,8 @@ function buildPisoRow(row, i, perm, maxVol){
 
 function renderPiso(){
   const { role } = currentUser;
+  if(role === 'operador'){ renderOperador(); return; }
+  if(opPreview) renderOperador();
   const perm = {
     editAll: role === 'admin',
     markStatus: ehAdminLike(role),
@@ -3301,6 +3570,7 @@ function togglePrioridade(i){
 /* Operador (e admin): só MARCA como etiquetada — não altera o STATUS da carga */
 function toggleMarcaEtiquetada(i, checked){
   if(!currentUser) return;
+  if(opPreview){ showToast('Visualização: nada é gravado.', false); return; }
   const row = pisoData[i];
   if(!row) return;
   if(checked){
@@ -6648,7 +6918,7 @@ window.addEventListener('scroll', () => {
 }, { passive:true });
 
 /* ===================== SOMENTE LEITURA (fora do horário do turno) ===================== */
-const RO_PERMITIDO_ONCLICK = /abrirAuditoria|fecharAuditoria|auditoria|imprimirAuditoria|switchTab|switchDistTab|setBordas|irSecao|toggleDock|toggleUsersFloat|logout|openQrModal|closeQrModal|copySiteLink|copiarDistribuicao|copiarGraficoImagem|recFiltro|toggleProgramacaoFiltro|imprimir|toggleMobilePreview|toggleSenhaVisibility|^document\./;
+const RO_PERMITIDO_ONCLICK = /abrirAuditoria|opEtiquetar|opCalcFechar|opKey|opSelItem|opInserir|opAvisoOk|fecharAuditoria|auditoria|imprimirAuditoria|switchTab|switchDistTab|setBordas|irSecao|toggleDock|toggleUsersFloat|logout|openQrModal|closeQrModal|copySiteLink|copiarDistribuicao|copiarGraficoImagem|recFiltro|toggleProgramacaoFiltro|imprimir|toggleMobilePreview|toggleSenhaVisibility|^document\./;
 function roPermitido(el){
   if(!el) return true;
   if(el.closest('[data-ro-ok]') || el.closest('.tab-btn')) return true;
@@ -6931,6 +7201,7 @@ function renderDistClockOnly(){
     if(!snap.exists()) return;
     const dd = snap.data(), u = dd.ultimo;
     if(u && typeof tvReceberAviso === 'function') tvReceberAviso(u, dd.recentes);
+    if(u && typeof opReceberAviso === 'function') opReceberAviso(u, dd.recentes);
   }, err => reportError('Erro ao ler aviso de carga impressa:', err));
 
   // ---------- nomes das guias (editáveis pelo Administrador, valem para todos) ----------

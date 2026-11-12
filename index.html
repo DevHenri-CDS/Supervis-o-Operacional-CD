@@ -1312,7 +1312,6 @@
           <button class="pbtn" id="btn-colar-piso" onclick="openImportModal()">Colar da planilha</button>
           <button class="pbtn" id="btn-foto-piso" onclick="openPhotoImportModal()">Preencher por foto</button>
           <button class="pbtn pbtn-primary" id="btn-add-piso" onclick="addPisoRow()">+ Adicionar carga</button>
-          <button class="pbtn pbtn-danger" id="btn-limpar-piso" onclick="limparCargasNoPiso()">🗑 Limpar cargas no piso</button>
         </div>
       </div>
 
@@ -2434,7 +2433,6 @@ async function doLogin(){
   document.getElementById('btn-add-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-colar-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-foto-piso').style.display = isAdmin ? 'inline-block' : 'none';
-  document.getElementById('btn-limpar-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.body.classList.add('logado');
   document.body.classList.toggle('is-admin', isAdmin);
 
@@ -3327,17 +3325,6 @@ function addPisoRow(){
   pisoData.push({produtivo:'', doca:'', carga:'', fornecedor:'', liberacao: todayLabel().curto, d1:0, volume:0, sku:0, departamento:'', status:'PENDENTE DE ETIQUETAGEM', obs:''});
   savePiso();
   renderAll();
-}
-
-function limparCargasNoPiso(){
-  if(!currentUser || !souAdmin()) return;
-  const qtd = pisoData.length;
-  if(qtd === 0){ showToast('Não há cargas no piso pra limpar.', true); return; }
-  if(!confirm(`Limpar TODAS as ${qtd} carga(s) no piso? Essa ação apaga a lista inteira e não pode ser desfeita. A Distribuição e o relatório Cross não são afetados.`)) return;
-  pisoData = [];
-  savePiso();
-  renderAll();
-  showToast(`🗑 ${qtd} carga(s) removida(s) do piso.`, false);
 }
 
 /* ===================== RENDER: PAINEL 2 - FILA DE DISTRIBUIÇÃO ===================== */

@@ -459,6 +459,31 @@
   .pp-ret .ppr-row .obs b{ color:#c62828; font-style:normal; }
   .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:7px 12px; background:#000; color:#fff; font-size:11px; font-weight:700; border-top:3px solid #FF8A1F; }
   .pp-ret .ppr-total b{ color:#FF8A1F; font-size:15px; margin:0 3px 0 10px; }
+
+  .pp-ret .ppr-sec{ margin:12px 0 4px; padding:5px 10px; background:#000; color:#FF8A1F; font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; border-left:5px solid #FF8A1F; display:flex; justify-content:space-between; align-items:baseline; }
+  .pp-ret .ppr-sec small{ color:#f3eedf; font-weight:400; font-size:8.5px; text-transform:none; letter-spacing:0; }
+  .pp-ret .ppr-cards{ display:grid; gap:5px; }
+  .pp-ret .ppr-cards.c3{ grid-template-columns:repeat(3,1fr); }
+  .pp-ret .ppr-cards.c4{ grid-template-columns:repeat(4,1fr); }
+  .pp-ret .ppr-card{ border:1px solid #999; border-left:4px solid #2e9e5b; border-radius:3px; padding:4px 6px; font-size:9px; break-inside:avoid; page-break-inside:avoid; min-width:0; }
+  .pp-ret .ppr-card.crit{ border-left-color:#c62828; background:#fff1f0; }
+  .pp-ret .ppr-card.por{ border-left-color:#FF8A1F; }
+  .pp-ret .ppr-card.por.ja{ border-left-color:#2e9e5b; background:#eef9f2; }
+  .pp-ret .ppr-card .t{ font-weight:700; font-size:10px; }
+  .pp-ret .ppr-card .f{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#222; margin:1px 0 2px; }
+  .pp-ret .ppr-card .m{ font-size:8.5px; color:#333; }
+  .pp-ret .ppr-card .m b{ font-size:10px; color:#000; }
+  .pp-ret .ppr-card .m .neg{ color:#c62828; font-weight:700; }
+  .pp-ret .ppr-card .tag{ font-size:7.5px; font-weight:700; text-transform:uppercase; color:#8a4b00; }
+  .pp-ret .ppr-card.por.ja .tag{ color:#1d6b3d; }
+  .pp-ret .ppr-card .cb{ font-size:7.5px; font-weight:700; color:#c62828; text-transform:uppercase; }
+  .pp-ret .ppr-vazio{ font-size:9px; font-style:italic; color:#555; padding:4px 2px; }
+  .pp-ret .ppr-turno{ margin:6px 0 0; break-inside:avoid; page-break-inside:avoid; }
+  .pp-ret .ppr-turno h4{ margin:0 0 2px; font-size:10px; text-transform:uppercase; padding:2px 6px; background:#ffe9d0; border-left:4px solid #FF8A1F; }
+  .pp-ret .ppr-tab{ width:100%; border-collapse:collapse; font-size:8.5px; }
+  .pp-ret .ppr-tab th{ background:#eee; text-align:left; font-size:7.5px; text-transform:uppercase; padding:2px 4px; border:1px solid #aaa; }
+  .pp-ret .ppr-tab td{ padding:2px 4px; border:1px solid #ccc; }
+  .pp-ret .ppr-tab tfoot td{ background:#f1f1f1; font-weight:700; border-top:2px solid #000; }
   .pp-ret .ppr-foot{ margin-top:4px; font-size:8px; color:#555; text-align:right; }
 
   /* ---------- IMPRESSÃO: CARGAS NO PISO ---------- */
@@ -6255,6 +6280,52 @@ function imprimirCargasPisoRetrato(){
     ? `<div class="ppr-grp ${ok ? 'ok' : ''}">${titulo} — ${lista.length}</div>${colunas}${lista.map(r => linha(r, ok)).join('')}`
     : '';
 
+  /* ---- Fila de Distribuição + Portaria + Resumo da Distribuição (não vão para o Operador, que não enxerga esse bloco) ---- */
+  let secoesDist = '';
+  if(currentUser.role !== 'operador'){
+    const fila = pisoData.filter(r => r.status === 'CARGA ETIQUETADA').slice().sort((a,b) => (cargaCritica(b)?1:0) - (cargaCritica(a)?1:0));
+    const nFilaCrit = fila.filter(r => cargaCritica(r)).length;
+    const cardFila = r => {
+      const crit = cargaCritica(r);
+      return `<div class="ppr-card ${crit ? 'crit' : ''}">
+        ${crit ? `<div class="cb">⚠ Crítico · ${Math.abs(Number(r.d1))} dias no D-1</div>` : ''}
+        <div class="t">Carga ${txt(r.carga)}${vazio(r.doca) ? '' : ' · Doca ' + escapeHtml(r.doca)}</div>
+        <div class="f">${txt(r.fornecedor)}</div>
+        <div class="m"><b>${fmtInt(r.volume || 0)}</b> vol · <b>${r.sku == null ? 0 : escapeHtml(r.sku)}</b> SKU · aging <span class="${crit ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</span></div>
+      </div>`;
+    };
+    const secFila = `<div class="ppr-sec"><span>Fila de distribuição</span><small>Turno ativo ${escapeHtml(turnoAtivo || '—')} · ${fila.length} aguardando · ${nFilaCrit} crítica(s)</small></div>` +
+      (fila.length ? `<div class="ppr-cards c3">${fila.map(cardFila).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga aguardando distribuição.</div>');
+
+    const noPiso = new Set((pisoData || []).map(r => String(r.carga)));
+    const aLiberar = portariaData.filter(r => !noPiso.has(String(r.carga))).length;
+    const cardPor = r => {
+      const ja = noPiso.has(String(r.carga));
+      return `<div class="ppr-card por ${ja ? 'ja' : ''}"><div class="t">Carga ${txt(r.carga)}</div><div class="f">${txt(r.fornecedor)}</div><div class="tag">${ja ? '✔ já no piso' : 'Aguardando liberação'}</div></div>`;
+    };
+    const secPor = `<div class="ppr-sec"><span>Portaria</span><small>Cargas que ainda vão ser liberadas · ${aLiberar} a liberar</small></div>` +
+      (portariaData.length ? `<div class="ppr-cards c4">${portariaData.map(cardPor).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga na Portaria.</div>');
+
+    const turnosAtivos = TURNOS.filter(t => distData.some(r => turnoDaCarga(r) === t));
+    const blocoTurno = turno => {
+      const linhas = distData.filter(r => turnoDaCarga(r) === turno);
+      const extras = distExtras[turno] || distExtrasVazio();
+      const volLin = linhas.reduce((s, r) => s + Number(r.volume || 0), 0);
+      const skuTot = linhas.reduce((s, r) => s + Number(r.sku || 0), 0) + nrSku(extras);
+      const volTot = volLin + Number(extras.estocadoFull || 0) + Number(extras.estocadoMix || 0) + nrVol(extras);
+      return `<div class="ppr-turno"><h4>Distribuição ${turno}</h4>
+        <table class="ppr-tab">
+          <thead><tr><th>Etiquetagem</th><th>Doca</th><th>Carga</th><th>Descrição</th><th>Liberação</th><th>D-1</th><th>Volume</th><th>SKU</th><th>Hora</th><th>Distribuído por</th></tr></thead>
+          <tbody>${linhas.map(r => `<tr><td>${txt(r.etiquetagem)}</td><td>${txt(r.doca)}</td><td>${txt(r.carga)}</td><td>${txt(r.descricao)}</td><td>${txt(r.liberacao)}</td><td>${r.d1 == null ? 0 : escapeHtml(r.d1)}</td><td>${fmtInt(r.volume || 0)}</td><td>${r.sku == null ? 0 : escapeHtml(r.sku)}</td><td>${txt(r.horaDist)}</td><td>${txt(r.distribuidoPor)}</td></tr>`).join('')}</tbody>
+          <tfoot><tr><td colspan="6">TOTAL ${turno}</td><td>${fmtInt(volTot)}</td><td>${skuTot}</td><td colspan="2">Produtivos: ${Number(extras.qtdProdutivos || 0)}</td></tr></tfoot>
+        </table></div>`;
+    };
+    const secRes = `<div class="ppr-sec"><span>Resumo da distribuição</span><small>Turnos com carga distribuída</small></div>` +
+      (turnosAtivos.length ? turnosAtivos.map(blocoTurno).join('') : '<div class="ppr-vazio">Nenhum turno com carga distribuída ainda.</div>');
+
+    secoesDist = secFila + secPor + secRes;
+  }
+
   const { curto, extenso } = todayLabel();
   const d = new Date();
   const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
@@ -6277,6 +6348,7 @@ function imprimirCargasPisoRetrato(){
     ${grupo('NÃO ETIQUETADAS', naoEtq, false)}
     ${grupo('ETIQUETADAS', etq, true)}
     <div class="ppr-total"><span>VOLUME TOTAL</span><span><b>${fmtInt(volAll)}</b>volumes<b>${fmtInt(skuAll)}</b>SKU</span></div>
+    ${secoesDist}
     <div class="ppr-foot">Supervisão Operacional — Painel CD</div>
   </div>`;
 

@@ -483,7 +483,9 @@
   .pp-ret .ppr-tab{ width:100%; border-collapse:collapse; font-size:8.5px; }
   .pp-ret .ppr-tab th{ background:#eee; text-align:left; font-size:7.5px; text-transform:uppercase; padding:2px 4px; border:1px solid #aaa; }
   .pp-ret .ppr-tab td{ padding:2px 4px; border:1px solid #ccc; }
-  .pp-ret .ppr-tab tfoot td{ background:#f1f1f1; font-weight:700; border-top:2px solid #000; }
+  .pp-ret .ppr-tab tfoot td{ background:#f1f1f1; font-weight:700; border-top:2px solid #000; font-family:Arial,Helvetica,sans-serif; font-size:8.5px; padding:2px 4px; }
+  .pp-ret .ppr-tab thead th{ white-space:normal; letter-spacing:0; }
+  .pp-ret .ppr-tab tr{ break-inside:avoid; page-break-inside:avoid; }
   .pp-ret .ppr-foot{ margin-top:4px; font-size:8px; color:#555; text-align:right; }
 
   /* ---------- IMPRESSÃO: CARGAS NO PISO ---------- */
@@ -492,19 +494,19 @@
     body[data-print-target="piso"] > *:not(#piso-print-area){ display:none !important; }
     body[data-print-target="piso"]{ background:#fff !important; }
     body[data-print-target="piso"] #piso-print-area{ display:block; color:#000; font-family:Arial,sans-serif; }
-    #piso-print-area h1{ font-family:Arial,sans-serif; font-size:18px; margin:0 0 2px; color:#000; letter-spacing:0; }
-    #piso-print-area .pp-sub{ font-size:11px; margin:0 0 6px; color:#333; }
-    #piso-print-area .pp-resumo{ font-size:12px; font-weight:700; margin:0 0 10px; }
-    #piso-print-area table{ width:100%; border-collapse:collapse; font-size:11px; }
-    #piso-print-area thead{ display:table-header-group; }
-    #piso-print-area tr{ page-break-inside:avoid; }
-    #piso-print-area th, #piso-print-area td{
+    #piso-print-area:not(.pp-ret) h1{ font-family:Arial,sans-serif; font-size:18px; margin:0 0 2px; color:#000; letter-spacing:0; }
+    #piso-print-area:not(.pp-ret) .pp-sub{ font-size:11px; margin:0 0 6px; color:#333; }
+    #piso-print-area:not(.pp-ret) .pp-resumo{ font-size:12px; font-weight:700; margin:0 0 10px; }
+    #piso-print-area:not(.pp-ret) table{ width:100%; border-collapse:collapse; font-size:11px; }
+    #piso-print-area:not(.pp-ret) thead{ display:table-header-group; }
+    #piso-print-area:not(.pp-ret) tr{ page-break-inside:avoid; }
+    #piso-print-area:not(.pp-ret) th, #piso-print-area:not(.pp-ret) td{
       border:1px solid #888; padding:4px 6px; text-align:left; color:#000; background:#fff;
       -webkit-print-color-adjust:exact; print-color-adjust:exact;
     }
-    #piso-print-area th{ background:#FF8A1F !important; font-size:10px; text-transform:uppercase; }
-    #piso-print-area tr.pp-grp td{ background:#ddd !important; font-weight:700; text-transform:uppercase; font-size:11px; }
-    #piso-print-area tfoot td{ background:#eee !important; font-weight:700; font-family:Arial,sans-serif; border-top:2px solid #000; }
+    #piso-print-area:not(.pp-ret) th{ background:#FF8A1F !important; font-size:10px; text-transform:uppercase; }
+    #piso-print-area:not(.pp-ret) tr.pp-grp td{ background:#ddd !important; font-weight:700; text-transform:uppercase; font-size:11px; }
+    #piso-print-area:not(.pp-ret) tfoot td{ background:#eee !important; font-weight:700; font-family:Arial,sans-serif; border-top:2px solid #000; }
   }
 
   /* ============================================================
@@ -6353,7 +6355,7 @@ function imprimirCargasPisoRetrato(){
   </div>`;
 
   /* ajuste automático: mede o conteúdo e reduz a escala até caber em UMA página A4 retrato (margem 8 mm) */
-  const W = 733, H = 1040;                       // px úteis (≈194 × 275 mm)
+  const W = 733, H = 1010;                       // px úteis (≈194 × 275 mm)
   const fit = area.firstElementChild;
   area.style.cssText = `display:block;position:absolute;left:-10000px;top:0;width:${W}px;`;
   fit.style.width = W + 'px';
@@ -6361,7 +6363,7 @@ function imprimirCargasPisoRetrato(){
   const escala = Math.min(1, H / h);
   area.removeAttribute('style');
   fit.style.cssText = `width:${(W / escala).toFixed(2)}px;transform:scale(${escala.toFixed(4)});transform-origin:0 0;`;
-  area.style.cssText = `height:${Math.floor(h * escala)}px;overflow:hidden;`;
+  area.style.cssText = `height:${Math.ceil(h * escala)}px;overflow:visible;`;
   if(escala < 0.6) showToast('Muitas cargas: a letra ficou bem reduzida para caber em 1 página.', true);
 
   const velho = document.getElementById('pp-page-style');

@@ -419,6 +419,48 @@
   .fech-img{ width:100%; border:1px solid var(--line); border-radius:4px; background:#fff; display:block; }
   .fech-foto-bar{ border-top:none; border-bottom:1px solid var(--line); align-items:center; flex-wrap:wrap; }
 
+
+  /* ---------- IMPRESSÃO: CARGAS NO PISO — RETRATO, 1 PÁGINA ---------- */
+  .piso-print-grp{ display:flex; gap:8px; flex-wrap:wrap; }
+  #piso-print-area.pp-ret{ font-family:Arial,Helvetica,sans-serif; color:#000; background:#fff; }
+  .pp-ret *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .pp-ret .ppr-fit{ background:#fff; }
+  .pp-ret .ppr-head{ display:flex; justify-content:space-between; align-items:flex-end; background:#000; color:#FF8A1F; padding:10px 14px; border-bottom:4px solid #FF8A1F; }
+  .pp-ret .ppr-head h1{ margin:0; font:700 24px Arial,sans-serif; letter-spacing:.02em; color:#FF8A1F; }
+  .pp-ret .ppr-head .ppr-data{ font-size:10.5px; color:#f3eedf; text-align:right; line-height:1.4; }
+  .pp-ret .ppr-kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:10px 0 10px; }
+  .pp-ret .ppr-kpi{ border:1px solid #999; border-top:4px solid #FF6A00; border-radius:3px; padding:6px 8px 7px; }
+  .pp-ret .ppr-kpi.crit{ border-top-color:#c62828; }
+  .pp-ret .ppr-kpi.crit.on .n{ color:#c62828; }
+  .pp-ret .ppr-kpi .l{ font-size:8.5px; font-weight:700; text-transform:uppercase; color:#444; letter-spacing:.03em; }
+  .pp-ret .ppr-kpi .n{ font-size:22px; font-weight:700; line-height:1.1; margin-top:2px; }
+  .pp-ret .ppr-kpi .s{ font-size:8px; color:#444; margin-top:1px; min-height:10px; }
+  .pp-ret .ppr-kpi .b{ height:5px; background:#ddd; border-radius:3px; margin-top:4px; overflow:hidden; }
+  .pp-ret .ppr-kpi .b i{ display:block; height:100%; background:#FF8A1F; }
+  .pp-ret .ppr-grp{ margin:8px 0 3px; padding:4px 8px; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; border-left:5px solid #FF8A1F; background:#ffe9d0; }
+  .pp-ret .ppr-grp.ok{ border-left-color:#2e9e5b; background:#dcf3e5; }
+  .pp-ret .ppr-cols, .pp-ret .ppr-row{ display:grid; grid-template-columns:36px 58px minmax(0,1fr) 52px 30px 74px 34px 92px 76px; column-gap:6px; align-items:center; }
+  .pp-ret .ppr-cols{ padding:3px 8px 3px 11px; font-size:8px; font-weight:700; text-transform:uppercase; color:#555; border-bottom:1px solid #888; }
+  .pp-ret .ppr-row{ padding:4px 8px 4px 8px; border-bottom:1px solid #ccc; border-left:3px solid #FF8A1F; font-size:10px; break-inside:avoid; page-break-inside:avoid; }
+  .pp-ret .ppr-row.ok{ border-left-color:#2e9e5b; }
+  .pp-ret .ppr-row.prio{ border-left-color:#c62828; background:#fff1f0; }
+  .pp-ret .ppr-row .doca, .pp-ret .ppr-row .carga{ font-weight:700; }
+  .pp-ret .ppr-row .forn{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pp-ret .ppr-row .forn small{ display:block; font-weight:400; font-size:8px; color:#555; text-transform:uppercase; }
+  .pp-ret .ppr-row .d1.neg{ color:#c62828; font-weight:700; }
+  .pp-ret .ppr-row .vol{ font-weight:700; }
+  .pp-ret .ppr-row .vol .bar{ height:4px; background:#ddd; border-radius:2px; margin-top:2px; overflow:hidden; }
+  .pp-ret .ppr-row .vol .bar i{ display:block; height:100%; background:#FF8A1F; }
+  .pp-ret .ppr-row.ok .vol .bar i{ background:#2e9e5b; }
+  .pp-ret .ppr-row .pill{ display:inline-block; font-size:8px; font-weight:700; padding:2px 5px; border-radius:8px; background:#ffe0b8; border:1px solid #d98a2b; line-height:1.2; }
+  .pp-ret .ppr-row.ok .pill{ background:#cfeedd; border-color:#2e9e5b; }
+  .pp-ret .ppr-row .prod{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pp-ret .ppr-row .obs{ grid-column:3 / -1; font-size:8.5px; font-style:italic; color:#333; margin-top:1px; }
+  .pp-ret .ppr-row .obs b{ color:#c62828; font-style:normal; }
+  .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:7px 12px; background:#000; color:#fff; font-size:11px; font-weight:700; border-top:3px solid #FF8A1F; }
+  .pp-ret .ppr-total b{ color:#FF8A1F; font-size:15px; margin:0 3px 0 10px; }
+  .pp-ret .ppr-foot{ margin-top:4px; font-size:8px; color:#555; text-align:right; }
+
   /* ---------- IMPRESSÃO: CARGAS NO PISO ---------- */
   #piso-print-area{ display:none; }
   @media print{
@@ -1354,9 +1396,9 @@
           <h2 contenteditable="false" id="titulo-piso">CARGAS NO PISO</h2>
           <div class="piso-date" id="data-piso"></div>
         </div>
-        <button class="piso-print-btn no-print" onclick="imprimirCargasPiso()">
+        <button class="piso-print-btn no-print" onclick="imprimirCargasPisoRetrato()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg>
-          Imprimir
+          Impressão
         </button>
       </div>
 
@@ -6136,6 +6178,8 @@ function imprimirCargasPiso(){
   const d = new Date();
   const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 
+  const _pa = document.getElementById('piso-print-area');
+  _pa.className = ''; _pa.removeAttribute('style');
   document.getElementById('piso-print-area').innerHTML = `
     <h1>CARGAS NO PISO</h1>
     <div class="pp-sub">${curto} · ${escapeHtml(extenso)} · impresso às ${hora} por ${escapeHtml(currentUser.nome)}</div>
@@ -6164,6 +6208,101 @@ function imprimirCargasPiso(){
   document.body.setAttribute('data-print-target', 'piso');
   window.print();
 }
+
+/* ===================== IMPRIMIR CARGAS NO PISO — RETRATO, 1 PÁGINA ===================== */
+function imprimirCargasPisoRetrato(){
+  if(!currentUser) return;
+  const permitidos = STATUS_VISIVEL[currentUser.role];
+  const vis = pisoData.filter(r => !permitidos || permitidos.includes(r.status));
+  if(vis.length === 0){ showToast('Não há cargas no piso para imprimir.', true); return; }
+
+  const porPrio = (a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0);
+  const naoEtq = vis.filter(r => r.status !== 'CARGA ETIQUETADA').sort(porPrio);
+  const etq = vis.filter(r => r.status === 'CARGA ETIQUETADA').sort(porPrio);
+  const soma = (lista, campo) => lista.reduce((s, r) => s + Number(r[campo] || 0), 0);
+  const pctDe = (a, b) => b > 0 ? Math.round((a / b) * 100) : 0;
+  const maxVol = vis.reduce((m, r) => Math.max(m, Number(r.volume || 0)), 0);
+  const vazio = v => String(v == null ? '' : v).trim() === '';
+  const txt = v => vazio(v) ? '—' : escapeHtml(v);
+
+  const volEtq = soma(etq, 'volume'), skuEtq = soma(etq, 'sku');
+  const volAll = soma(vis, 'volume'), skuAll = soma(vis, 'sku');
+  const nCrit = vis.filter(r => cargaCritica(r)).length;
+  const nPrio = vis.filter(r => r.prioridade).length;
+
+  const linha = (r, ok) => {
+    const vol = Number(r.volume || 0);
+    let pct = maxVol > 0 ? (vol / maxVol) * 100 : 0;
+    if(vol > 0 && pct < 3) pct = 3;
+    const neg = Number(r.d1) < 0 || cargaCritica(r);
+    const obsTxt = (r.prioridade ? '<b>⚑ PRIORIDADE</b> ' : '') + (vazio(r.obs) ? '' : escapeHtml(r.obs));
+    const marca = r.marcadoEtq ? ' ✔' : '';
+    return `<div class="ppr-row ${r.prioridade ? 'prio' : (ok ? 'ok' : '')}">
+      <div class="doca">${txt(r.doca)}</div>
+      <div class="carga">${txt(r.carga)}</div>
+      <div class="forn">${txt(r.fornecedor)}${vazio(r.departamento) ? '' : `<small>${escapeHtml(r.departamento)}</small>`}</div>
+      <div class="lib">${txt(r.liberacao)}</div>
+      <div class="d1 ${neg ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</div>
+      <div class="vol">${fmtInt(vol)}<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>
+      <div class="sku">${r.sku == null ? 0 : escapeHtml(r.sku)}</div>
+      <div><span class="pill">${escapeHtml(STATUS_LABELS[r.status] || r.status || '')}${marca}</span></div>
+      <div class="prod">${txt(r.produtivo)}</div>
+      ${obsTxt ? `<div class="obs">${obsTxt}</div>` : ''}
+    </div>`;
+  };
+  const colunas = '<div class="ppr-cols"><span>Doca</span><span>Carga</span><span>Fornecedor</span><span>Liberação</span><span>D-1</span><span>Volume</span><span>SKU</span><span>Status</span><span>Produtivo</span></div>';
+  const grupo = (titulo, lista, ok) => lista.length
+    ? `<div class="ppr-grp ${ok ? 'ok' : ''}">${titulo} — ${lista.length}</div>${colunas}${lista.map(r => linha(r, ok)).join('')}`
+    : '';
+
+  const { curto, extenso } = todayLabel();
+  const d = new Date();
+  const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+
+  const area = document.getElementById('piso-print-area');
+  area.className = 'pp-ret';
+  area.removeAttribute('style');
+  area.innerHTML = `<div class="ppr-fit">
+    <div class="ppr-head">
+      <h1>CARGAS NO PISO</h1>
+      <div class="ppr-data">${curto} · ${escapeHtml(extenso)}<br>impresso às ${hora} por ${escapeHtml(currentUser.nome)}</div>
+    </div>
+    <div class="ppr-kpis">
+      <div class="ppr-kpi"><div class="l">Cargas no piso</div><div class="n">${vis.length}</div><div class="s">${etq.length} etiquetadas · ${naoEtq.length} não etiq.</div><div class="b"><i style="width:${pctDe(etq.length, vis.length)}%"></i></div></div>
+      <div class="ppr-kpi"><div class="l">Volumes etiquetados</div><div class="n">${fmtInt(volEtq)}</div><div class="s">de ${fmtInt(volAll)} · ${pctDe(volEtq, volAll)}%</div><div class="b"><i style="width:${pctDe(volEtq, volAll)}%"></i></div></div>
+      <div class="ppr-kpi"><div class="l">SKU etiquetados</div><div class="n">${fmtInt(skuEtq)}</div><div class="s">de ${fmtInt(skuAll)} · ${pctDe(skuEtq, skuAll)}%</div><div class="b"><i style="width:${pctDe(skuEtq, skuAll)}%"></i></div></div>
+      <div class="ppr-kpi crit ${nCrit > 0 ? 'on' : ''}"><div class="l">Cargas críticas</div><div class="n">${nCrit}</div><div class="s">3 dias ou mais no D-1</div></div>
+      <div class="ppr-kpi"><div class="l">Prioridades</div><div class="n">${nPrio}</div><div class="s">sinalizadas pelo supervisor</div></div>
+    </div>
+    ${grupo('NÃO ETIQUETADAS', naoEtq, false)}
+    ${grupo('ETIQUETADAS', etq, true)}
+    <div class="ppr-total"><span>VOLUME TOTAL</span><span><b>${fmtInt(volAll)}</b>volumes<b>${fmtInt(skuAll)}</b>SKU</span></div>
+    <div class="ppr-foot">Supervisão Operacional — Painel CD</div>
+  </div>`;
+
+  /* ajuste automático: mede o conteúdo e reduz a escala até caber em UMA página A4 retrato (margem 8 mm) */
+  const W = 733, H = 1040;                       // px úteis (≈194 × 275 mm)
+  const fit = area.firstElementChild;
+  area.style.cssText = `display:block;position:absolute;left:-10000px;top:0;width:${W}px;`;
+  fit.style.width = W + 'px';
+  const h = fit.offsetHeight;
+  const escala = Math.min(1, H / h);
+  area.removeAttribute('style');
+  fit.style.cssText = `width:${(W / escala).toFixed(2)}px;transform:scale(${escala.toFixed(4)});transform-origin:0 0;`;
+  area.style.cssText = `height:${Math.floor(h * escala)}px;overflow:hidden;`;
+  if(escala < 0.6) showToast('Muitas cargas: a letra ficou bem reduzida para caber em 1 página.', true);
+
+  const velho = document.getElementById('pp-page-style');
+  if(velho) velho.remove();
+  const st = document.createElement('style');
+  st.id = 'pp-page-style';
+  st.textContent = '@page{ size:A4 portrait; margin:8mm; }';
+  document.head.appendChild(st);
+
+  document.body.setAttribute('data-print-target', 'piso');
+  window.print();
+}
+
 window.addEventListener('afterprint', () => {
   const s = document.getElementById('pp-page-style');
   if(s) s.remove();

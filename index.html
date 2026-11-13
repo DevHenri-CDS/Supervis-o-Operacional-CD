@@ -567,7 +567,7 @@
   .op-sub{ font-size:.85rem; color:var(--text-dim); margin:4px 0 12px; }
   .op-busca input{ width:100%; padding:13px 14px; font-size:1rem; border:1px solid var(--line); border-radius:6px; background:var(--input-bg); color:var(--text); margin-bottom:12px; }
   .op-grp{ margin:16px 0 8px; padding:8px 12px; border-radius:4px; background:#140c04; font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:.06em; font-size:.9rem; color:var(--band); border-left:5px solid var(--band-strong); }
-  .op-grp.g1{ color:var(--text-dim); border-left-color:#6a5f52; } .op-grp.g2{ color:var(--info-text); border-left-color:var(--info-text); }
+  .op-grp.g1{ color:var(--text-dim); border-left-color:#6a5f52; } .op-grp.g2{ color:var(--info-text); border-left-color:var(--info-text); } .op-grp.g3{ color:var(--text-dim); border-left-color:#6a5f52; }
   .opc{ background:var(--panel); border:1px solid var(--line); border-left:6px solid var(--band-strong); border-radius:8px; padding:14px; margin-bottom:12px; }
   .opc.prio{ border-left-color:var(--danger); background:#1d0f0d; } .opc.ok{ border-left-color:var(--ok-text); opacity:.8; }
   .opc-top{ display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -2351,7 +2351,7 @@ const ROLE_LABELS = { admin:'Administrador', encarregado:'Encarregado', conferen
 
 /* quais status cada perfil enxerga em "Cargas no Piso" (perfil ausente = vê tudo) */
 const STATUS_VISIVEL = {
-  operador: ['PENDENTE DE ETIQUETAGEM', 'PARCIALMENTE ETIQUETADA', 'AGUARDANDO IMPRESSÃO']
+  operador: ['PENDENTE DE ETIQUETAGEM', 'EM PROCESSO DE ETIQUETAGEM', 'PARCIALMENTE ETIQUETADA', 'AGUARDANDO IMPRESSÃO']
 };
 /* todos os perfis têm as funções do Administrador, menos o Operador (só vê pendências e marca etiquetadas) */
 function ehAdminLike(role){ return !!role && role !== 'operador' && role !== 'tv'; }
@@ -2762,7 +2762,7 @@ function renderTvFech(){
 }
 
 /* ===== OPERADOR: lista para celular, aviso em tela cheia (carga impressa) e calculadora "Etiquetar" ===== */
-const OP_GRUPOS = [['PENDENTE DE ETIQUETAGEM','PENDENTES DE ETIQUETAGEM'],['AGUARDANDO IMPRESSÃO','AGUARDANDO IMPRESSÃO']];
+const OP_GRUPOS = [['PENDENTE DE ETIQUETAGEM','PENDENTES DE ETIQUETAGEM'],['AGUARDANDO IMPRESSÃO','AGUARDANDO IMPRESSÃO'],['EM PROCESSO DE ETIQUETAGEM','EM PROCESSO DE ETIQUETAGEM']];
 let opBusca = '';
 function opSetBusca(v){ opBusca = String(v || '').trim().toLowerCase(); renderOperador(); }
 function opStatusLabel(st){ return (typeof STATUS_LABELS !== 'undefined' && STATUS_LABELS[st]) || st; }

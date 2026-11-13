@@ -788,26 +788,49 @@
   .btn-ghost.ativo{ background:var(--band); border-color:var(--band); color:#000; }
   .btn-ghost.ativo:hover{ color:#000; filter:brightness(1.08); }
 
+
+  /* ---------- BARRA DE AÇÕES / FILTRO POR ESTAÇÃO (Relatório) ---------- */
+  .cross-bar{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:10px 20px; border-bottom:1px solid var(--line); background:var(--panel-header); }
+  .cross-est-lb{ display:flex; align-items:center; gap:8px; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-dim); font-weight:700; }
+  .cross-est-sel{ background:#111; color:var(--text); border:1px solid var(--line); border-radius:4px; padding:7px 10px; font-size:.82rem; font-family:'Inter',sans-serif; max-width:260px; }
+  .cross-est-sel:focus{ outline:none; border-color:var(--band); }
+  .cross-est-sel.on{ border-color:var(--band); color:var(--band); }
+  /* Portaria (avisos de cargas por liberar) */
+  #panel-portaria .por-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); gap:10px; padding:14px 18px; }
+  .por-card{ background:var(--row-alt); border:1px solid var(--line); border-left:4px solid #E6A817; border-radius:6px; padding:10px 14px; }
+  .por-card .pc-carga{ font-family:'Oswald',sans-serif; font-size:1.05rem; color:var(--band); letter-spacing:.03em; }
+  .por-card .pc-forn{ font-size:.88rem; margin-top:3px; word-break:break-word; }
+  .por-card .pc-tag{ display:inline-block; margin-top:7px; font-size:.58rem; letter-spacing:.07em; text-transform:uppercase; font-weight:700; color:#E6A817; border:1px solid #E6A817; border-radius:3px; padding:1px 6px; }
+  .por-card.no-piso{ opacity:.55; border-left-color:#3fb950; }
+  .por-card.no-piso .pc-tag{ color:#3fb950; border-color:#3fb950; }
+  .por-vazio{ color:var(--text-dim); font-style:italic; padding:14px 20px; grid-column:1/-1; }
+  body.tv-mode #panel-portaria{ display:none !important; }
+
   /* ---------- IMPRESSÃO: RELATÓRIO MONTADO (paisagem, compacto) ---------- */
   #cross-print-area{ display:none; }
   @media print{
     body[data-print-target="cross"] > *:not(#cross-print-area){ display:none !important; }
     body[data-print-target="cross"]{ background:#fff !important; }
     body[data-print-target="cross"] #cross-print-area{ display:block; color:#000; font-family:Arial,sans-serif; }
-    #cross-print-area h1{ font-family:Arial,sans-serif; font-size:14px; margin:0 0 2px; color:#000; letter-spacing:0; }
-    #cross-print-area .pp-sub{ font-size:9px; margin:0 0 5px; color:#333; }
+    #cross-print-area{ text-align:center; }
+    #cross-print-area .cp-head{ text-align:center; margin:0 0 8px; padding-bottom:6px; border-bottom:2px solid #000; break-inside:avoid; }
+    #cross-print-area h1{ font-family:Arial,sans-serif; font-size:18px; margin:0 0 4px; color:#000; letter-spacing:.04em; text-align:center; }
+    #cross-print-area .cp-cargas{ margin:0 0 4px; }
+    #cross-print-area .cp-carga{ font-size:10.5px; font-weight:700; line-height:1.45; text-align:center; }
+    #cross-print-area .cp-meta{ font-size:10px; margin:2px 0 0; color:#222; text-align:center; }
     #cross-print-area table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:8px; }
     #cross-print-area thead{ display:table-header-group; }
+    #cross-print-area tfoot{ display:table-row-group; }
     #cross-print-area tr{ page-break-inside:avoid; }
     #cross-print-area th, #cross-print-area td{
-      border:1px solid #999; padding:1px 3px; line-height:1.3; text-align:left; color:#000; background:#fff;
+      border:1px solid #999; padding:1px 3px; line-height:1.3; text-align:center; color:#000; background:#fff;
       white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
       -webkit-print-color-adjust:exact; print-color-adjust:exact;
     }
     #cross-print-area th{ background:#FF8A1F !important; font-size:7.5px; text-transform:uppercase; }
-    #cross-print-area td.cp-n{ text-align:right; font-weight:700; }
-    #cross-print-area tr.cp-grp td{ background:#ddd !important; font-weight:700; text-transform:uppercase; font-size:8.5px; }
-    #cross-print-area tfoot td{ background:#eee !important; font-weight:700; border-top:2px solid #000; }
+    #cross-print-area td.cp-n{ text-align:center; font-weight:700; }
+    #cross-print-area tr.cp-grp td{ background:#ddd !important; font-weight:700; text-transform:uppercase; font-size:8.5px; text-align:center; }
+    #cross-print-area tfoot td{ background:#eee !important; font-weight:700; border-top:2px solid #000; text-align:center; }
   }
 
   /* ---------- AUDITORIA POR ITEM (janela + impressão em paisagem) ---------- */
@@ -1409,6 +1432,22 @@
       <div class="fila-grid" id="fila-grid"></div>
     </section>
 
+    <!-- PORTARIA: avisos de cargas que ainda vão ser liberadas -->
+    <section class="panel" id="panel-portaria">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>PORTARIA</h2>
+          <span class="sub">Aviso · cargas que ainda vão ser liberadas</span>
+        </div>
+        <div class="stat-row" style="align-items:center;">
+          <div class="stat"><div class="n" id="st-portaria-count">0</div><div class="l">Cargas a liberar</div></div>
+          <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openPortariaModal()">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print so-admin" onclick="portariaLimpar()">Limpar</button>
+        </div>
+      </div>
+      <div class="por-grid" id="portaria-grid"></div>
+    </section>
+
     <!-- PANEL 3: DISTRIBUIÇÃO T1 / T2 / T3 -->
     <div class="dist-tabnav" id="sec-dist">
       <button class="tab-btn" id="dist-tab-btn-T1" onclick="switchDistTab('T1')">Distribuição T1</button>
@@ -1604,7 +1643,7 @@
     <section class="panel" id="panel-tv-fech">
       <div class="panel-header">
         <div class="title-block">
-          <h2 id="tv-fech-titulo">FECHAMENTO T2</h2>
+          <h2 id="tv-fech-titulo">FECHAMENTO T1 · T2 · T3</h2>
           <span class="sub">Volume distribuído por dia (SKU em verde embaixo de cada barra)</span>
         </div>
       </div>
@@ -1616,28 +1655,6 @@
 
   <div id="tab-cross" style="display:none;">
 
-    <section class="panel" id="panel-programacao">
-      <div class="panel-header">
-        <div class="title-block">
-          <h2>PROGRAMAÇÃO EXPEDIÇÃO - DESTINO</h2>
-          <span class="sub" id="prog-sub">Marque as lojas que serão expedidas no dia</span>
-        </div>
-        <div class="stat-row">
-          <div class="stat"><div class="n" id="st-prog-count">0</div><div class="l">Lojas programadas</div></div>
-        </div>
-      </div>
-      <div class="prog-body">
-        <div class="prog-grid" id="prog-grid"></div>
-        <div class="prog-actions no-print" id="prog-actions">
-          <button class="btn btn-ghost btn-sm" onclick="progMarcarTodas(true)">Marcar todas</button>
-          <button class="btn btn-ghost btn-sm" onclick="progMarcarTodas(false)">Limpar seleção</button>
-          <input type="text" id="prog-nova" maxlength="30" placeholder="Adicionar loja (ex.: LOJA 05)" onkeydown="if(event.key==='Enter') progAdicionarLoja()">
-          <button class="btn btn-ghost btn-sm" onclick="progAdicionarLoja()">+ Adicionar loja</button>
-        </div>
-        <span class="hint" style="display:block; margin-top:10px;">As lojas listadas vêm do relatório colado da planilha. Depois de marcar as que serão expedidas hoje, use o botão <b>Programação Expedição</b> no painel abaixo para ver só as cargas pendentes dessas lojas. A marcação vale para o dia e é a mesma para todos.</span>
-      </div>
-    </section>
-
     <section class="panel" id="panel-cross-pendencias">
       <div class="panel-header">
         <div class="title-block">
@@ -1647,6 +1664,11 @@
         <div class="stat-row">
           <div class="stat"><div class="n" id="st-cross-pend-count">0</div><div class="l">Cargas pendentes</div></div>
         </div>
+      </div>
+      <div class="cross-bar no-print" data-ro-ok>
+        <label class="cross-est-lb">Estação (Programação CD Secos)
+          <select class="cross-est-sel" onchange="crossSetEst(this.value)" title="Mostra só as lojas da estação escolhida"></select>
+        </label>
       </div>
       <div class="table-scroll">
         <table>
@@ -1660,7 +1682,6 @@
       </div>
       <div class="panel-footer-actions no-print" id="cross-pend-actions" style="display:none;">
         <button class="btn btn-ghost btn-sm" onclick="openCrossImportModal()">Colar relatório da planilha (Excel)</button>
-        <button class="btn btn-ghost btn-sm" id="btn-prog-filtro" onclick="toggleProgramacaoFiltro()" title="Mostra só as cargas pendentes das lojas marcadas na Programação Expedição">Programação Expedição</button>
       </div>
     </section>
 
@@ -1674,6 +1695,14 @@
           <div class="stat"><div class="n" id="st-cross-rel-count">0</div><div class="l">Itens no relatório</div></div>
         </div>
       </div>
+      <div class="cross-bar cross-bar-top no-print" data-ro-ok>
+        <button class="btn btn-primary" style="width:auto; display:none;" id="btn-print-cross" onclick="imprimirRelatorioCross()">🖨 Imprimir relatório (frente e verso)</button>
+        <label class="cross-est-lb">Estação (Programação CD Secos)
+          <select class="cross-est-sel" onchange="crossSetEst(this.value)" title="Mostra só as lojas da estação escolhida"></select>
+        </label>
+        <button class="btn btn-ghost btn-sm" id="btn-mobile-preview" onclick="toggleMobilePreview()">Visualizar como celular</button>
+        <span class="hint" style="margin:0; flex:1 1 100%;">Sai impresso em paisagem, frente e verso, agrupado por loja. Na janela de impressão, escolha a impressora <b>1030-SUOP-001</b> (porta IP_10.30.2.235) e marque <b>Imprimir em ambos os lados</b> (virar pela borda curta).</span>
+      </div>
       <div class="table-scroll">
         <table>
           <thead>
@@ -1684,14 +1713,7 @@
           <tbody id="tbody-cross-relatorio"></tbody>
         </table>
       </div>
-      <div class="panel-footer-actions no-print" style="flex-direction:column; align-items:flex-start; gap:8px;">
-        <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <button class="btn btn-primary" style="width:auto; display:none;" id="btn-print-cross" onclick="imprimirRelatorioCross()">Imprimir relatório</button>
-          <button class="btn btn-ghost btn-sm" id="btn-mobile-preview" onclick="toggleMobilePreview()">Visualizar como celular</button>
-        </div>
-        <span class="hint" style="margin:0;">O relatório sai impresso em paisagem (deitado), agrupado por loja. Na janela de impressão, selecione a impressora <b>1030-SUOP-001</b> (porta IP_10.30.2.235). Use o botão acima para ver, no computador, como o relatório fica no celular.</span>
-      </div>
-    </section>
+</section>
 
   </div>
   <!-- fim da aba "Pendências Relatório Cross" -->
@@ -2067,6 +2089,25 @@
   </div>
 </div>
 
+
+<!-- ===================== MODAL: COLAR PORTARIA ===================== -->
+<div class="modal-overlay" id="portaria-modal">
+  <div class="modal-box">
+    <div class="login-band">
+      <h1>Colar cargas da Portaria</h1>
+      <p>Cole as linhas (carga, fornecedor e data). Só o número da carga e o fornecedor são importados.</p>
+    </div>
+    <div class="modal-body">
+      <textarea id="portaria-textarea" placeholder="Ex.: 501418&#9;AZEVEDO ID:11463&#9;13/11/26"></textarea>
+      <p class="hint">Isso substitui a lista atual da Portaria pelas linhas coladas.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-sm" onclick="closePortariaModal()">Cancelar</button>
+        <button class="btn btn-primary" style="width:auto;" onclick="importPortariaFromPaste()">Importar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== MODAL: QTD. DE PRODUTIVOS (1ª distribuição do turno) ===================== -->
 <div class="modal-overlay" id="produtivos-modal">
   <div class="modal-box" style="max-width:440px;">
@@ -2372,7 +2413,6 @@ let crossMarcadas = {};
 /* Programação Expedição: lojas marcadas para expedir hoje (sincronizado na nuvem) + filtro local do painel */
 let progLojas = [];
 let progCatalogoExtra = [];   // lojas adicionadas à mão (as demais vêm do relatório colado)
-let progFiltroAtivo = false;
 
 const DEMO_DIST = [
   {etiquetagem:'', doca:'', carga:'446886', descricao:'VINICOLA ID:8594', liberacao:'10/09/2026', d1:0, volume:2064, sku:9, horaDist:'19:10'},
@@ -2535,7 +2575,7 @@ function tvSlides(){
     if(distData.some(r => turnoDaCarga(r) === t)){ sl.push({ id:'panel-dist-' + t, l:nomeAba('dist-' + t) }); algum = true; }
   });
   if(algum) sl.push({ id:'panel-dist-resumo', l:nomeAba('dist-resumo') });
-  if(tvTemFech()) sl.push({ id:'panel-tv-fech', l:'Fechamento T2' });
+  if(tvTemFech()) sl.push({ id:'panel-tv-fech', l:'Fechamento T1 · T2 · T3' });
   return sl;
 }
 function tvMostrar(i){
@@ -2619,7 +2659,7 @@ function renderTvAging(){
 function tvTemFech(){
   try{
     const dias = prodColetar(diaOperacional().slice(0, 7));
-    return Object.keys(dias).some(id => dias[id].T2 && dias[id].T2.vol > 0);
+    return Object.keys(dias).some(id => TURNOS.some(t => dias[id][t] && dias[id][t].vol > 0));
   }catch(e){ return false; }
 }
 function renderTvFech(){
@@ -2628,9 +2668,9 @@ function renderTvFech(){
   const ym = diaOperacional().slice(0, 7);
   const [a, m] = ym.split('-');
   const tt = document.getElementById('tv-fech-titulo');
-  if(tt) tt.textContent = `FECHAMENTO T2 — ${m}/${a}`;
+  if(tt) tt.textContent = `FECHAMENTO T1 · T2 · T3 — ${m}/${a}`;
   const dias = prodColetar(ym);
-  box.innerHTML = ['T2'].map(t => {
+  box.innerHTML = TURNOS.map(t => {
     const g = prodGraficoSvg(ym, t, dias);
     const volMes = g.comDado.reduce((x, v) => x + v.vol, 0);
     const skuMes = g.comDado.reduce((x, v) => x + v.sku, 0);
@@ -5021,11 +5061,41 @@ function agingLabel(r){
 function normLoja(s){ return String(s == null ? '' : s).trim().toUpperCase().replace(/\s+/g, ' '); }
 function cmpNat(a, b){ return String(a || '').localeCompare(String(b || ''), 'pt-BR', { numeric:true, sensitivity:'base' }); }
 
-/* com a Programação Expedição ligada, só contam as linhas das lojas marcadas */
+/* filtro por estação (a da Programação CD Secos / guia Separação): só contam as lojas da estação escolhida */
+let crossEstSel = '';   // '' = todas as estações; senão o índice da estação (0 = estação 1)
+function crossEstAtual(){
+  if(crossEstSel === '') return null;
+  const e = (sepData.estacoes || [])[Number(crossEstSel)];
+  if(!e){ crossEstSel = ''; return null; }
+  return e;
+}
+function crossEstLojasSet(){
+  const e = crossEstAtual();
+  return e ? new Set((e.lojas || []).map(sepKey).filter(Boolean)) : null;
+}
 function crossRowsFiltradas(){
-  if(!progFiltroAtivo) return crossRawData;
-  const sel = new Set(progLojas.map(normLoja));
-  return crossRawData.filter(r => sel.has(normLoja(r.destino)));
+  const set = crossEstLojasSet();
+  if(!set) return crossRawData;
+  return crossRawData.filter(r => set.has(sepKey(r.destino)));
+}
+function crossSetEst(v){
+  crossEstSel = v;
+  renderCrossAll();
+}
+function renderCrossEstSelects(){
+  const est = sepData.estacoes || [];
+  if(crossEstSel !== '' && !est[Number(crossEstSel)]) crossEstSel = '';
+  const opts = ['<option value="">Todas as estações</option>'].concat(est.map((e, i) => {
+    const n = (e.lojas || []).length;
+    const nome = e.produtivo ? ' · ' + sepEsc(e.produtivo) : '';
+    return `<option value="${i}" ${String(i) === crossEstSel ? 'selected' : ''}>Estação ${i + 1}${nome} (${n} loja${n === 1 ? '' : 's'})</option>`;
+  })).join('');
+  document.querySelectorAll('.cross-est-sel').forEach(sel => {
+    sel.innerHTML = opts;
+    sel.value = crossEstSel;
+    sel.classList.toggle('on', crossEstSel !== '');
+    sel.disabled = false;
+  });
 }
 
 function computePendenciasCross(){
@@ -5086,16 +5156,10 @@ function renderCrossPendencias(){
   const canImport = ehAdminLike(currentUser.role);
   document.getElementById('cross-pend-actions').style.display = canImport ? 'flex' : 'none';
 
-  const btnProg = document.getElementById('btn-prog-filtro');
-  if(btnProg){
-    btnProg.classList.toggle('ativo', progFiltroAtivo);
-    btnProg.textContent = progFiltroAtivo
-      ? `Programação Expedição ✔ (${progLojas.length} loja${progLojas.length === 1 ? '' : 's'})`
-      : 'Programação Expedição';
-  }
+  const estF = crossEstAtual();
   const sub = document.getElementById('cross-pend-sub');
-  if(sub) sub.textContent = progFiltroAtivo
-    ? 'Filtrado pela Programação Expedição: ' + (progLojas.length ? progLojas.slice().sort(cmpNat).join(', ') : 'nenhuma loja marcada')
+  if(sub) sub.textContent = estF
+    ? 'Filtrado pela Estação ' + (Number(crossEstSel) + 1) + ': ' + ((estF.lojas || []).length ? (estF.lojas || []).map(sepNomeLoja).join(', ') : 'nenhuma loja na estação')
     : 'Cargas com % de agrupamento acima de 1% · Pedido: Cross-Docking';
 
   const tbody = document.getElementById('tbody-cross-pend');
@@ -5103,8 +5167,8 @@ function renderCrossPendencias(){
   const pendencias = computePendenciasCross();
 
   if(pendencias.length === 0){
-    const msg = progFiltroAtivo
-      ? (progLojas.length ? 'Nenhuma carga pendente para as lojas da Programação Expedição.' : 'Nenhuma loja marcada na Programação Expedição.')
+    const msg = crossEstAtual()
+      ? 'Nenhuma carga pendente para as lojas da estação ' + (Number(crossEstSel) + 1) + '.'
       : 'Nenhuma carga pendente no relatório Cross.';
     tbody.innerHTML = `<tr class="empty-row"><td colspan="8">${msg}</td></tr>`;
   }
@@ -5135,9 +5199,7 @@ function renderCrossRelatorio(){
   const itens = computeRelatorioCross();
 
   if(itens.length === 0){
-    const msg = (progFiltroAtivo && progLojas.length === 0)
-      ? 'Nenhuma loja marcada na Programação Expedição.'
-      : 'Nenhuma carga marcada para o relatório ainda.';
+    const msg = 'Nenhuma carga marcada para o relatório ainda.';
     tbody.innerHTML = `<tr class="empty-row"><td class="mc-only mc-show" style="display:block;" colspan="10">${msg}</td></tr>`;
   }
 
@@ -5204,22 +5266,25 @@ window.addEventListener('resize', applyCrossReportLayout);
 window.addEventListener('afterprint', () => document.body.removeAttribute('data-print-target'));
 
 function renderCrossAll(){
-  renderProgramacao();
+  renderCrossEstSelects();
   renderCrossPendencias();
   renderCrossRelatorio();
 }
 
-/* Impressão do relatório montado: página deitada (paisagem), agrupada por loja, o mais compacta possível */
+/* Impressão do relatório montado: página deitada (paisagem), frente e verso, agrupada por loja, tudo centralizado */
 function imprimirRelatorioCross(){
   if(!currentUser) return;
   const itens = computeRelatorioCross();
   if(itens.length === 0){ showToast('Marque ao menos uma carga em "Imprimir?" para montar o relatório.', true); return; }
 
   const contLoja = {}, qtdLoja = {};
+  const porCarga = {}, ordemCarga = [];
   itens.forEach(r => {
     const k = normLoja(r.destino) || 'SEM DESTINO';
     contLoja[k] = (contLoja[k] || 0) + 1;
     qtdLoja[k] = (qtdLoja[k] || 0) + Number(r.qtd || 0);
+    if(!porCarga[r.carga]){ porCarga[r.carga] = { forn: r.fornecedor || '', vol: 0 }; ordemCarga.push(r.carga); }
+    porCarga[r.carga].vol += Number(r.qtd || 0);
   });
 
   const larg = [8, 6, 7, 27, 6, 5, 7, 22, 7, 5];
@@ -5250,10 +5315,22 @@ function imprimirRelatorioCross(){
   const { curto } = todayLabel();
   const d = new Date();
   const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const turno = (currentUser.turno && TURNOS.includes(currentUser.turno)) ? currentUser.turno : turnoPorHorario();
+  const estF = crossEstAtual();
+  const linhaEst = estF
+    ? `<div class="cp-meta">Estação ${Number(crossEstSel) + 1}${estF.produtivo ? ' · ' + escapeHtml(estF.produtivo) : ''} · lojas: ${escapeHtml((estF.lojas || []).map(sepNomeLoja).join(', '))}</div>`
+    : '';
+  const linhasCargas = ordemCarga.map(c =>
+    `<div class="cp-carga">Cargas: ${escapeHtml(c)} - ${escapeHtml(porCarga[c].forn)} - ${fmtInt(porCarga[c].vol)}u</div>`).join('');
 
   document.getElementById('cross-print-area').innerHTML = `
-    <h1>PAINEL CARGAS MONTADAS - CD SECOS</h1>
-    <div class="pp-sub">${curto} · ${hora} · impresso por ${escapeHtml(currentUser.nome)} · ${lojas.length} loja(s): ${escapeHtml(lojas.join(', '))} · ${itens.length} item(ns)</div>
+    <div class="cp-head">
+      <h1>RELATÓRIO CD SECOS - MONTADO</h1>
+      <div class="cp-cargas">${linhasCargas}</div>
+      <div class="cp-meta">Turno: <b>${escapeHtml(turno)}</b> · Associado: <b>${escapeHtml(currentUser.nome)}</b></div>
+      ${linhaEst}
+      <div class="cp-meta">${curto} · ${hora} · ${lojas.length} loja(s) · ${itens.length} item(ns) · ${fmtInt(totalQtd)} un.</div>
+    </div>
     <table>
       <colgroup>${larg.map(w => `<col style="width:${w}%">`).join('')}</colgroup>
       <thead><tr>${cab.map(c => `<th>${c}</th>`).join('')}</tr></thead>
@@ -5269,75 +5346,60 @@ function imprimirRelatorioCross(){
   document.head.appendChild(st);
 
   document.body.setAttribute('data-print-target', 'cross');
-  window.print();
+  showToast('Na janela de impressão, marque "Imprimir em ambos os lados" (frente e verso, borda curta).');
+  setTimeout(() => window.print(), 350);
 }
 
-/* ===================== PROGRAMAÇÃO EXPEDIÇÃO - DESTINO ===================== */
-/* catálogo = destinos que aparecem no relatório colado + lojas adicionadas à mão + as já marcadas */
-function progCatalogo(){
-  const mapa = new Set();
-  const add = n => { const k = normLoja(n); if(k) mapa.add(k); };
-  crossRawData.forEach(r => add(r.destino));
-  progCatalogoExtra.forEach(add);
-  progLojas.forEach(add);
-  return Array.from(mapa).sort(cmpNat);
+/* ===================== PORTARIA (cargas por liberar) ===================== */
+let portariaData = [];   // [{ carga, fornecedor }]
+function savePortaria(){}   // sobrescrita pelo módulo do Firebase
+function parsePortariaPaste(raw){
+  const mapa = new Map();
+  String(raw || '').split(/\r?\n/).forEach(l => {
+    const m = l.replace(/\t/g, '  ').match(/^\s*(\d{3,})\s+(.*?)\s*(?:\d{1,2}\/\d{1,2}\/\d{2,4})?\s*$/);
+    if(!m) return;
+    const forn = m[2].trim();
+    if(!forn) return;
+    mapa.set(m[1], { carga: m[1], fornecedor: forn });
+  });
+  return Array.from(mapa.values());
 }
-function renderProgramacao(){
-  const grid = document.getElementById('prog-grid');
-  if(!grid || !currentUser) return;
-  const canEdit = ehAdminLike(currentUser.role);
-  const cat = progCatalogo();
-  const sel = new Set(progLojas.map(normLoja));
-  const cont = {};
-  crossRawData
-    .filter(r => ehCrossDocking(r) && String(r.status || '').toUpperCase().includes('MONTAD'))
-    .forEach(r => { const k = normLoja(r.destino); cont[k] = (cont[k] || 0) + 1; });
-
-  grid.innerHTML = cat.length
-    ? cat.map(l => `<label class="prog-chip ${sel.has(l) ? 'on' : ''}">
-        <input type="checkbox" data-l="${escapeHtml(l)}" ${sel.has(l) ? 'checked' : ''} ${canEdit ? '' : 'disabled'} onchange="progToggleLoja(this.dataset.l, this.checked)">
-        ${escapeHtml(l)}<b title="Itens montados (Cross-Docking) nesta loja">${fmtInt(cont[l] || 0)}</b>
-      </label>`).join('')
-    : '<div class="prog-vazio">Nenhuma loja ainda — cole o relatório da planilha ou adicione uma loja abaixo.</div>';
-
-  document.getElementById('st-prog-count').textContent = sel.size;
-  const ac = document.getElementById('prog-actions');
-  if(ac) ac.style.display = canEdit ? 'flex' : 'none';
-  const sub = document.getElementById('prog-sub');
-  if(sub) sub.textContent = `Marque as lojas que serão expedidas no dia · ${todayLabel().curto}`;
+function renderPortaria(){
+  const grid = document.getElementById('portaria-grid');
+  if(!grid) return;
+  const noPiso = new Set((pisoData || []).map(r => String(r.carga)));
+  grid.innerHTML = portariaData.length
+    ? portariaData.map(r => {
+        const ja = noPiso.has(String(r.carga));
+        return `<div class="por-card ${ja ? 'no-piso' : ''}"><div class="pc-carga">Carga ${escapeHtml(r.carga)}</div><div class="pc-forn">${escapeHtml(r.fornecedor)}</div><span class="pc-tag">${ja ? '✔ já no piso' : 'Aguardando liberação'}</span></div>`;
+      }).join('')
+    : '<div class="por-vazio">Nenhuma carga na Portaria.</div>';
+  const c = document.getElementById('st-portaria-count');
+  if(c) c.textContent = portariaData.filter(r => !noPiso.has(String(r.carga))).length;
 }
-function progToggleLoja(nome, marcado){
-  if(!currentUser || !ehAdminLike(currentUser.role)) return;
-  const k = normLoja(nome);
-  progLojas = progLojas.filter(l => normLoja(l) !== k);
-  if(marcado) progLojas.push(k);
-  saveProgramacao();
-  renderCrossAll();
+function openPortariaModal(){
+  if(!souAdmin()) return;
+  document.getElementById('portaria-textarea').value = '';
+  document.getElementById('portaria-modal').classList.add('open');
 }
-function progMarcarTodas(sim){
-  if(!currentUser || !ehAdminLike(currentUser.role)) return;
-  progLojas = sim ? progCatalogo() : [];
-  saveProgramacao();
-  renderCrossAll();
+function closePortariaModal(){ document.getElementById('portaria-modal').classList.remove('open'); }
+function importPortariaFromPaste(){
+  const raw = document.getElementById('portaria-textarea').value.trim();
+  if(!raw){ closePortariaModal(); return; }
+  const rows = parsePortariaPaste(raw);
+  if(!rows.length){ alert('Não encontrei nenhuma linha válida. Cada linha precisa ter o número da carga e o fornecedor.'); return; }
+  portariaData = rows;
+  savePortaria();
+  closePortariaModal();
+  renderPortaria();
 }
-function progAdicionarLoja(){
-  if(!currentUser || !ehAdminLike(currentUser.role)) return;
-  const inp = document.getElementById('prog-nova');
-  const k = normLoja(inp.value);
-  if(!k) return;
-  if(!progCatalogo().includes(k)) progCatalogoExtra.push(k);
-  if(!progLojas.some(l => normLoja(l) === k)) progLojas.push(k);
-  inp.value = '';
-  saveProgramacao();
-  renderCrossAll();
-}
-function toggleProgramacaoFiltro(){
-  if(!progFiltroAtivo && progLojas.length === 0){
-    showToast('Marque ao menos uma loja na Programação Expedição antes de filtrar.', true);
-    return;
-  }
-  progFiltroAtivo = !progFiltroAtivo;
-  renderCrossAll();
+function portariaLimpar(){
+  if(!souAdmin()) return;
+  if(!portariaData.length) return;
+  if(!confirm('Limpar todas as cargas da Portaria?')) return;
+  portariaData = [];
+  savePortaria();
+  renderPortaria();
 }
 
 /* ===================== SEPARAÇÃO ===================== */
@@ -6528,6 +6590,7 @@ function renderAll(){
   if(!currentUser) return;
   renderPiso();
   renderFila();
+  renderPortaria();
   renderDist();
   renderUsuarios();
   renderSolicitacoes();
@@ -7317,6 +7380,17 @@ function renderDistClockOnly(){
     }
     if(currentUser) renderAllSoon();
   }, err => reportError('Erro ao ler a Programação Expedição:', err));
+
+  // ---------- PORTARIA (cargas por liberar) ----------
+  const portariaRef = doc(db, 'painelCD', 'portaria');
+  window.savePortaria = function(){
+    setDoc(portariaRef, { cargas: portariaData, atualizadoPor: currentUser ? currentUser.nome : '', atualizadoEm: new Date().toLocaleString('pt-BR') })
+      .catch(err => reportError('Erro ao salvar a Portaria:', err));
+  };
+  onSnapshot(portariaRef, snap => {
+    portariaData = snap.exists() && Array.isArray(snap.data().cargas) ? snap.data().cargas : [];
+    if(currentUser) renderAllSoon();
+  }, err => reportError('Erro ao ler a Portaria:', err));
 
   // ---------- SEPARAÇÃO (cargas montadas → estações → folha) ----------
   const sepRef = doc(db, 'painelCD', 'separacao');

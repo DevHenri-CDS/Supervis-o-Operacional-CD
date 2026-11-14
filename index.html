@@ -6122,14 +6122,45 @@ function openCrossImportModal(){
 function closeCrossImportModal(){
   document.getElementById('import-cross-modal').classList.remove('open');
 }
+/* confere se o texto colado é mesmo o relatório Cross (colunas e conteúdo). Devolve a lista de problemas; vazia = pode importar */
+function validarRelatorioCross(raw, rows){
+  const erros = [];
+  const lines = String(raw || '').split(/\r?\n/).filter(l => l.trim() !== '');
+  const head = (lines[0] || '').split('\t').map(normalizeHeader);
+  if(head.includes('AGRUPADORA') || head.includes('CARGA')){
+    const chaves = new Set(head.map(h => CROSS_HEADER_MAP[h]).filter(Boolean));
+    const faltam = [['status','STATUS'],['qtd','QTD'],['carga','CARGA'],['destino','DESTINO']].filter(c => !chaves.has(c[0])).map(c => c[1]);
+    if(faltam.length) erros.push('Faltam colunas no cabeçalho: ' + faltam.join(', ') + '.');
+  }
+  const total = rows.length || 1;
+  const pc = f => Math.round(rows.filter(f).length / total * 100);
+  const pStatus = pc(r => /MONTAD|AGRUPAD/.test(normalizeHeader(r.status)));
+  const pQtd = pc(r => Number(r.qtd) > 0);
+  const pCarga = pc(r => /^\d{3,}$/.test(String(r.carga || '').trim()));
+  const pDest = pc(r => String(r.destino || '').trim() !== '');
+  if(pStatus < 70) erros.push('A coluna Status deveria ter "Montada" ou "Agrupada" (só ' + pStatus + '% das linhas têm).');
+  if(pQtd < 70) erros.push('A coluna Qtd deveria ter números maiores que zero (só ' + pQtd + '% das linhas têm).');
+  if(pCarga < 90) erros.push('A coluna Carga deveria ter o número da carga (só ' + pCarga + '% das linhas têm).');
+  if(pDest < 70) erros.push('A coluna Destino deveria ter a loja (só ' + pDest + '% das linhas têm).');
+  return erros;
+}
 function importCrossFromPaste(){
   const raw = document.getElementById('import-cross-textarea').value.trim();
   if(!raw){ closeCrossImportModal(); return; }
 
   const rows = parseCrossPaste(raw);
   if(rows.length === 0){
-    alert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Carga está preenchida.');
+    alert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Carga está preenchida.\n\nNada foi alterado: o relatório anterior, as marcações, a Base e a Separação continuam salvos.');
     return;
+  }
+
+  /* trava de segurança: só substitui o relatório salvo se o que foi colado realmente for o relatório Montada/Agrupada */
+  const erros = validarRelatorioCross(raw, rows);
+  if(erros.length){
+    alert('⛔ RELATÓRIO NÃO IMPORTADO — o que foi colado não parece o relatório certo.\n\n• ' + erros.join('\n• ')
+      + '\n\nNada foi alterado: o relatório anterior, as marcações, a Base e a Separação continuam salvos. Cole o relatório correto para atualizar.');
+    showToast('⛔ Relatório errado: nada foi alterado, as informações anteriores continuam salvas.', true);
+    return;   // a janela continua aberta para corrigir/colar de novo
   }
 
   crossRawData = rows;

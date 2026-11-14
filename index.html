@@ -906,6 +906,56 @@
     #cross-print-area tfoot td{ background:#eee !important; font-weight:700; border-top:2px solid #000; text-align:center; }
   }
 
+  /* ---------- % DO RELATÓRIO NA DISTRIBUIÇÃO + RELATÓRIO DA CARGA (impressão) ---------- */
+  .rel-pct{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--input-bg); color:var(--text);
+    border-radius:999px; padding:3px 11px 3px 8px; font:700 .82rem 'Oswald',sans-serif; letter-spacing:.02em; cursor:pointer; white-space:nowrap; transition:filter .12s, transform .12s; }
+  .rel-pct svg{ width:15px; height:15px; flex:none; }
+  .rel-pct:hover{ filter:brightness(1.3); transform:translateY(-1px); }
+  .rel-pct.ok{ border-color:var(--ok-text); color:var(--ok-text); background:var(--ok-bg); }
+  .rel-pct.warn{ border-color:var(--warn-text); color:var(--warn-text); background:var(--warn-bg); }
+  .rel-pct.full{ border-color:var(--danger); color:var(--danger); background:#2a0f0c; }
+  .rel-pct.ro{ cursor:default; }
+  .rel-pct.ro:hover{ filter:none; transform:none; }
+  .rel-na{ color:var(--text-dim); }
+
+  #relcarga-print-area{ display:none; }
+  @media print{
+    body[data-print-target="relcarga"] > *:not(#relcarga-print-area){ display:none !important; }
+    body[data-print-target="relcarga"]{ background:#fff !important; }
+    body[data-print-target="relcarga"] #relcarga-print-area{ display:block; color:#000; font-family:Arial,sans-serif; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    #relcarga-print-area .rc-head{ display:flex; align-items:stretch; border:2px solid #000; border-radius:3mm; overflow:hidden; break-inside:avoid; }
+    #relcarga-print-area .rc-id{ flex:1; min-width:0; background:#000 !important; color:#fff !important; padding:4mm 5mm; }
+    #relcarga-print-area .rc-id small{ display:block; font-size:8px; letter-spacing:.14em; color:#FF8A1F !important; font-weight:700; }
+    #relcarga-print-area .rc-id b{ display:block; font-size:26px; line-height:1.1; margin:1mm 0; letter-spacing:.02em; color:#fff !important; }
+    #relcarga-print-area .rc-id span{ font-size:11px; font-weight:700; color:#fff !important; }
+    #relcarga-print-area .rc-pct{ width:44mm; flex:none; text-align:center; background:#FF8A1F !important; color:#000 !important; padding:3mm; display:flex; flex-direction:column; justify-content:center; }
+    #relcarga-print-area .rc-pct b{ font-size:34px; line-height:1; color:#000 !important; }
+    #relcarga-print-area .rc-pct small{ font-size:8px; font-weight:700; letter-spacing:.12em; color:#000 !important; }
+    #relcarga-print-area .rc-bar{ display:flex; height:5mm; margin:3mm 0 2mm; border:1px solid #000; border-radius:2mm; overflow:hidden; font-size:7.5px; font-weight:700; break-inside:avoid; }
+    #relcarga-print-area .rc-bar i{ font-style:normal; display:flex; align-items:center; justify-content:center; white-space:nowrap; overflow:hidden; color:#fff !important; }
+    #relcarga-print-area .rc-bar .m{ background:#2e9e5b !important; }
+    #relcarga-print-area .rc-bar .a{ background:#e5484d !important; }
+    #relcarga-print-area .rc-kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:2mm; margin:0 0 2mm; break-inside:avoid; }
+    #relcarga-print-area .rc-kpis div{ border:1px solid #999; border-radius:2mm; padding:1.5mm 2mm; text-align:center; background:#fff !important; }
+    #relcarga-print-area .rc-kpis small{ display:block; font-size:7px; font-weight:700; letter-spacing:.08em; color:#555 !important; }
+    #relcarga-print-area .rc-kpis b{ font-size:13px; color:#000 !important; }
+    #relcarga-print-area .rc-meta{ font-size:8.5px; color:#333 !important; margin:0 0 3mm; }
+    #relcarga-print-area .rc-lojas{ column-count:2; column-gap:5mm; }
+    #relcarga-print-area .rc-loja{ break-inside:avoid; margin:0 0 3mm; border:1px solid #000; border-radius:1.5mm; overflow:hidden; background:#fff !important; }
+    #relcarga-print-area .rc-loja header{ display:flex; justify-content:space-between; align-items:center; background:#e9e9e9 !important; padding:1mm 2mm; font-size:8.5px; border-bottom:1px solid #000; color:#000 !important; }
+    #relcarga-print-area .rc-loja header b{ font-size:10px; letter-spacing:.03em; }
+    #relcarga-print-area .rc-loja table{ width:100%; border-collapse:collapse; table-layout:fixed; font-size:7.5px; }
+    #relcarga-print-area .rc-loja th{ font-size:6.5px; text-transform:uppercase; color:#444 !important; text-align:left; padding:.8mm 1.5mm; border-bottom:1px solid #999; background:#fff !important; }
+    #relcarga-print-area .rc-loja td{ padding:.8mm 1.5mm; border-bottom:1px dotted #bbb; vertical-align:top; line-height:1.25; word-wrap:break-word; color:#000 !important; background:#fff !important; }
+    #relcarga-print-area .rc-loja tr{ break-inside:avoid; }
+    #relcarga-print-area .rc-loja tr:last-child td{ border-bottom:none; }
+    #relcarga-print-area .rc-loja .n{ text-align:right; font-weight:700; }
+    #relcarga-print-area .rc-loja .ck{ text-align:center; }
+    #relcarga-print-area .rc-box{ display:inline-block; width:3mm; height:3mm; border:1px solid #000; vertical-align:middle; }
+    #relcarga-print-area .rc-foot{ display:flex; gap:8mm; margin-top:6mm; font-size:9px; break-inside:avoid; }
+    #relcarga-print-area .rc-foot div{ flex:1; border-top:1px solid #000; padding-top:1mm; text-align:center; }
+  }
+
   /* ---------- AUDITORIA POR ITEM (janela + impressão em paisagem) ---------- */
   .btn-aud{ background:transparent; border:1px solid var(--band); color:var(--band); padding:5px 9px; font-size:.72rem; margin-right:6px; }
   .btn-aud:hover{ background:var(--band); color:#000; }
@@ -1566,7 +1616,7 @@
           <thead>
             <tr>
               <th>Etiquetagem</th><th>Doca</th><th>Carga</th><th>Descrição</th><th>Liberação</th>
-              <th>D-1</th><th>Volume</th><th>SKU</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
+              <th>D-1</th><th>Volume</th><th>SKU</th><th title="% agrupado da carga na guia Relatório (agrupado ÷ montado + agrupado). Clique na % para imprimir o relatório montado da carga.">% Relatório</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
             </tr>
           </thead>
           <tbody id="tbody-dist-T1"></tbody>
@@ -1575,7 +1625,7 @@
               <td colspan="6">DISTRIBUIÇÃO TOTAL T1</td>
               <td id="ft-dist-vol-T1">0</td>
               <td id="ft-dist-sku-T1">0</td>
-              <td colspan="4"></td>
+              <td colspan="5"></td>
             </tr>
           </tfoot>
         </table>
@@ -1619,7 +1669,7 @@
           <thead>
             <tr>
               <th>Etiquetagem</th><th>Doca</th><th>Carga</th><th>Descrição</th><th>Liberação</th>
-              <th>D-1</th><th>Volume</th><th>SKU</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
+              <th>D-1</th><th>Volume</th><th>SKU</th><th title="% agrupado da carga na guia Relatório (agrupado ÷ montado + agrupado). Clique na % para imprimir o relatório montado da carga.">% Relatório</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
             </tr>
           </thead>
           <tbody id="tbody-dist-T2"></tbody>
@@ -1628,7 +1678,7 @@
               <td colspan="6">DISTRIBUIÇÃO TOTAL T2</td>
               <td id="ft-dist-vol-T2">0</td>
               <td id="ft-dist-sku-T2">0</td>
-              <td colspan="4"></td>
+              <td colspan="5"></td>
             </tr>
           </tfoot>
         </table>
@@ -1672,7 +1722,7 @@
           <thead>
             <tr>
               <th>Etiquetagem</th><th>Doca</th><th>Carga</th><th>Descrição</th><th>Liberação</th>
-              <th>D-1</th><th>Volume</th><th>SKU</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
+              <th>D-1</th><th>Volume</th><th>SKU</th><th title="% agrupado da carga na guia Relatório (agrupado ÷ montado + agrupado). Clique na % para imprimir o relatório montado da carga.">% Relatório</th><th>Hora dist.</th><th>Turno</th><th>Distribuído por</th><th></th>
             </tr>
           </thead>
           <tbody id="tbody-dist-T3"></tbody>
@@ -1681,7 +1731,7 @@
               <td colspan="6">DISTRIBUIÇÃO TOTAL T3</td>
               <td id="ft-dist-vol-T3">0</td>
               <td id="ft-dist-sku-T3">0</td>
-              <td colspan="4"></td>
+              <td colspan="5"></td>
             </tr>
           </tfoot>
         </table>
@@ -2298,6 +2348,7 @@
 <div id="cross-print-area"></div>
 <div id="sep-print-area"></div>
 <div id="audit-print-area"></div>
+<div id="relcarga-print-area"></div>
 
 <!-- ===================== MODAL: CÓDIGO (QR) PRO SITE ===================== -->
 <div class="modal-overlay" id="qr-modal">
@@ -3854,6 +3905,8 @@ function renderDist(){
   const canDevolver = canEditHora;
   const canDelete = canDevolver;
   const canEditTurno = canDevolver;
+  const relMapa = relCargaMapa();            // % do Relatório de cada carga (uma passada só)
+  const relPodeImprimir = podeAuditar();
 
   TURNOS.forEach(t => {
     const painel = document.getElementById('panel-dist-'+t);
@@ -3876,7 +3929,7 @@ function renderDist(){
     const linhas = distData.map((r,i)=>({...r, _idx:i})).filter(r => turnoDaCarga(r) === turno);
 
     if(linhas.length === 0){
-      tbody.innerHTML = '<tr class="empty-row"><td colspan="12">Nenhuma carga distribuída ainda.</td></tr>';
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="13">Nenhuma carga distribuída ainda.</td></tr>';
     }
 
     linhas.forEach(row => {
@@ -3896,6 +3949,7 @@ function renderDist(){
         <td>${row.d1}</td>
         <td>${fmtInt(row.volume)}</td>
         <td>${row.sku}</td>
+        <td>${relPctCelula(row.carga, relMapa, relPodeImprimir)}</td>
         <td><input type="text" value="${escapeHtml(row.horaDist)}" title="${row.distribuidoPor ? 'Distribuído por '+escapeHtml(row.distribuidoPor) : ''}" style="width:70px" ${canEditHora?'':'disabled'} onchange="updateDist(${i},'horaDist',this.value)"></td>
         <td>
           <select ${canEditTurno?'':'disabled'} onchange="updateDist(${i},'turno',this.value)">
@@ -6085,6 +6139,7 @@ function importCrossFromPaste(){
   try{ spdAgendarSync(); }catch(e){}   // grava na Base as cargas que estão no piso/distribuídas
   closeCrossImportModal();
   renderCrossAll();
+  try{ renderDist(); }catch(e){}
 }
 
 /* ===================== CÓDIGO (QR) PRO SITE ===================== */
@@ -6614,6 +6669,139 @@ function imprimirAuditoria(){
 
   document.body.setAttribute('data-print-target', 'audit');
   window.print();
+}
+
+/* ===================== % DO RELATÓRIO NA DISTRIBUIÇÃO + RELATÓRIO MONTADO DA CARGA ===================== */
+/* % = AGRUPADO ÷ (MONTADO + AGRUPADO), a mesma conta da tabela de Pendências da guia Relatório (Cross-Docking).
+   Diferente das Pendências, aqui NÃO há corte (0% e 100% também aparecem). Se a carga já saiu do relatório colado,
+   usa a Base (cargas 100% montadas salvas no dia). Sem nenhuma das duas, mostra "—". */
+function relPctTxt(p){
+  if(!(p > 0)) return '0%';
+  const r = Math.round(p);
+  if(r < 1) return '<1%';
+  if(r > 99 && p < 100) return '99%';
+  return r + '%';
+}
+function relCargaMapa(){
+  const res = new Map();
+  const somar = (lista, fonte) => {
+    const t = new Map();
+    for(const r of (lista || [])){
+      const k = sepNorm(r.carga); if(!k) continue;
+      const st = String(r.status || '').toUpperCase();
+      const mont = st.includes('MONTAD'), agr = !mont && st.includes('AGRUPAD');
+      if(!mont && !agr) continue;
+      let o = t.get(k); if(!o){ o = { c:[0,0], t:[0,0] }; t.set(k, o); }
+      const q = Number(r.qtd) || 0, i = mont ? 0 : 1;
+      o.t[i] += q; if(ehCrossDocking(r)) o.c[i] += q;
+    }
+    t.forEach((o, k) => {
+      if(res.has(k)) return;
+      const v = (o.c[0] + o.c[1]) > 0 ? o.c : o.t;      // Cross-Docking primeiro; sem Cross, considera todas as linhas da carga
+      if(v[0] + v[1] <= 0) return;
+      res.set(k, { montado:v[0], agrupado:v[1], pct:v[1] / (v[0] + v[1]) * 100, fonte });
+    });
+  };
+  somar(crossRawData, 'relatorio');
+  try{ somar(baseRows, 'base'); }catch(e){}
+  return res;
+}
+const REL_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/></svg>';
+function relPctCelula(carga, mapa, podeImprimir){
+  const k = sepNorm(carga);
+  const d = mapa.get(k);
+  if(!d) return '<span class="rel-na" title="Carga não encontrada na guia Relatório nem na Base">—</span>';
+  const cls = d.pct <= 0 ? 'ok' : (d.pct >= 100 ? 'full' : 'warn');
+  const txt = relPctTxt(d.pct);
+  const tip = 'Agrupado ' + txt + ' · ' + fmtInt(d.montado) + ' montado(s) · ' + fmtInt(d.agrupado) + ' agrupado(s)'
+    + (d.fonte === 'base' ? ' · (da Base: a carga já não está no relatório colado)' : '')
+    + (podeImprimir ? ' — clique para imprimir o relatório montado desta carga' : '');
+  return podeImprimir
+    ? `<button type="button" class="rel-pct ${cls}" data-c="${escapeHtml(k)}" title="${escapeHtml(tip)}" onclick="imprimirRelCarga(this.dataset.c)">${REL_ICO}${txt}</button>`
+    : `<span class="rel-pct ro ${cls}" title="${escapeHtml(tip)}">${REL_ICO}${txt}</span>`;
+}
+/* itens montados da carga (Cross-Docking; sem Cross, todos), do relatório colado ou, na falta dele, da Base */
+function relCargaItens(k){
+  const pega = lista => {
+    const todas = (lista || []).filter(r => sepNorm(r.carga) === k && String(r.status || '').toUpperCase().includes('MONTAD'));
+    const cross = todas.filter(ehCrossDocking);
+    return cross.length ? cross : todas;
+  };
+  let it = pega(crossRawData);
+  if(!it.length){ try{ it = pega(baseRows); }catch(e){ it = []; } }
+  return it;
+}
+function imprimirRelCarga(carga){
+  if(!currentUser) return;
+  const k = sepNorm(carga);
+  const info = relCargaMapa().get(k);
+  if(!info){ showToast('Carga ' + k + ': não encontrada na guia Relatório nem na Base.', true); return; }
+  const itens = relCargaItens(k);
+  if(!itens.length){ showToast('Carga ' + k + ': ' + relPctTxt(info.pct) + ' agrupada — não há itens montados para imprimir.', true); return; }
+
+  /* agrupa por loja */
+  const lojas = new Map();
+  itens.forEach(r => {
+    const lk = sepKey(r.destino) || normLoja(r.destino) || 'SEM DESTINO';
+    if(!lojas.has(lk)) lojas.set(lk, []);
+    lojas.get(lk).push(r);
+  });
+  const ordem = Array.from(lojas.keys()).sort(sepCmpLoja);
+  const itensDistintos = new Set(itens.map(r => String(r.cod || r.descricao || '').trim())).size;
+  const ref = itens[0];
+  const forn = (itens.find(r => r.fornecedor) || {}).fornecedor || '';
+  const rec = (itens.find(r => r.recebimento) || {}).recebimento || '';
+  const aging = rec ? agingLabel(itens.find(r => r.recebimento)) : '—';
+
+  const blocos = ordem.map(lk => {
+    const L = lojas.get(lk).slice().sort((a, b) => cmpNat(a.descricao, b.descricao) || cmpNat(a.cod, b.cod));
+    const vol = L.reduce((x, r) => x + (Number(r.qtd) || 0), 0);
+    return `<section class="rc-loja">
+      <header><b>${escapeHtml(sepNomeLoja(lk))}</b><span>${L.length} item(ns) · ${fmtInt(vol)} un.</span></header>
+      <table>
+        <colgroup><col style="width:17%"><col style="width:49%"><col style="width:12%"><col style="width:11%"><col style="width:11%"></colgroup>
+        <thead><tr><th>Cód</th><th>Descrição</th><th>Emb.</th><th style="text-align:right">Qtd</th><th style="text-align:center">OK</th></tr></thead>
+        <tbody>${L.map(r => `<tr><td>${escapeHtml(r.cod)}</td><td>${escapeHtml(r.descricao)}</td><td>${escapeHtml(r.embalagem || r.embl || '')}</td><td class="n">${fmtInt(r.qtd)}</td><td class="ck"><span class="rc-box"></span></td></tr>`).join('')}</tbody>
+      </table>
+    </section>`;
+  }).join('');
+
+  const tot = info.montado + info.agrupado;
+  const pM = tot > 0 ? info.montado / tot * 100 : 0;
+  const pA = 100 - pM;
+  const barra = (pM > 0 ? `<i class="m" style="width:${pM.toFixed(2)}%">${pM >= 14 ? 'MONTADO ' + relPctTxt(pM) : ''}</i>` : '')
+              + (pA > 0 ? `<i class="a" style="width:${pA.toFixed(2)}%">${pA >= 14 ? 'AGRUPADO ' + relPctTxt(pA) : ''}</i>` : '');
+  const { curto } = todayLabel();
+  const d = new Date();
+  const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  const turno = (currentUser.turno && TURNOS.includes(currentUser.turno)) ? currentUser.turno : turnoPorHorario();
+
+  document.getElementById('relcarga-print-area').innerHTML = `
+    <div class="rc-head">
+      <div class="rc-id"><small>CD SECOS · RELATÓRIO MONTADO DA CARGA</small><b>CARGA ${escapeHtml(k)}</b><span>${escapeHtml(forn || '—')}</span></div>
+      <div class="rc-pct"><b>${relPctTxt(info.pct)}</b><small>AGRUPADO</small></div>
+    </div>
+    <div class="rc-bar">${barra}</div>
+    <div class="rc-kpis">
+      <div><small>MONTADO (UN.)</small><b>${fmtInt(info.montado)}</b></div>
+      <div><small>AGRUPADO (UN.)</small><b>${fmtInt(info.agrupado)}</b></div>
+      <div><small>LOJAS</small><b>${ordem.length}</b></div>
+      <div><small>ITENS</small><b>${fmtInt(itensDistintos)}</b></div>
+      <div><small>AGING</small><b>${escapeHtml(aging)}</b></div>
+    </div>
+    <div class="rc-meta">${curto} · ${hora} · Turno <b>${escapeHtml(turno)}</b> · Associado <b>${escapeHtml(currentUser.nome)}</b>${info.fonte === 'base' ? ' · origem: Base do dia' : ''}</div>
+    <div class="rc-lojas">${blocos}</div>
+    <div class="rc-foot"><div>Conferente</div><div>Distribuidor</div><div>Data / hora</div></div>`;
+
+  const velho = document.getElementById('pp-page-style');
+  if(velho) velho.remove();
+  const st = document.createElement('style');
+  st.id = 'pp-page-style';
+  st.textContent = '@page{ size:A4 portrait; margin:8mm; }';
+  document.head.appendChild(st);
+
+  document.body.setAttribute('data-print-target', 'relcarga');
+  setTimeout(() => window.print(), 250);
 }
 
 /* ===================== COPIAR DISTRIBUIÇÃO PARA O EXCEL ===================== */

@@ -8812,16 +8812,37 @@ function baseCapturar(rows){
   const naDist = new Set((distData || []).map(r => sepNorm(r.carga)).filter(Boolean));
   const agora = new Date().toLocaleString('pt-BR');
   const por = currentUser ? currentUser.nome : '';
+  /* limpeza: linha lixo (sem carga, sem status Montada ou sem quantidade) vinda de uma colagem errada não pode segurar a carga como "já salva" */
+  const antes = baseRows.length;
+  baseRows = baseRows.filter(r => sepNorm(r.carga) && String(r.status || '').toUpperCase().includes('MONTAD') && Number(r.qtd) > 0);
+  const limpou = antes - baseRows.length;
   const jaSalvas = new Set(baseRows.map(r => sepNorm(r.carga)));
   const porCarga = {};
   rows.forEach(r => { const k = sepNorm(r.carga); if(k) (porCarga[k] = porCarga[k] || []).push(r); });
-  const add = []; let novas = 0, jaTinha = 0, aguardando = 0;
+  const add = []; let novas = 0, jaTinha = 0, aguardando = 0, completadas = 0;
+  const assin = r => [sepKey(r.destino), String(r.cod || '').trim(), String(r.embalagem || '').trim(), String(r.master || '').trim()].join('|');
   Object.keys(porCarga).forEach(k => {
     const p = noPiso.has(k), d = naDist.has(k);
     if(!p && !d) return;                                   // só cargas que estão no piso ou na distribuição
-    if(jaSalvas.has(k)){ jaTinha++; return; }              // já salva como montada: nunca é substituída
     const linhas = porCarga[k];
     const st = r => String(r.status || '').toUpperCase();
+    if(jaSalvas.has(k)){
+      /* já salva: nada do que está salvo é trocado ou apagado. Só entram as linhas que faltavam
+         (carga salva incompleta), e apenas se a carga estiver 100% montada no relatório atual */
+      jaTinha++;
+      if(linhas.some(r => st(r).includes('AGRUPAD'))) return;
+      const tem = {};
+      baseRows.forEach(r => { if(sepNorm(r.carga) === k){ const a = assin(r); tem[a] = (tem[a] || 0) + 1; } });
+      const ref = baseRows.find(r => sepNorm(r.carga) === k) || {};
+      let falt = 0;
+      linhas.filter(r => st(r).includes('MONTAD')).forEach(r => {
+        const a = assin(r);
+        if(tem[a] > 0){ tem[a]--; return; }
+        const l = Object.assign({}, r, { origem:ref.origem || ((p && d) ? 'ambas' : (d ? 'distribuida' : 'piso')), captadoEm:agora, captadoPor:por }); delete l.aging; add.push(l); falt++;
+      });
+      if(falt) completadas++;
+      return;
+    }
     if(linhas.some(r => st(r).includes('AGRUPAD'))){ aguardando++; return; }   // tem item agrupado: espera ficar 100% montada
     if(!linhas.some(r => st(r).includes('MONTAD'))) return;
     const o = (p && d) ? 'ambas' : (d ? 'distribuida' : 'piso');
@@ -8829,13 +8850,15 @@ function baseCapturar(rows){
     novas++;
   });
   if(add.length){ baseRows = baseRows.concat(add); }
-  if(add.length || resetou){ baseVer++; if(window.baseSalvar) window.baseSalvar(baseRows, baseDia); }
+  if(add.length || resetou || limpou){ baseVer++; if(window.baseSalvar) window.baseSalvar(baseRows, baseDia); }
   baseRender(true);
   const tot = new Set(baseRows.map(r => sepNorm(r.carga))).size;
   const partes = [novas + ' carga(s) montada(s) salva(s)'];
   if(jaTinha) partes.push(jaTinha + ' já estavam salvas');
+  if(completadas) partes.push(completadas + ' completada(s) com linhas que faltavam');
+  if(limpou) partes.push(limpou + ' linha(s) inválida(s) removida(s)');
   if(aguardando) partes.push(aguardando + ' com item agrupado (aguardam ficar 100% montadas)');
-  showToast((novas ? '✔ Base: ' : 'Base: ') + partes.join(' · ') + ' · total na Base: ' + tot, !novas && !jaTinha && !aguardando);
+  showToast((novas || completadas ? '✔ Base: ' : 'Base: ') + partes.join(' · ') + ' · total na Base: ' + tot, !novas && !jaTinha && !aguardando);
 }
 
 function baseFiltradas(){

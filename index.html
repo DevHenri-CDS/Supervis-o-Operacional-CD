@@ -950,6 +950,7 @@
     #relcarga-print-area .rc-loja tr{ break-inside:avoid; }
     #relcarga-print-area .rc-loja tr:last-child td{ border-bottom:none; }
     #relcarga-print-area .rc-loja .n{ text-align:right; font-weight:700; }
+    #relcarga-print-area .rc-loja .mst{ font-weight:700; word-break:break-all; }
     #relcarga-print-area .rc-loja .ck{ text-align:center; }
     #relcarga-print-area .rc-box{ display:inline-block; width:3mm; height:3mm; border:1px solid #000; vertical-align:middle; }
     #relcarga-print-area .rc-foot{ display:flex; gap:8mm; margin-top:6mm; font-size:9px; break-inside:avoid; }
@@ -6790,9 +6791,9 @@ function imprimirRelCarga(carga){
     return `<section class="rc-loja">
       <header><b>${escapeHtml(sepNomeLoja(lk))}</b><span>${L.length} item(ns) · ${fmtInt(vol)} un.</span></header>
       <table>
-        <colgroup><col style="width:17%"><col style="width:49%"><col style="width:12%"><col style="width:11%"><col style="width:11%"></colgroup>
-        <thead><tr><th>Cód</th><th>Descrição</th><th>Emb.</th><th style="text-align:right">Qtd</th><th style="text-align:center">OK</th></tr></thead>
-        <tbody>${L.map(r => `<tr><td>${escapeHtml(r.cod)}</td><td>${escapeHtml(r.descricao)}</td><td>${escapeHtml(r.embalagem || r.embl || '')}</td><td class="n">${fmtInt(r.qtd)}</td><td class="ck"><span class="rc-box"></span></td></tr>`).join('')}</tbody>
+        <colgroup><col style="width:13%"><col style="width:34%"><col style="width:19%"><col style="width:10%"><col style="width:12%"><col style="width:12%"></colgroup>
+        <thead><tr><th>Cód</th><th>Descrição</th><th>Master</th><th>Emb.</th><th style="text-align:right">Qtd</th><th style="text-align:center">OK</th></tr></thead>
+        <tbody>${L.map(r => `<tr><td>${escapeHtml(r.cod)}</td><td>${escapeHtml(r.descricao)}</td><td class="mst">${escapeHtml(r.master || '')}</td><td>${escapeHtml(r.embalagem || r.embl || '')}</td><td class="n">${fmtInt(r.qtd)}</td><td class="ck"><span class="rc-box"></span></td></tr>`).join('')}</tbody>
       </table>
     </section>`;
   }).join('');

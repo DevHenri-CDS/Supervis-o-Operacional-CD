@@ -1347,6 +1347,27 @@
   .tvav-barra i{ display:block; height:100%; width:100%; background:#3dff8a; }
   #panel-tv-fech .prod-kpi .v{ font-size:1.7rem; }
 </style>
+<style id="org-style">
+  .org-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; }
+  .org-grid .field label{ display:block; font-size:.7rem; letter-spacing:.06em; color:var(--text-dim); margin-bottom:4px; }
+  .org-grid .field input, .org-grid .field select{ width:100%; box-sizing:border-box; }
+  .org-prev-wrap{ margin-top:14px; padding:14px; border:1px dashed var(--line); border-radius:6px; background:var(--row-alt); overflow-x:auto; }
+  .org-etq{ box-sizing:border-box; background:#fff; color:#000; font-family:Arial,Helvetica,sans-serif; padding:3mm; display:flex; flex-direction:column; justify-content:space-between; overflow:hidden; }
+  #org-preview .org-etq{ border:1px solid #888; box-shadow:0 2px 8px rgba(0,0,0,.45); margin:0 auto; }
+  .org-etq .org-r{ flex:1 1 0; min-height:0; display:flex; flex-direction:column; justify-content:center; border-bottom:.25mm solid #000; }
+  .org-etq .org-r:last-child{ border-bottom:none; }
+  .org-etq .org-k{ font-weight:700; letter-spacing:.06em; line-height:1; }
+  .org-etq .org-v{ font-weight:800; line-height:1.05; white-space:nowrap; overflow:hidden; }
+  .sep-chip .sep-chip-tn{ font-size:.7rem; padding:1px 2px; border-radius:4px; background:var(--panel); color:var(--band); border:1px solid var(--line); font-weight:700; }
+  #org-print-area{ display:none; }
+  @media print{
+    body[data-print-target="org"] > *:not(#org-print-area){ display:none !important; }
+    body[data-print-target="org"]{ background:#fff !important; margin:0 !important; padding:0 !important; }
+    body[data-print-target="org"] #org-print-area{ display:block !important; }
+    #org-print-area .org-etq{ page-break-after:always; break-after:page; page-break-inside:avoid; break-inside:avoid; }
+    #org-print-area .org-etq:last-child{ page-break-after:auto; break-after:auto; }
+  }
+</style>
 </head>
 <body>
 <div id="toast-layer"></div>
@@ -1433,6 +1454,7 @@
     <button class="tab-btn active" id="tab-btn-piso" onclick="switchTab('piso')">Cargas no Piso</button>
     <button class="tab-btn" id="tab-btn-cross" onclick="switchTab('cross')">Relatório</button>
     <button class="tab-btn" id="tab-btn-sep" onclick="switchTab('sep')">Separação</button>
+    <button class="tab-btn" id="tab-btn-org" onclick="switchTab('org')">Organizacional Operação</button>
     <button class="tab-btn" id="tab-btn-fech" onclick="switchTab('fech')" style="display:none;">Fechamentos</button>
   </div>
 
@@ -1798,7 +1820,7 @@
         <table>
           <thead>
             <tr>
-              <th>Carga</th><th>Fornecedor</th><th>Recebimento</th><th>Aging</th><th>Vol. Montado</th><th>Vol. Agrupado</th><th>% Agrupado</th><th>Imprimir?</th>
+              <th>Carga</th><th>Fornecedor</th><th>Recebimento</th><th>Aging</th><th>Vol. Montado</th><th>Vol. Agrupado</th><th>% Agrupado</th><th title="Turno em que a carga foi distribuída (Distribuição de hoje ou Fechamento de dias anteriores)">Turno distribuído</th><th>Imprimir?</th>
             </tr>
           </thead>
           <tbody id="tbody-cross-pend"></tbody>
@@ -1864,10 +1886,13 @@
           <h3>1 · Cadastro de produtivos</h3>
           <div class="sep-linha">
             <input type="text" id="sep-prod-in" maxlength="30" placeholder="Nome do produtivo e dê OK" autocomplete="off" style="min-width:230px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); sepAddProdutivo(); }">
+            <label class="lb" for="sep-prod-turno" style="margin-left:4px;">Turno</label>
+            <select id="sep-prod-turno" onchange="sepEscolherTurnoCad(this.value)" title="Turno do produtivo a cadastrar: automático (turno do seu login) ou T1, T2, T3"></select>
             <button class="btn btn-primary btn-sm" style="width:auto;" onclick="sepAddProdutivo()">Cadastrar</button>
             <button class="btn btn-ghost btn-sm" onclick="sepFloatToggle(true)" title="Abre a janela flutuante para escolher as cargas da programação">🗔 Janela de cargas</button>
             <button class="btn btn-ghost btn-sm" onclick="sepImportarProdutivos()" title="Cadastra os nomes que já estão nas estações e na produtividade do dia">Importar nomes já usados</button>
           </div>
+          <span class="hint" id="sep-prod-turno-hint" style="display:block; margin-top:6px;"></span>
           <div class="sep-chips sep-chips-prod" id="sep-prod-chips"></div>
           <span class="hint" style="display:block; margin-top:8px;">Cada estação escolhe o produtivo nesta lista, e o gráfico de Produtividade soma o volume feito por esses nomes. Cadastre uma vez e fica salvo para todos.</span>
         </div>
@@ -1923,6 +1948,84 @@
 
   </div>
   <!-- fim da aba "Separação" -->
+
+  <div id="tab-org" style="display:none;">
+    <section class="panel" id="panel-org-assoc">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>ORGANIZACIONAL OPERAÇÃO</h2>
+          <span class="sub">Associados do Cadastro de produtivos da Separação, cada um com o seu turno · etiqueta de identificação para a Zebra ZT411</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="n" id="st-org-total">0</div><div class="l">Associados</div></div>
+          <div class="stat"><div class="n" id="st-org-T1">0</div><div class="l">T1</div></div>
+          <div class="stat"><div class="n" id="st-org-T2">0</div><div class="l">T2</div></div>
+          <div class="stat"><div class="n" id="st-org-T3">0</div><div class="l">T3</div></div>
+        </div>
+      </div>
+      <div class="sep-body">
+        <div class="sep-bloco">
+          <h3>1 · Cadastrar associado</h3>
+          <div class="sep-linha">
+            <input type="text" id="org-nome" maxlength="30" placeholder="Nome do associado e dê OK" autocomplete="off" style="min-width:230px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); orgCadastrar(); }">
+            <label class="lb" for="org-turno-cad">Turno</label>
+            <select id="org-turno-cad" onchange="sepEscolherTurnoCad(this.value)" title="Automático = turno do seu login; ou escolha T1, T2, T3"></select>
+            <button class="btn btn-primary btn-sm" style="width:auto;" onclick="orgCadastrar()">Cadastrar</button>
+          </div>
+          <span class="hint" id="org-turno-hint" style="display:block; margin-top:6px;"></span>
+          <span class="hint" style="display:block; margin-top:4px;">É o mesmo cadastro da guia Separação: quem for cadastrado aqui aparece lá (e vice-versa), com o turno, para todos.</span>
+        </div>
+        <div class="sep-bloco">
+          <h3>2 · Associados cadastrados</h3>
+          <div class="sep-linha" style="gap:8px; flex-wrap:wrap;">
+            <span id="org-chips-tn"></span>
+            <input type="text" id="org-busca" placeholder="Buscar nome…" autocomplete="off" style="min-width:180px;" oninput="orgBusca = this.value; renderOrg(true);">
+            <button class="btn btn-ghost btn-sm" onclick="orgSelTodos(true)">Marcar todos da lista</button>
+            <button class="btn btn-ghost btn-sm" onclick="orgSelTodos(false)">Limpar marcação</button>
+          </div>
+          <div class="table-scroll" style="margin-top:10px;">
+            <table>
+              <thead><tr><th style="width:36px;"></th><th>Associado</th><th style="width:90px;">Turno</th><th>Etiqueta</th><th style="width:44px;"></th></tr></thead>
+              <tbody id="org-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-org-etq">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>ETIQUETA DE IDENTIFICAÇÃO — ZEBRA ZT411</h2>
+          <span class="sub">SETOR · ASSOCIADO · MÁQUINA · TURNO</span>
+        </div>
+      </div>
+      <div class="sep-body">
+        <div class="sep-bloco">
+          <div class="org-grid">
+            <div class="field"><label for="org-setor">SETOR</label><input type="text" id="org-setor" maxlength="30" autocomplete="off" oninput="orgLer()"></div>
+            <div class="field"><label for="org-assoc">ASSOCIADO</label><input type="text" id="org-assoc" list="org-assoc-list" maxlength="30" autocomplete="off" placeholder="Escolha da lista ou digite" oninput="orgAssocMudou()"><datalist id="org-assoc-list"></datalist></div>
+            <div class="field"><label for="org-maquina">MÁQUINA</label><input type="text" id="org-maquina" maxlength="30" autocomplete="off" oninput="orgLer()"></div>
+            <div class="field"><label for="org-turno">TURNO</label><select id="org-turno" onchange="orgLer()"><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></div>
+          </div>
+          <div class="org-grid" style="margin-top:10px;">
+            <div class="field"><label for="org-copias">Cópias</label><input type="number" id="org-copias" min="1" max="50" oninput="orgLer()"></div>
+            <div class="field"><label for="org-w">Largura da etiqueta (mm)</label><input type="number" id="org-w" min="30" max="110" oninput="orgLer()"></div>
+            <div class="field"><label for="org-h">Altura da etiqueta (mm)</label><input type="number" id="org-h" min="20" max="300" oninput="orgLer()"></div>
+            <div class="field"><label for="org-dpi">Resolução (só para o ZPL)</label><select id="org-dpi" onchange="orgLer()"><option value="203">203 dpi</option><option value="300">300 dpi</option><option value="600">600 dpi</option></select></div>
+          </div>
+          <div class="org-prev-wrap"><div id="org-preview"></div></div>
+          <div class="sep-linha" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
+            <button class="btn btn-primary btn-sm" style="width:auto;" onclick="orgImprimirAtual()">🖨 Imprimir etiqueta</button>
+            <button class="btn btn-primary btn-sm" style="width:auto;" id="org-btn-sel" onclick="orgImprimirMarcados()">🖨 Imprimir marcados (0)</button>
+            <button class="btn btn-ghost btn-sm" id="org-btn-zpl" onclick="orgBaixarZpl()">⬇ Baixar ZPL</button>
+          </div>
+          <span class="hint" style="display:block; margin-top:8px;">Na janela de impressão escolha a impressora <b>ZDesigner ZT411</b> (driver Zebra) com o mesmo tamanho de etiqueta informado acima, margens “Nenhuma” e escala 100%. “Imprimir marcados” usa o SETOR e a MÁQUINA do formulário e o turno cadastrado de cada associado. O arquivo ZPL serve para enviar direto pela Zebra Setup Utilities, sem driver.</span>
+        </div>
+      </div>
+    </section>
+  </div>
+  <!-- fim da aba "Organizacional Operação" -->
 
   <div id="tab-fech" style="display:none;">
     <section class="panel" id="panel-fech">
@@ -2348,6 +2451,7 @@
 <div id="piso-print-area"></div>
 <div id="cross-print-area"></div>
 <div id="sep-print-area"></div>
+<div id="org-print-area"></div>
 <div id="audit-print-area"></div>
 <div id="relcarga-print-area"></div>
 
@@ -3397,15 +3501,17 @@ function switchTab(name){
   if(currentUser && currentUser.role === 'operador') name = 'piso'; // operador só tem a aba de cargas no piso
   if(name === 'fech' && !podeVerFechamentos()) name = 'piso';
   if(name === 'sep' && !sepPode()) name = 'piso';
-  if(['rec','piso','cross','sep','fech'].indexOf(name) === -1) name = 'piso';
+  if(name === 'org' && !sepPode()) name = 'piso';
+  if(['rec','piso','cross','sep','org','fech'].indexOf(name) === -1) name = 'piso';
   abaAtual = name;
   document.body.classList.toggle('piso-view', name === 'piso');
-  ['rec','piso','cross','sep','fech'].forEach(n => {
+  ['rec','piso','cross','sep','org','fech'].forEach(n => {
     document.getElementById('tab-'+n).style.display = name === n ? 'block' : 'none';
     document.getElementById('tab-btn-'+n).classList.toggle('active', name === n);
   });
   if(name === 'rec') renderRecebimento();
   if(name === 'sep') renderSep();
+  if(name === 'org') renderOrg();
   if(name === 'cross') renderCrossAll();   // as abas fechadas não são desenhadas (site mais leve)
   if(name === 'fech') renderFechamentos();
   renderDock();
@@ -3419,6 +3525,7 @@ function forceLogout(motivo){
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('in-senha').value = '';
   turnoLoginManual = false;
+  sepProdTurnoManual = '';
   preencherCatalogoTurno();
   document.body.classList.remove('readonly');
   document.getElementById('login-error').textContent = motivo || 'Sua sessão foi encerrada.';
@@ -5279,6 +5386,27 @@ function toggleCrossMarcada(carga, checked){
   renderCrossAll();
 }
 
+/* turno em que a carga foi distribuída: Distribuição de hoje primeiro; senão o Fechamento mais recente que a contém */
+function turnoDistCarga(carga){
+  const c = String(carga == null ? '' : carga).trim();
+  if(!c) return null;
+  const uniq = rows => Array.from(new Set(rows.filter(r => String(r.carga == null ? '' : r.carga).trim() === c).map(turnoDaCarga)));
+  const vivo = uniq(distData || []);
+  if(vivo.length) return { turno: vivo.join('/'), dia: diaOperacional() };
+  const dias = [...(fechamentosData || [])].sort((a, b) => b.id.localeCompare(a.id));
+  for(const f of dias){
+    const t = uniq(f.rows || []);
+    if(t.length) return { turno: t.join('/'), dia: f.id };
+  }
+  return null;
+}
+function turnoDistCelula(carga){
+  const r = turnoDistCarga(carga);
+  if(!r) return '<span style="color:var(--text-dim);" title="Carga ainda não distribuída (nem em Distribuição, nem em Fechamentos)">—</span>';
+  const hoje = r.dia === diaOperacional();
+  const dm = fmtDia(r.dia).slice(0, 5);
+  return `<b style="color:var(--band);" title="Distribuída no ${escapeHtml(r.turno)} · ${escapeHtml(fmtDia(r.dia))}">${escapeHtml(r.turno)}</b>${hoje ? '' : ` <span style="color:var(--text-dim); font-size:.72rem;">${escapeHtml(dm)}</span>`}`;
+}
 function renderCrossPendencias(){
   const canMark = PERFIS_DISTRIBUICAO.includes(currentUser.role);
   const canImport = ehAdminLike(currentUser.role);
@@ -5298,7 +5426,7 @@ function renderCrossPendencias(){
     const msg = crossEstAtual()
       ? 'Nenhuma carga pendente para as lojas da estação ' + (Number(crossEstSel) + 1) + '.'
       : 'Nenhuma carga pendente no relatório Cross.';
-    tbody.innerHTML = `<tr class="empty-row"><td colspan="8">${msg}</td></tr>`;
+    tbody.innerHTML = `<tr class="empty-row"><td colspan="9">${msg}</td></tr>`;
   }
 
   pendencias.forEach(p => {
@@ -5312,6 +5440,7 @@ function renderCrossPendencias(){
       <td>${fmtInt(p.montado)}</td>
       <td>${fmtInt(p.agrupado)}</td>
       <td>${p.pct.toFixed(0)}%</td>
+      <td>${turnoDistCelula(p.carga)}</td>
       <td style="text-align:center;"><input type="checkbox" ${marcada?'checked':''} ${canMark?'':'disabled'} onchange="toggleCrossMarcada('${p.carga}', this.checked)"></td>
     `;
     tbody.appendChild(tr);
@@ -5478,6 +5607,189 @@ function imprimirRelatorioCross(){
   setTimeout(() => window.print(), 350);
 }
 
+/* ===================== ORGANIZACIONAL OPERAÇÃO (associados + etiqueta Zebra ZT411) ===================== */
+let orgFiltroTn = '';      // '' = todos os turnos
+let orgBusca = '';
+let orgSel = {};           // associados marcados na lista { NOME:true }
+let orgCfg = { setor:'', maquina:'', w:100, h:60, dpi:203, copias:1 };
+try{ Object.assign(orgCfg, JSON.parse(localStorage.getItem('orgEtqCfg') || '{}')); }catch(e){}
+function orgSalvarCfg(){ try{ localStorage.setItem('orgEtqCfg', JSON.stringify(orgCfg)); }catch(e){} }
+const orgV = id => { const e = document.getElementById(id); return e ? e.value : ''; };
+const orgTxt = v => String(v == null ? '' : v).trim().replace(/\s+/g, ' ').toUpperCase();
+
+function orgRenderForm(){
+  const set = (id, v) => { const e = document.getElementById(id); if(e && document.activeElement !== e) e.value = v; };
+  set('org-setor', orgCfg.setor); set('org-maquina', orgCfg.maquina);
+  set('org-copias', orgCfg.copias); set('org-w', orgCfg.w); set('org-h', orgCfg.h); set('org-dpi', String(orgCfg.dpi));
+  const selT = document.getElementById('org-turno-cad');
+  if(selT && document.activeElement !== selT){
+    selT.innerHTML = `<option value="">Auto · ${sepTurnoPadrao()}</option>` + TURNOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    selT.value = TURNOS.includes(sepProdTurnoManual) ? sepProdTurnoManual : '';
+  }
+  const h = document.getElementById('org-turno-hint');
+  if(h) h.textContent = TURNOS.includes(sepProdTurnoManual) ? 'Turno escolhido manualmente: ' + sepProdTurnoManual : 'Automático: segue o turno do seu login (' + sepTurnoPadrao() + ')';
+  const t = document.getElementById('org-turno');
+  if(t && document.activeElement !== t && !t.dataset.tocado) t.value = sepTurnoPadrao();
+}
+function orgLer(){
+  orgCfg.setor = orgTxt(orgV('org-setor'));
+  orgCfg.maquina = orgTxt(orgV('org-maquina'));
+  orgCfg.copias = Math.max(1, Math.min(50, parseInt(orgV('org-copias')) || 1));
+  orgCfg.w = Math.max(30, Math.min(110, parseFloat(orgV('org-w')) || 100));
+  orgCfg.h = Math.max(20, Math.min(300, parseFloat(orgV('org-h')) || 60));
+  orgCfg.dpi = [203, 300, 600].includes(parseInt(orgV('org-dpi'))) ? parseInt(orgV('org-dpi')) : 203;
+  const t = document.getElementById('org-turno'); if(t) t.dataset.tocado = '1';
+  orgSalvarCfg();
+  orgPreview();
+}
+function orgAssocMudou(){
+  const t = sepTurnoDe(orgV('org-assoc'));
+  const sel = document.getElementById('org-turno');
+  if(t && sel){ sel.value = t; sel.dataset.tocado = ''; }
+  orgPreview();
+}
+function orgItemAtual(){
+  return { setor: orgTxt(orgV('org-setor')), associado: orgTxt(orgV('org-assoc')), maquina: orgTxt(orgV('org-maquina')), turno: orgV('org-turno') || sepTurnoPadrao() };
+}
+function orgEtqHtml(it, w, h){
+  const m = 3, rowH = (h - 2 * m) / 4, maxW = w - 2 * m;
+  const fk = Math.max(2.2, Math.min(3.4, rowH * 0.22));
+  const linha = (k, v) => {
+    const txt = v || '';
+    const fv = Math.max(3, Math.min(rowH * 0.56, maxW / (Math.max(txt.length, 4) * 0.62)));
+    return `<div class="org-r"><span class="org-k" style="font-size:${fk.toFixed(2)}mm;">${k}:</span><span class="org-v" style="font-size:${fv.toFixed(2)}mm;">${escapeHtml(txt) || '&nbsp;'}</span></div>`;
+  };
+  return `<div class="org-etq" style="width:${w}mm;height:${h}mm;">${linha('SETOR', it.setor)}${linha('ASSOCIADO', it.associado)}${linha('MÁQUINA', it.maquina)}${linha('TURNO', it.turno)}</div>`;
+}
+function orgPreview(){
+  const box = document.getElementById('org-preview');
+  if(!box) return;
+  const it = orgItemAtual();
+  box.innerHTML = orgEtqHtml(it, orgCfg.w, orgCfg.h);
+  const n = Object.keys(orgSel).filter(k => orgSel[k]).length;
+  const b = document.getElementById('org-btn-sel'); if(b) b.textContent = '🖨 Imprimir marcados (' + n + ')';
+  const z = document.getElementById('org-btn-zpl'); if(z) z.textContent = n ? '⬇ Baixar ZPL (' + n + ' marcados)' : '⬇ Baixar ZPL';
+}
+
+function renderOrg(soft){
+  if(!currentUser || !document.getElementById('tab-org')) return;
+  const nomes = (sepData.produtivos || []).slice();
+  const cont = { T1:0, T2:0, T3:0 };
+  nomes.forEach(n => { const t = sepTurnoDe(n); if(cont[t] !== undefined) cont[t]++; });
+  document.getElementById('st-org-total').textContent = nomes.length;
+  TURNOS.forEach(t => { document.getElementById('st-org-' + t).textContent = cont[t]; });
+  const pode = sepPode() && !somenteLeitura();
+  ['org-nome', 'org-turno-cad'].forEach(id => { const e = document.getElementById(id); if(e) e.disabled = !pode; });
+  document.getElementById('org-chips-tn').innerHTML = ['', ...TURNOS].map(t =>
+    `<span class="rc-chip ${orgFiltroTn === t ? 'on' : ''}" onclick="orgFiltro('${t}')">${t || 'Todos'}</span>`).join(' ');
+  const dl = document.getElementById('org-assoc-list');
+  if(dl) dl.innerHTML = nomes.map(n => `<option value="${escapeHtml(n)}"></option>`).join('');
+  const q = orgTxt(orgBusca);
+  const lista = nomes.filter(n => (!orgFiltroTn || sepTurnoDe(n) === orgFiltroTn) && (!q || n.includes(q)));
+  document.getElementById('org-tbody').innerHTML = lista.length ? lista.map(n => `<tr>
+      <td style="text-align:center;"><input type="checkbox" data-n="${escapeHtml(n)}" ${orgSel[n] ? 'checked' : ''} onchange="orgToggleSel(this.dataset.n, this.checked)"></td>
+      <td><b>${escapeHtml(n)}</b></td>
+      <td><select data-n="${escapeHtml(n)}" ${pode ? '' : 'disabled'} onchange="sepMudarTurnoProd(this.dataset.n, this.value)">${sepTurnoDe(n) ? '' : '<option value="" selected>—</option>'}${TURNOS.map(t => `<option value="${t}" ${sepTurnoDe(n) === t ? 'selected' : ''}>${t}</option>`).join('')}</select></td>
+      <td><button class="btn btn-ghost btn-sm" data-n="${escapeHtml(n)}" onclick="orgUsar(this.dataset.n)">Usar no formulário</button> <button class="btn btn-ghost btn-sm" data-n="${escapeHtml(n)}" onclick="orgImprimirUm(this.dataset.n)">🖨 Imprimir</button></td>
+      <td><button type="button" class="btn btn-ghost btn-sm" data-n="${escapeHtml(n)}" ${pode ? '' : 'disabled'} onclick="sepRemProdutivo(this.dataset.n)" title="Remover do cadastro">✕</button></td>
+    </tr>`).join('')
+    : `<tr class="empty-row"><td colspan="5">${nomes.length ? 'Nenhum associado nesse filtro.' : 'Nenhum associado cadastrado ainda. Digite o nome acima e clique em Cadastrar.'}</td></tr>`;
+  if(!soft) orgRenderForm();
+  orgPreview();
+}
+function orgFiltro(t){ orgFiltroTn = t; renderOrg(true); }
+function orgToggleSel(n, on){ if(on) orgSel[n] = true; else delete orgSel[n]; orgPreview(); }
+function orgSelTodos(on){
+  const q = orgTxt(orgBusca);
+  (sepData.produtivos || []).filter(n => (!orgFiltroTn || sepTurnoDe(n) === orgFiltroTn) && (!q || n.includes(q))).forEach(n => { if(on) orgSel[n] = true; else delete orgSel[n]; });
+  renderOrg(true);
+}
+function orgUsar(n){
+  const a = document.getElementById('org-assoc'); if(a) a.value = n;
+  orgAssocMudou();
+  const e = document.getElementById('panel-org-etq'); if(e) e.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+function orgCadastrar(){
+  if(!sepPode() || somenteLeitura()) return;
+  const inp = document.getElementById('org-nome');
+  const r = sepCadastrarNomes(inp ? inp.value : '', sepTurnoCad());
+  if(!r.total) return;
+  if(inp) inp.value = '';
+  if(!r.novos) showToast('Esse(s) associado(s) já estava(m) cadastrado(s).', true);
+  else showToast('✔ ' + r.novos + ' associado(s) cadastrado(s) no ' + sepTurnoCad() + '.', false);
+  sepCommit();
+  renderOrg(true);
+}
+
+/* ---- impressão (driver da Zebra ZT411 pelo navegador) ---- */
+function orgExpandir(itens){
+  const c = Math.max(1, orgCfg.copias || 1), out = [];
+  itens.forEach(it => { for(let i = 0; i < c; i++) out.push(it); });
+  return out;
+}
+function orgItensMarcados(){
+  const base = orgItemAtual();
+  return Object.keys(orgSel).filter(k => orgSel[k]).sort((a, b) => a.localeCompare(b, 'pt-BR'))
+    .map(n => ({ setor: base.setor, associado: n, maquina: base.maquina, turno: sepTurnoDe(n) || base.turno }));
+}
+function orgImprimir(itens){
+  if(!itens.length){ showToast('Não há etiqueta para imprimir.', true); return; }
+  if(itens.some(i => !i.associado)){ showToast('Informe o ASSOCIADO da etiqueta.', true); return; }
+  orgLer();
+  const w = orgCfg.w, h = orgCfg.h;
+  document.getElementById('org-print-area').innerHTML = orgExpandir(itens).map(it => orgEtqHtml(it, w, h)).join('');
+  const velho = document.getElementById('org-page-style'); if(velho) velho.remove();
+  const st = document.createElement('style');
+  st.id = 'org-page-style';
+  st.textContent = `@page{ size:${w}mm ${h}mm; margin:0; }`;
+  document.head.appendChild(st);
+  document.body.setAttribute('data-print-target', 'org');
+  showToast('Escolha a impressora Zebra ZT411 na janela de impressão.');
+  setTimeout(() => window.print(), 350);
+}
+window.addEventListener('afterprint', () => { const e = document.getElementById('org-page-style'); if(e) e.remove(); });
+function orgImprimirAtual(){ orgImprimir([orgItemAtual()]); }
+function orgImprimirMarcados(){
+  const it = orgItensMarcados();
+  if(!it.length){ showToast('Marque ao menos um associado na lista.', true); return; }
+  orgImprimir(it);
+}
+function orgImprimirUm(n){
+  const base = orgItemAtual();
+  orgImprimir([{ setor: base.setor, associado: n, maquina: base.maquina, turno: sepTurnoDe(n) || base.turno }]);
+}
+
+/* ---- ZPL (envio direto para a Zebra, sem driver) ---- */
+function orgZpl(itens, w, h, dpi){
+  const dpm = dpi / 25.4, PW = Math.round(w * dpm), LL = Math.round(h * dpm), m = Math.round(3 * dpm);
+  const rowH = Math.floor((LL - 2 * m) / 4), maxW = PW - 2 * m;
+  const lim = t => String(t == null ? '' : t).replace(/[\^~\\]/g, ' ');
+  let z = '';
+  itens.forEach(it => {
+    z += `^XA\n^CI28\n^PW${PW}\n^LL${LL}\n^LH0,0\n`;
+    [['SETOR', it.setor], ['ASSOCIADO', it.associado], ['MÁQUINA', it.maquina], ['TURNO', it.turno]].forEach(([k, v], i) => {
+      const y = m + i * rowH, fk = Math.round(rowH * 0.2), txt = lim(v);
+      const fv = Math.max(Math.round(fk * 1.2), Math.min(Math.round(rowH * 0.5), Math.floor(maxW / (Math.max(txt.length, 4) * 0.58))));
+      z += `^FO${m},${y}^A0N,${fk}^FD${lim(k)}:^FS\n`;
+      z += `^FO${m},${y + fk + Math.round(rowH * 0.05)}^A0N,${fv}^FB${maxW},1,0,L^FD${txt}^FS\n`;
+    });
+    z += '^XZ\n';
+  });
+  return z;
+}
+function orgBaixarZpl(){
+  orgLer();
+  const marc = orgItensMarcados();
+  const itens = marc.length ? marc : [orgItemAtual()];
+  if(itens.some(i => !i.associado)){ showToast('Informe o ASSOCIADO da etiqueta.', true); return; }
+  const z = orgZpl(orgExpandir(itens), orgCfg.w, orgCfg.h, orgCfg.dpi);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([z], { type:'text/plain;charset=utf-8' }));
+  a.download = 'etiquetas-associados.zpl';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+
 /* ===================== PORTARIA (cargas por liberar) ===================== */
 let portariaData = [];   // [{ carga, fornecedor }]
 function savePortaria(){}   // sobrescrita pelo módulo do Firebase
@@ -5533,7 +5845,7 @@ function portariaLimpar(){
 /* ===================== SEPARAÇÃO ===================== */
 /* Usa como base as cargas MONTADAS (Cross-Docking) do relatório colado na guia Relatório.
    Cada estação recebe um conjunto de lojas e um produtivo; a folha sai em 1 página A4. */
-let sepData = { cargas:[], lojasOff:[], estacoes:[], produtivos:[], lojasVistas:[], incAgr:false, orient:'paisagem', cols:'auto', nEst:6, qLoja:20, modo:'igual' };
+let sepData = { cargas:[], lojasOff:[], estacoes:[], produtivos:[], prodTurnos:[], lojasVistas:[], incAgr:false, orient:'paisagem', cols:'auto', nEst:6, qLoja:20, modo:'igual' };
 let sepOpenEst = {};          // estações com a lista "Escolher na lista" aberta
 
 /* Lojas: número de 3 dígitos vale só os 2 últimos (214 = loja 14; 235 = loja 35) */
@@ -5909,17 +6221,44 @@ function sepRenderCargas(st){
 
 /* ---------- cadastro de produtivos (vale para todos; a Produtividade soma o volume por esses nomes) ---------- */
 function sepNomeProd(s){ return String(s == null ? '' : s).trim().replace(/\s+/g, ' ').toUpperCase().slice(0, 30); }
+/* turno de cada produtivo/associado: sepData.prodTurnos = [{ n:'NOME', t:'T1' }] (ordenado por nome; sincronizado na nuvem) */
+let sepProdTurnoManual = '';   // '' = acompanha o turno do usuário logado (ex.: Conf30 do T3 → cadastra no T3)
+function sepTurnoPadrao(){ return (currentUser && TURNOS.includes(currentUser.turno)) ? currentUser.turno : turnoPorHorario(); }
+function sepTurnoCad(){ return TURNOS.includes(sepProdTurnoManual) ? sepProdTurnoManual : sepTurnoPadrao(); }
+function sepTurnoDe(nome){ const n = sepNomeProd(nome); const x = (sepData.prodTurnos || []).find(p => p.n === n); return x ? x.t : ''; }
+function sepSetTurnoProd(nome, t){
+  const n = sepNomeProd(nome);
+  if(!n || !TURNOS.includes(t)) return;
+  const l = (sepData.prodTurnos = sepData.prodTurnos || []);
+  const x = l.find(p => p.n === n);
+  if(x) x.t = t; else l.push({ n, t });
+  l.sort((a, b) => a.n.localeCompare(b.n, 'pt-BR'));
+}
+function sepEscolherTurnoCad(v){ sepProdTurnoManual = TURNOS.includes(v) ? v : ''; sepRenderProdutivos(); try{ orgRenderForm(); }catch(e){} }
+function sepMudarTurnoProd(nome, t){
+  if(!sepPode() || somenteLeitura()) return;
+  sepSetTurnoProd(nome, t);
+  sepCommit();
+  try{ if(abaAtual === 'org') renderOrg(); }catch(e){}
+}
+function sepCadastrarNomes(bruto, turno){
+  const nomes = String(bruto == null ? '' : bruto).split(/[;,\n]+/).map(sepNomeProd).filter(Boolean);
+  let novos = 0;
+  nomes.forEach(n => {
+    if(!sepData.produtivos.includes(n)){ sepData.produtivos.push(n); sepSetTurnoProd(n, turno); novos++; }
+    else if(!sepTurnoDe(n)) sepSetTurnoProd(n, turno);   // nome antigo ainda sem turno: assume o escolhido
+  });
+  sepData.produtivos.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  return { total: nomes.length, novos };
+}
 function sepAddProdutivo(valor){
   if(!sepPode() || somenteLeitura()) return;
   const inp = document.getElementById('sep-prod-in');
   const bruto = valor != null ? valor : (inp ? inp.value : '');
-  const nomes = String(bruto).split(/[;,\n]+/).map(sepNomeProd).filter(Boolean);
-  if(!nomes.length) return;
-  let novos = 0;
-  nomes.forEach(n => { if(!sepData.produtivos.includes(n)){ sepData.produtivos.push(n); novos++; } });
-  sepData.produtivos.sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  const r = sepCadastrarNomes(bruto, sepTurnoCad());
+  if(!r.total) return;
   if(inp) inp.value = '';
-  if(!novos) showToast('Esse(s) produtivo(s) já estava(m) cadastrado(s).', true);
+  if(!r.novos) showToast('Esse(s) produtivo(s) já estava(m) cadastrado(s).', true);
   sepCommit();
 }
 function sepRemProdutivo(nome){
@@ -5927,7 +6266,10 @@ function sepRemProdutivo(nome){
   const em = sepData.estacoes.map((e, i) => sepNomeProd(e.produtivo) === nome ? i + 1 : 0).filter(Boolean);
   if(!confirm('Remover "' + nome + '" do cadastro?' + (em.length ? ' Ele está na(s) estação(ões) ' + em.join(', ') + ' e continuará lá, marcado como não cadastrado.' : ''))) return;
   sepData.produtivos = sepData.produtivos.filter(x => x !== nome);
+  sepData.prodTurnos = (sepData.prodTurnos || []).filter(x => x.n !== nome);
+  delete orgSel[nome];
   sepCommit();
+  try{ if(abaAtual === 'org') renderOrg(); }catch(e){}
 }
 function sepImportarProdutivos(){
   if(!sepPode() || somenteLeitura()) return;
@@ -5937,7 +6279,8 @@ function sepImportarProdutivos(){
   const unicos = Array.from(new Set(novos));
   if(!unicos.length){ showToast('Não há nomes novos para importar.', true); return; }
   sepData.produtivos = sepData.produtivos.concat(unicos).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-  showToast('✔ ' + unicos.length + ' produtivo(s) cadastrado(s).', false);
+  unicos.forEach(n => sepSetTurnoProd(n, sepTurnoCad()));
+  showToast('✔ ' + unicos.length + ' produtivo(s) cadastrado(s) no ' + sepTurnoCad() + '.', false);
   sepCommit();
 }
 function sepRenderProdutivos(){
@@ -5945,8 +6288,15 @@ function sepRenderProdutivos(){
   if(!box) return;
   const usados = new Set(sepData.estacoes.map(e => sepNomeProd(e.produtivo)).filter(Boolean));
   box.innerHTML = sepData.produtivos.length
-    ? sepData.produtivos.map(n => `<span class="sep-chip ${usados.has(n) ? 'on-use' : ''}" title="${usados.has(n) ? 'Em uso em uma estação' : ''}"><span class="sep-chip-t"><b class="cn">${sepEsc(n)}</b></span><button type="button" data-n="${sepEsc(n)}" onclick="sepRemProdutivo(this.dataset.n)" aria-label="Remover" title="Remover do cadastro">✕</button></span>`).join('')
+    ? sepData.produtivos.map(n => `<span class="sep-chip ${usados.has(n) ? 'on-use' : ''}" title="${usados.has(n) ? 'Em uso em uma estação' : ''}"><span class="sep-chip-t"><b class="cn">${sepEsc(n)}</b></span><select class="sep-chip-tn" data-n="${sepEsc(n)}" onchange="sepMudarTurnoProd(this.dataset.n, this.value)" title="Turno do produtivo">${sepTurnoDe(n) ? '' : '<option value="" selected>—</option>'}${TURNOS.map(t => `<option value="${t}" ${sepTurnoDe(n) === t ? 'selected' : ''}>${t}</option>`).join('')}</select><button type="button" data-n="${sepEsc(n)}" onclick="sepRemProdutivo(this.dataset.n)" aria-label="Remover" title="Remover do cadastro">✕</button></span>`).join('')
     : '<div class="sep-vazio">Nenhum produtivo cadastrado ainda. Digite o nome e clique em Cadastrar.</div>';
+  const selT = document.getElementById('sep-prod-turno');
+  if(selT && document.activeElement !== selT){
+    selT.innerHTML = `<option value="">Auto · ${sepTurnoPadrao()}</option>` + TURNOS.map(t => `<option value="${t}">${t}</option>`).join('');
+    selT.value = TURNOS.includes(sepProdTurnoManual) ? sepProdTurnoManual : '';
+  }
+  const h = document.getElementById('sep-prod-turno-hint');
+  if(h) h.textContent = TURNOS.includes(sepProdTurnoManual) ? 'Turno escolhido manualmente: ' + sepProdTurnoManual : 'Automático: segue o turno do seu login (' + sepTurnoPadrao() + ')';
 }
 function sepProdOpts(atual){
   const a = sepNomeProd(atual);
@@ -7033,6 +7383,7 @@ function renderAll(){
   renderSolicitacoes();
   if(abaAtual === 'cross') renderCrossAll();
   if(abaAtual === 'sep') renderSep();
+  if(abaAtual === 'org') renderOrg(true);
   if(abaAtual === 'fech') renderFechamentos();
   if(abaAtual === 'rec' || (typeof tvAtivo !== 'undefined' && tvAtivo)) renderRecebimento();
   if(typeof tvAtivo !== 'undefined' && tvAtivo){ renderTvAging(); renderTvFech(); }
@@ -7297,9 +7648,9 @@ function setBordas(modo){
 })();
 
 /* ===================== NOMES DAS GUIAS (editáveis só pelo Administrador) ===================== */
-const ABAS_ORDEM = ['rec','piso','cross','sep','fech','fila','dist-T1','dist-T2','dist-T3','dist-resumo'];
+const ABAS_ORDEM = ['rec','piso','cross','sep','org','fech','fila','dist-T1','dist-T2','dist-T3','dist-resumo'];
 const ABAS_PADRAO = {
-  'rec':'Recebimento', 'piso':'Cargas no Piso', 'cross':'Relatório', 'sep':'Separação', 'fech':'Fechamentos', 'fila':'Fila de Distribuição',
+  'rec':'Recebimento', 'piso':'Cargas no Piso', 'cross':'Relatório', 'sep':'Separação', 'org':'Organizacional Operação', 'fech':'Fechamentos', 'fila':'Fila de Distribuição',
   'dist-T1':'Distribuição T1', 'dist-T2':'Distribuição T2', 'dist-T3':'Distribuição T3', 'dist-resumo':'Resumo'
 };
 let abasNomes = {};   // { id: 'nome novo' } — sincronizado no Firestore (painelCD/abas)
@@ -7310,6 +7661,7 @@ function aplicarNomesAbas(){
   set('tab-btn-piso', nomeAba('piso'));
   set('tab-btn-cross', nomeAba('cross'));
   set('tab-btn-sep', nomeAba('sep'));
+  set('tab-btn-org', nomeAba('org'));
   set('tab-btn-fech', nomeAba('fech'));
   TURNOS.forEach(t => set('dist-tab-btn-' + t, nomeAba('dist-' + t)));
   set('dist-tab-btn-resumo', nomeAba('dist-resumo'));
@@ -7351,6 +7703,10 @@ function dockItens(){
     { l:'Programação', t:'panel-programacao' },
     { l:'Pendências', t:'panel-cross-pendencias' },
     { l:'Relatório montado', t:'panel-relatorio-cross' }
+  ];
+  if(abaAtual === 'org') return [
+    { l:'Associados', t:'panel-org-assoc' },
+    { l:'Etiqueta', t:'panel-org-etq' }
   ];
   if(abaAtual === 'sep') return [
     { l:'Configurar', t:'panel-sep-config' },
@@ -7850,6 +8206,7 @@ function renderDistClockOnly(){
   onSnapshot(fechCol, snap => {
     fechamentosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     if(currentUser) renderFechamentos();
+    if(currentUser && abaAtual === 'cross') renderCrossPendencias();
   }, err => reportError('Erro ao ler fechamentos:', err));
 
   window.loadFechImagens = async function(dia){
@@ -8352,6 +8709,7 @@ function sepLerRemoto(d){
     cargas: Array.isArray(d.cargas) ? d.cargas.map(sepNorm).filter(Boolean) : [],
     lojasOff: Array.isArray(d.lojasOff) ? d.lojasOff.map(normLoja) : [],
     produtivos: Array.isArray(d.produtivos) ? Array.from(new Set(d.produtivos.map(x => String(x == null ? '' : x).trim().toUpperCase()).filter(Boolean))) : [],
+    prodTurnos: Array.isArray(d.prodTurnos) ? d.prodTurnos.map(x => ({ n: String((x && x.n) || '').trim().toUpperCase(), t: String((x && x.t) || '') })).filter(x => x.n && TURNOS.includes(x.t)).sort((a, b) => a.n.localeCompare(b.n, 'pt-BR')) : [],
     lojasVistas: Array.isArray(d.lojasVistas) ? d.lojasVistas.map(normLoja).filter(Boolean) : [],
     est,
     op: {
@@ -8375,6 +8733,7 @@ function sepMesclarRemoto(d, inicial){
   adota('cargas', sepData.cargas, R.cargas, v => { sepData.cargas = v; });
   adota('lojasOff', sepData.lojasOff, R.lojasOff, v => { sepData.lojasOff = v; });
   adota('produtivos', sepData.produtivos, R.produtivos, v => { sepData.produtivos = v; });
+  adota('prodTurnos', sepData.prodTurnos, R.prodTurnos, v => { sepData.prodTurnos = v; });
   adota('lojasVistas', sepData.lojasVistas, R.lojasVistas, v => { sepData.lojasVistas = v; });
   SEP_OPS.forEach(k => adota('o_' + k, sepData[k], R.op[k], v => { sepData[k] = v; }));
 
@@ -8404,6 +8763,8 @@ function sepDiff(apagar){
   if(lj !== sepBase.lojasOff){ payload.lojasOff = sepData.lojasOff; nova.lojasOff = lj; }
   const pj = sepJ(sepData.produtivos);
   if(pj !== sepBase.produtivos){ payload.produtivos = sepData.produtivos; nova.produtivos = pj; }
+  const tj = sepJ(sepData.prodTurnos || []);
+  if(tj !== sepBase.prodTurnos){ payload.prodTurnos = sepData.prodTurnos || []; nova.prodTurnos = tj; }
   const vj = sepJ(sepData.lojasVistas);
   if(vj !== sepBase.lojasVistas){ payload.lojasVistas = sepData.lojasVistas; nova.lojasVistas = vj; }
   SEP_OPS.forEach(k => {
@@ -8446,7 +8807,7 @@ function sepFocoRestaurar(f){
   if(document.activeElement !== el){ el.focus(); }
   try{ if(f.s != null && f.e != null) el.setSelectionRange(f.s, f.e); }catch(e){}
 }
-function sepRenderRemoto2(){ if(abaAtual === 'sep') renderSep(false); }
+function sepRenderRemoto2(){ if(abaAtual === 'sep') renderSep(false); if(abaAtual === 'org' && typeof renderOrg === 'function') renderOrg(true); }
 
 const _renderSepOrig = renderSep;
 /* guarda (para todos) as lojas que já apareceram em qualquer carga do relatório, com ou sem volume montado */

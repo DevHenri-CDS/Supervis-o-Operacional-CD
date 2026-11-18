@@ -420,77 +420,72 @@
   .fech-foto-bar{ border-top:none; border-bottom:1px solid var(--line); align-items:center; flex-wrap:wrap; }
 
 
-  /* ---------- IMPRESSÃO: CARGAS NO PISO — RETRATO, 1 PÁGINA ---------- */
+  /* ---------- IMPRESSÃO: CARGAS NO PISO — RETRATO, PRETO E BRANCO, LETRA GRANDE ---------- */
   .piso-print-grp{ display:flex; gap:8px; flex-wrap:wrap; }
   #piso-print-area.pp-ret{ font-family:Arial,Helvetica,sans-serif; color:#000; background:#fff; }
-  .pp-ret *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .pp-ret *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; color:#000; }
   .pp-ret .ppr-fit{ background:#fff; }
-  .pp-ret .ppr-head{ display:flex; justify-content:space-between; align-items:flex-end; background:#000; color:#FF8A1F; padding:10px 14px; border-bottom:4px solid #FF8A1F; }
-  .pp-ret .ppr-head h1{ margin:0; font:700 24px Arial,sans-serif; letter-spacing:.02em; color:#FF8A1F; }
-  .pp-ret .ppr-head .ppr-data{ font-size:10.5px; color:#f3eedf; text-align:right; line-height:1.4; }
-  .pp-ret .ppr-kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin:10px 0 10px; }
-  .pp-ret .ppr-kpi{ border:1px solid #999; border-top:4px solid #FF6A00; border-radius:3px; padding:6px 8px 7px; }
-  .pp-ret .ppr-kpi.crit{ border-top-color:#c62828; }
-  .pp-ret .ppr-kpi.crit.on .n{ color:#c62828; }
-  .pp-ret .ppr-kpi .l{ font-size:8.5px; font-weight:700; text-transform:uppercase; color:#444; letter-spacing:.03em; }
-  .pp-ret .ppr-kpi .n{ font-size:22px; font-weight:700; line-height:1.1; margin-top:2px; }
-  .pp-ret .ppr-kpi .s{ font-size:8px; color:#444; margin-top:1px; min-height:10px; }
-  .pp-ret .ppr-kpi .b{ height:5px; background:#ddd; border-radius:3px; margin-top:4px; overflow:hidden; }
-  .pp-ret .ppr-kpi .b i{ display:block; height:100%; background:#FF8A1F; }
-  .pp-ret .ppr-grp{ margin:8px 0 3px; padding:4px 8px; font-size:10.5px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; border-left:5px solid #FF8A1F; background:#ffe9d0; }
-  .pp-ret .ppr-grp.ok{ border-left-color:#2e9e5b; background:#dcf3e5; }
-  .pp-ret .ppr-cols, .pp-ret .ppr-row{ display:grid; grid-template-columns:36px 58px minmax(0,1fr) 52px 30px 74px 34px 92px 76px; column-gap:6px; align-items:center; }
-  .pp-ret .ppr-cols{ padding:3px 8px 3px 11px; font-size:8px; font-weight:700; text-transform:uppercase; color:#555; border-bottom:1px solid #888; }
-  .pp-ret .ppr-row{ padding:4px 8px 4px 8px; border-bottom:1px solid #ccc; border-left:3px solid #FF8A1F; font-size:10px; break-inside:avoid; page-break-inside:avoid; }
-  .pp-ret .ppr-row.ok{ border-left-color:#2e9e5b; }
-  .pp-ret .ppr-row.prio{ border-left-color:#c62828; background:#fff1f0; }
-  .pp-ret .ppr-row .doca, .pp-ret .ppr-row .carga{ font-weight:700; }
-  .pp-ret .ppr-row .forn{ font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .pp-ret .ppr-row .forn small{ display:block; font-weight:400; font-size:8px; color:#555; text-transform:uppercase; }
-  .pp-ret .ppr-row .d1.neg{ color:#c62828; font-weight:700; }
-  .pp-ret .ppr-row .vol{ font-weight:700; }
-  .pp-ret .ppr-row .vol .bar{ height:4px; background:#ddd; border-radius:2px; margin-top:2px; overflow:hidden; }
-  .pp-ret .ppr-row .vol .bar i{ display:block; height:100%; background:#FF8A1F; }
-  .pp-ret .ppr-row.ok .vol .bar i{ background:#2e9e5b; }
-  .pp-ret .ppr-row .pill{ display:inline-block; font-size:8px; font-weight:700; padding:2px 5px; border-radius:8px; background:#ffe0b8; border:1px solid #d98a2b; line-height:1.2; }
-  .pp-ret .ppr-row.ok .pill{ background:#cfeedd; border-color:#2e9e5b; }
-  .pp-ret .ppr-row .prod{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .pp-ret .ppr-row .obs{ grid-column:3 / -1; font-size:8.5px; font-style:italic; color:#333; margin-top:1px; }
-  .pp-ret .ppr-row .obs b{ color:#c62828; font-style:normal; }
-  .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; padding:7px 12px; background:#000; color:#fff; font-size:11px; font-weight:700; border-top:3px solid #FF8A1F; }
-  .pp-ret .ppr-total b{ color:#FF8A1F; font-size:15px; margin:0 3px 0 10px; }
+  .pp-ret .ppr-head{ display:flex; justify-content:space-between; align-items:flex-end; background:#fff; padding:4px 2px 8px; border-bottom:4px solid #000; }
+  .pp-ret .ppr-head h1{ margin:0; font:900 30px Arial,sans-serif; letter-spacing:.02em; color:#000; }
+  .pp-ret .ppr-head .ppr-data{ font-size:13px; font-weight:700; text-align:right; line-height:1.35; }
+  .pp-ret .ppr-kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:10px 0; }
+  .pp-ret .ppr-kpi{ border:2px solid #000; border-radius:3px; padding:5px 7px 6px; }
+  .pp-ret .ppr-kpi .l{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
+  .pp-ret .ppr-kpi .n{ font-size:28px; font-weight:900; line-height:1.1; margin-top:1px; }
+  .pp-ret .ppr-kpi .s{ font-size:10.5px; font-weight:600; min-height:12px; }
+  .pp-ret .ppr-kpi .b{ height:8px; border:1.5px solid #000; border-radius:4px; margin-top:4px; overflow:hidden; background:#fff; }
+  .pp-ret .ppr-kpi .b i{ display:block; height:100%; background:#000; }
+  .pp-ret .ppr-grp{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin:12px 0 6px; padding:6px 10px; font-size:16px; font-weight:900; letter-spacing:.03em; text-transform:uppercase; border:2px solid #000; border-left:10px solid #000; background:#e8e8e8; break-after:avoid; page-break-after:avoid; }
+  .pp-ret .ppr-grp span:last-child{ font-size:13px; font-weight:700; text-transform:none; letter-spacing:0; }
+  .pp-ret .ppr-2col{ display:grid; grid-template-columns:1fr 1fr; gap:7px; align-items:start; }
+  .pp-ret .ppr-pk{ border:1.5px solid #000; border-radius:4px; padding:6px 8px 7px; break-inside:avoid; page-break-inside:avoid; min-width:0; background:#fff; }
+  .pp-ret .ppr-pk.prio{ border-width:4px; }
+  .pp-ret .pk-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  .pp-ret .pk-carga{ font-size:23px; font-weight:900; letter-spacing:.01em; line-height:1.05; }
+  .pp-ret .pk-doca{ font-size:14px; font-weight:800; border:1.5px solid #000; border-radius:3px; padding:1px 6px; white-space:nowrap; }
+  .pp-ret .pk-flags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
+  .pp-ret .pk-flag{ font-size:11.5px; font-weight:900; border:2px solid #000; border-radius:3px; padding:0 5px; text-transform:uppercase; }
+  .pp-ret .pk-forn{ font-size:15px; font-weight:800; line-height:1.15; margin:3px 0 5px; overflow-wrap:anywhere; }
+  .pp-ret .pk-forn small{ display:block; font-size:10.5px; font-weight:600; text-transform:uppercase; }
+  .pp-ret .pk-nums{ display:grid; grid-template-columns:1fr 0.7fr 0.7fr 1.5fr; gap:4px; border-top:1.5px solid #000; padding-top:4px; }
+  .pp-ret .pk-nums b{ display:block; font-size:19px; font-weight:900; line-height:1.1; }
+  .pp-ret .pk-nums .lib b{ font-size:14px; padding-top:3px; }
+  .pp-ret .pk-nums b.neg{ text-decoration:underline; text-decoration-thickness:2px; }
+  .pp-ret .pk-nums i{ display:block; font-style:normal; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
+  .pp-ret .pk-st{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:5px; }
+  .pp-ret .pk-pill{ display:inline-block; font-size:12.5px; font-weight:900; border:2px solid #000; border-radius:10px; padding:1px 8px; line-height:1.25; }
+  .pp-ret .pk-prod{ font-size:14px; font-weight:800; }
+  .pp-ret .pk-prod i{ font-style:normal; font-size:9.5px; font-weight:800; text-transform:uppercase; margin-right:3px; }
+  .pp-ret .pk-obs{ font-size:12px; font-weight:600; margin-top:4px; border-top:1px dashed #000; padding-top:3px; }
+  .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:8px 12px; border:3px solid #000; font-size:15px; font-weight:900; background:#fff; }
+  .pp-ret .ppr-total b{ font-size:22px; margin:0 4px 0 12px; }
 
-  .pp-ret .ppr-sec{ margin:12px 0 4px; padding:5px 10px; background:#000; color:#FF8A1F; font-size:11px; font-weight:700; letter-spacing:.03em; text-transform:uppercase; border-left:5px solid #FF8A1F; display:flex; justify-content:space-between; align-items:baseline; }
-  .pp-ret .ppr-sec small{ color:#f3eedf; font-weight:400; font-size:8.5px; text-transform:none; letter-spacing:0; }
-  .pp-ret .ppr-cards{ display:grid; gap:5px; }
+  .pp-ret .ppr-sec{ margin:16px 0 6px; padding:6px 10px; background:#e8e8e8; border:2px solid #000; border-left:10px solid #000; font-size:16px; font-weight:900; letter-spacing:.03em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:baseline; break-after:avoid; page-break-after:avoid; }
+  .pp-ret .ppr-sec small{ font-weight:700; font-size:12px; text-transform:none; letter-spacing:0; }
+  .pp-ret .ppr-cards{ display:grid; gap:7px; }
+  .pp-ret .ppr-cards.c2{ grid-template-columns:repeat(2,1fr); }
   .pp-ret .ppr-cards.c3{ grid-template-columns:repeat(3,1fr); }
-  .pp-ret .ppr-cards.c4{ grid-template-columns:repeat(4,1fr); }
-  .pp-ret .ppr-card{ border:1px solid #999; border-left:4px solid #2e9e5b; border-radius:3px; padding:4px 6px; font-size:9px; break-inside:avoid; page-break-inside:avoid; min-width:0; }
-  .pp-ret .ppr-card.crit{ border-left-color:#c62828; background:#fff1f0; }
-  .pp-ret .ppr-card.por{ border-left-color:#FF8A1F; }
-  .pp-ret .ppr-card.por.ja{ border-left-color:#2e9e5b; background:#eef9f2; }
-  .pp-ret .ppr-card .t{ font-weight:700; font-size:10px; }
-  .pp-ret .ppr-card .f{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#222; margin:1px 0 2px; }
-  .pp-ret .ppr-card .m{ font-size:8.5px; color:#333; }
-  .pp-ret .ppr-card .m b{ font-size:10px; color:#000; }
-  .pp-ret .ppr-card .m .neg{ color:#c62828; font-weight:700; }
-  .pp-ret .ppr-card .tag{ font-size:7.5px; font-weight:700; text-transform:uppercase; color:#8a4b00; }
-  .pp-ret .ppr-card.por.ja .tag{ color:#1d6b3d; }
-  .pp-ret .ppr-card .cb{ font-size:7.5px; font-weight:700; color:#c62828; text-transform:uppercase; }
-  .pp-ret .ppr-vazio{ font-size:9px; font-style:italic; color:#555; padding:4px 2px; }
-  .pp-ret .ppr-turno{ margin:6px 0 0; break-inside:avoid; page-break-inside:avoid; }
-  .pp-ret .ppr-turno h4{ margin:0 0 2px; font-size:10px; text-transform:uppercase; padding:2px 6px; background:#ffe9d0; border-left:4px solid #FF8A1F; }
-  .pp-ret .ppr-tab{ width:100%; border-collapse:collapse; font-size:8.5px; }
-  .pp-ret .ppr-tab th{ background:#eee; text-align:left; font-size:7.5px; text-transform:uppercase; padding:2px 4px; border:1px solid #aaa; }
-  .pp-ret .ppr-tab td{ padding:2px 4px; border:1px solid #ccc; }
-  .pp-ret .ppr-tab tfoot td{ background:#f1f1f1; font-weight:700; border-top:2px solid #000; font-family:Arial,Helvetica,sans-serif; font-size:8.5px; padding:2px 4px; }
-  .pp-ret .ppr-tab thead th{ white-space:normal; letter-spacing:0; }
+  .pp-ret .ppr-card{ border:1.5px solid #000; border-radius:4px; padding:5px 8px; font-size:12px; break-inside:avoid; page-break-inside:avoid; min-width:0; }
+  .pp-ret .ppr-card.crit{ border-width:4px; }
+  .pp-ret .ppr-card .t{ font-weight:900; font-size:15px; }
+  .pp-ret .ppr-card .f{ font-weight:700; font-size:13px; overflow-wrap:anywhere; margin:1px 0 3px; }
+  .pp-ret .ppr-card .m{ font-size:12px; font-weight:600; }
+  .pp-ret .ppr-card .m b{ font-size:14px; font-weight:900; }
+  .pp-ret .ppr-card .m .neg{ font-weight:900; text-decoration:underline; }
+  .pp-ret .ppr-card .tag{ font-size:11px; font-weight:800; text-transform:uppercase; }
+  .pp-ret .ppr-card .cb{ font-size:11px; font-weight:900; text-transform:uppercase; border:1.5px solid #000; display:inline-block; padding:0 4px; margin-bottom:2px; }
+  .pp-ret .ppr-vazio{ font-size:12px; font-weight:600; font-style:italic; padding:4px 2px; }
+  .pp-ret .ppr-turno{ margin:8px 0 0; break-inside:avoid; page-break-inside:avoid; }
+  .pp-ret .ppr-turno h4{ margin:0 0 3px; font-size:14px; font-weight:900; text-transform:uppercase; padding:3px 8px; background:#e8e8e8; border:2px solid #000; }
+  .pp-ret .ppr-tab{ width:100%; border-collapse:collapse; font-size:11.5px; }
+  .pp-ret .ppr-tab th{ background:#e8e8e8; text-align:left; font-size:10.5px; font-weight:900; text-transform:uppercase; padding:3px 5px; border:1.5px solid #000; white-space:normal; letter-spacing:0; }
+  .pp-ret .ppr-tab td{ padding:3px 5px; border:1px solid #000; font-weight:600; }
+  .pp-ret .ppr-tab tfoot td{ background:#e8e8e8; font-weight:900; border-top:2px solid #000; font-size:12px; }
   .pp-ret .ppr-tab tr{ break-inside:avoid; page-break-inside:avoid; }
   .pp-ret .ppr-tab tbody tr, .pp-ret .ppr-tab tbody tr:nth-child(even), .pp-ret .ppr-tab tbody tr:hover{ background:#fff !important; }
-  .pp-ret .ppr-tab tbody td{ background:#fff !important; color:#000 !important; border-bottom:1px solid #ccc; vertical-align:middle; }
-  .pp-ret .ppr-tab tbody tr:nth-child(even) td{ background:#f6f6f6 !important; }
+  .pp-ret .ppr-tab tbody td{ background:#fff !important; color:#000 !important; vertical-align:middle; }
   .pp-ret .ppr-tab thead th{ color:#000 !important; }
-  .pp-ret .ppr-foot{ margin-top:4px; font-size:8px; color:#555; text-align:right; }
+  .pp-ret .ppr-foot{ margin-top:8px; font-size:10px; font-weight:600; text-align:right; }
 
   /* ---------- IMPRESSÃO: CARGAS NO PISO ---------- */
   #piso-print-area{ display:none; }
@@ -2346,7 +2341,7 @@
       <p class="hint" style="margin:0 0 14px;">Carga <b id="produtivos-modal-carga"></b> · Turno <b id="produtivos-modal-turno"></b>. Sem a quantidade de produtivos a carga não pode ser distribuída.</p>
       <div class="field">
         <label for="produtivos-modal-input">Qtd. de produtivos</label>
-        <input type="number" id="produtivos-modal-input" min="1" step="1" inputmode="numeric" placeholder="Ex.: 7" onkeydown="if(event.key==='Enter') confirmarProdutivos()">
+        <input type="number" id="produtivos-modal-input" min="1" step="1" inputmode="numeric" placeholder="Ex.: 7" onkeydown="if(event.key==='Enter'){ event.preventDefault(); confirmarProdutivos(); }">
       </div>
       <div id="produtivos-modal-erro" style="color:var(--danger); font-size:.82rem; min-height:1em;"></div>
       <div class="modal-actions">
@@ -3631,6 +3626,12 @@ function pisoTxt(v){
   return t ? escapeHtml(t) : '<span class="dash">—</span>';
 }
 
+/* colunas da tela (e da impressão) de Cargas no Piso */
+const PISO_COLUNAS = [
+  { id:'pend', titulo:'PENDENTES E PARCIAIS', teste: st => st !== 'EM PROCESSO DE ETIQUETAGEM' && st !== 'CARGA ETIQUETADA' },
+  { id:'proc', titulo:'EM PROCESSO DE ETIQUETAGEM', teste: st => st === 'EM PROCESSO DE ETIQUETAGEM' },
+  { id:'etq',  titulo:'ETIQUETADAS', teste: st => st === 'CARGA ETIQUETADA' }
+];
 const pisoEditando = new Set();   // cartões com o painel de edição aberto (só admin)
 
 function togglePisoEdit(i){
@@ -3741,20 +3742,43 @@ function renderPiso(){
       : 'Nenhuma carga encontrada para o filtro.';
     tbody.innerHTML = `<div class="piso-empty">${msg}</div>`;
   } else {
-    tbody.appendChild(pisoHeadRow());
     const porPrio = (a, b) => (b.row.prioridade ? 1 : 0) - (a.row.prioridade ? 1 : 0); // prioridades no topo
-    const naoEtq = [];
-    const etq = [];
-    lista.forEach(v => (v.row.status === 'CARGA ETIQUETADA' ? etq : naoEtq).push(v));
-    naoEtq.sort(porPrio); etq.sort(porPrio);
-
-    if(naoEtq.length){
-      tbody.appendChild(buildPisoGroupHeaderRow(`NÃO ETIQUETADAS — ${naoEtq.length}`, 'pend'));
-      naoEtq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
-    }
-    if(etq.length){
-      tbody.appendChild(buildPisoGroupHeaderRow(`ETIQUETADAS — ${etq.length}`, 'ok'));
-      etq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
+    if(document.body.classList.contains('tv-mode')){
+      /* TV: mantém a apresentação em lista (não etiquetadas / etiquetadas) */
+      tbody.appendChild(pisoHeadRow());
+      const naoEtq = [];
+      const etq = [];
+      lista.forEach(v => (v.row.status === 'CARGA ETIQUETADA' ? etq : naoEtq).push(v));
+      naoEtq.sort(porPrio); etq.sort(porPrio);
+      if(naoEtq.length){
+        tbody.appendChild(buildPisoGroupHeaderRow(`NÃO ETIQUETADAS — ${naoEtq.length}`, 'pend'));
+        naoEtq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
+      }
+      if(etq.length){
+        tbody.appendChild(buildPisoGroupHeaderRow(`ETIQUETADAS — ${etq.length}`, 'ok'));
+        etq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
+      }
+    } else {
+      /* 3 colunas: pendentes/parciais/demais · em processo de etiquetagem · etiquetadas */
+      PISO_COLUNAS.forEach(c => {
+        const itens = lista.filter(v => c.teste(v.row.status)).sort(porPrio);
+        const vol = itens.reduce((t, v) => t + Number(v.row.volume || 0), 0);
+        const col = document.createElement('div');
+        col.className = 'piso-col piso-col-' + c.id;
+        const cab = document.createElement('div');
+        cab.className = 'piso-col-head';
+        cab.innerHTML = `<span class="pch-t">${c.titulo}</span><span class="pch-n">${itens.length}</span><span class="pch-v">${fmtInt(vol)} vol.</span>`;
+        col.appendChild(cab);
+        if(itens.length){
+          itens.forEach(({row,i}) => col.appendChild(buildPisoRow(row, i, perm, maxVol)));
+        } else {
+          const v = document.createElement('div');
+          v.className = 'piso-col-vazio';
+          v.textContent = 'Nenhuma carga';
+          col.appendChild(v);
+        }
+        tbody.appendChild(col);
+      });
     }
   }
 
@@ -6698,30 +6722,32 @@ function imprimirCargasPisoRetrato(){
   const nCrit = vis.filter(r => cargaCritica(r)).length;
   const nPrio = vis.filter(r => r.prioridade).length;
 
-  const linha = (r, ok) => {
-    const vol = Number(r.volume || 0);
-    let pct = maxVol > 0 ? (vol / maxVol) * 100 : 0;
-    if(vol > 0 && pct < 3) pct = 3;
+  /* cartão em preto e branco: fonte grande, bordas fortes, sem texto colorido sobre fundo escuro */
+  const cartao = r => {
     const neg = Number(r.d1) < 0 || cargaCritica(r);
-    const obsTxt = (r.prioridade ? '<b>⚑ PRIORIDADE</b> ' : '') + (vazio(r.obs) ? '' : escapeHtml(r.obs));
+    const crit = cargaCritica(r);
+    const flags = (r.prioridade ? '<span class="pk-flag">⚑ PRIORIDADE</span>' : '') +
+                  (crit ? `<span class="pk-flag">⚠ CRÍTICO · ${Math.abs(Number(r.d1))} dias no D-1</span>` : '');
     const marca = r.marcadoEtq ? ' ✔' : '';
-    return `<div class="ppr-row ${r.prioridade ? 'prio' : (ok ? 'ok' : '')}">
-      <div class="doca">${txt(r.doca)}</div>
-      <div class="carga">${txt(r.carga)}</div>
-      <div class="forn">${txt(r.fornecedor)}${vazio(r.departamento) ? '' : `<small>${escapeHtml(r.departamento)}</small>`}</div>
-      <div class="lib">${txt(r.liberacao)}</div>
-      <div class="d1 ${neg ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</div>
-      <div class="vol">${fmtInt(vol)}<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>
-      <div class="sku">${r.sku == null ? 0 : escapeHtml(r.sku)}</div>
-      <div><span class="pill">${escapeHtml(STATUS_LABELS[r.status] || r.status || '')}${marca}</span></div>
-      <div class="prod">${txt(r.produtivo)}</div>
-      ${obsTxt ? `<div class="obs">${obsTxt}</div>` : ''}
+    const obsTxt = vazio(r.obs) ? '' : escapeHtml(r.obs);
+    return `<div class="ppr-pk ${r.prioridade ? 'prio' : ''}">
+      <div class="pk-top"><span class="pk-carga">${txt(r.carga)}</span>${vazio(r.doca) ? '' : `<span class="pk-doca">DOCA ${escapeHtml(r.doca)}</span>`}</div>
+      ${flags ? `<div class="pk-flags">${flags}</div>` : ''}
+      <div class="pk-forn">${txt(r.fornecedor)}${vazio(r.departamento) ? '' : `<small>${escapeHtml(r.departamento)}</small>`}</div>
+      <div class="pk-nums">
+        <div><b>${fmtInt(r.volume || 0)}</b><i>Volume</i></div>
+        <div><b>${r.sku == null ? 0 : escapeHtml(r.sku)}</b><i>SKU</i></div>
+        <div><b class="${neg ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</b><i>D-1</i></div>
+        <div class="lib"><b>${txt(r.liberacao)}</b><i>Liberação</i></div>
+      </div>
+      <div class="pk-st"><span class="pk-pill">${escapeHtml(STATUS_LABELS[r.status] || r.status || '')}${marca}</span>${vazio(r.produtivo) ? '' : `<span class="pk-prod"><i>Produtivo</i> ${escapeHtml(r.produtivo)}</span>`}</div>
+      ${obsTxt ? `<div class="pk-obs">Obs.: ${obsTxt}</div>` : ''}
     </div>`;
   };
-  const colunas = '<div class="ppr-cols"><span>Doca</span><span>Carga</span><span>Fornecedor</span><span>Liberação</span><span>D-1</span><span>Volume</span><span>SKU</span><span>Status</span><span>Produtivo</span></div>';
-  const grupo = (titulo, lista, ok) => lista.length
-    ? `<div class="ppr-grp ${ok ? 'ok' : ''}">${titulo} — ${lista.length}</div>${colunas}${lista.map(r => linha(r, ok)).join('')}`
+  const grupo = (titulo, lista) => lista.length
+    ? `<div class="ppr-grp"><span>${titulo} — ${lista.length}</span><span>${fmtInt(soma(lista, 'volume'))} volumes · ${fmtInt(soma(lista, 'sku'))} SKU</span></div><div class="ppr-2col">${lista.map(cartao).join('')}</div>`
     : '';
+  const gruposHtml = PISO_COLUNAS.map(c => grupo(c.titulo, vis.filter(r => c.teste(r.status)).sort(porPrio))).join('');
 
   /* ---- Fila de Distribuição + Portaria + Resumo da Distribuição (não vão para o Operador, que não enxerga esse bloco) ---- */
   let secoesDist = '';
@@ -6738,7 +6764,7 @@ function imprimirCargasPisoRetrato(){
       </div>`;
     };
     const secFila = `<div class="ppr-sec"><span>Fila de distribuição</span><small>Turno ativo ${escapeHtml(turnoAtivo || '—')} · ${fila.length} aguardando · ${nFilaCrit} crítica(s)</small></div>` +
-      (fila.length ? `<div class="ppr-cards c3">${fila.map(cardFila).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga aguardando distribuição.</div>');
+      (fila.length ? `<div class="ppr-cards c2">${fila.map(cardFila).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga aguardando distribuição.</div>');
 
     const noPiso = new Set((pisoData || []).map(r => String(r.carga)));
     const aLiberar = portariaData.filter(r => !noPiso.has(String(r.carga))).length;
@@ -6747,7 +6773,7 @@ function imprimirCargasPisoRetrato(){
       return `<div class="ppr-card por ${ja ? 'ja' : ''}"><div class="t">Carga ${txt(r.carga)}</div><div class="f">${txt(r.fornecedor)}</div><div class="tag">${ja ? '✔ já no piso' : 'Aguardando liberação'}</div></div>`;
     };
     const secPor = `<div class="ppr-sec"><span>Portaria</span><small>Cargas que ainda vão ser liberadas · ${aLiberar} a liberar</small></div>` +
-      (portariaData.length ? `<div class="ppr-cards c4">${portariaData.map(cardPor).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga na Portaria.</div>');
+      (portariaData.length ? `<div class="ppr-cards c3">${portariaData.map(cardPor).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga na Portaria.</div>');
 
     const turnosAtivos = TURNOS.filter(t => distData.some(r => turnoDaCarga(r) === t));
     const blocoTurno = turno => {
@@ -6788,24 +6814,15 @@ function imprimirCargasPisoRetrato(){
       <div class="ppr-kpi crit ${nCrit > 0 ? 'on' : ''}"><div class="l">Cargas críticas</div><div class="n">${nCrit}</div><div class="s">3 dias ou mais no D-1</div></div>
       <div class="ppr-kpi"><div class="l">Prioridades</div><div class="n">${nPrio}</div><div class="s">sinalizadas pelo supervisor</div></div>
     </div>
-    ${grupo('NÃO ETIQUETADAS', naoEtq, false)}
-    ${grupo('ETIQUETADAS', etq, true)}
+    ${gruposHtml}
     <div class="ppr-total"><span>VOLUME TOTAL</span><span><b>${fmtInt(volAll)}</b>volumes<b>${fmtInt(skuAll)}</b>SKU</span></div>
     ${secoesDist}
     <div class="ppr-foot">Supervisão Operacional — Painel CD</div>
   </div>`;
 
-  /* ajuste automático: mede o conteúdo e reduz a escala até caber em UMA página A4 retrato (margem 8 mm) */
-  const W = 733, H = 1010;                       // px úteis (≈194 × 275 mm)
-  const fit = area.firstElementChild;
-  area.style.cssText = `display:block;position:absolute;left:-10000px;top:0;width:${W}px;`;
-  fit.style.width = W + 'px';
-  const h = fit.offsetHeight;
-  const escala = Math.min(1, H / h);
+  /* sem redução de escala: a letra fica grande e o que não couber segue para a próxima página */
   area.removeAttribute('style');
-  fit.style.cssText = `width:${(W / escala).toFixed(2)}px;transform:scale(${escala.toFixed(4)});transform-origin:0 0;`;
-  area.style.cssText = `height:${Math.ceil(h * escala)}px;overflow:visible;`;
-  if(escala < 0.6) showToast('Muitas cargas: a letra ficou bem reduzida para caber em 1 página.', true);
+  area.firstElementChild.removeAttribute('style');
 
   const velho = document.getElementById('pp-page-style');
   if(velho) velho.remove();
@@ -10346,6 +10363,129 @@ renderSep = function(soft){ const r = _renderSepOpp.apply(this, arguments); try{
 const _dockItensOpp = dockItens;
 dockItens = function(){ const it = _dockItensOpp(); if(abaAtual === 'sep'){ const k = it.findIndex(x => x.t === 'panel-sep-prod'); const novo = { l:'Oportunidades', t:'panel-sep-opp' }; if(k >= 0) it.splice(k, 0, novo); else it.push(novo); } return it; };
 try{ oppPainelRender(); }catch(e){}
+</script>
+
+<style id="piso-colunas-css">
+/* ---------- Cargas no Piso: 3 colunas por status + cartão simples (igual à fila de distribuição) ---------- */
+@media (min-width:900px){
+  body:not(.tv-mode) #tbody-piso{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; overflow:visible; }
+}
+body:not(.tv-mode) #tbody-piso .piso-col{ min-width:0; display:flex; flex-direction:column; gap:10px; }
+.piso-col-head{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:6px; background:#0b0b0b; border:1px solid var(--line); border-top:4px solid var(--band-strong); position:sticky; top:46px; z-index:5; }
+.piso-col-proc .piso-col-head{ border-top-color:#4aa8ff; }
+.piso-col-etq .piso-col-head{ border-top-color:var(--ok-text); }
+.pch-t{ flex:1; font-family:'Oswald',sans-serif; font-weight:700; font-size:.92rem; letter-spacing:.06em; color:var(--text); }
+.pch-n{ min-width:30px; text-align:center; padding:1px 10px; border-radius:12px; background:var(--band-strong); color:#000; font-family:'Oswald',sans-serif; font-weight:700; font-size:1rem; }
+.piso-col-proc .pch-n{ background:#4aa8ff; }
+.piso-col-etq .pch-n{ background:var(--ok-text); }
+.pch-v{ font-size:.74rem; color:var(--text-dim); white-space:nowrap; }
+.piso-col-vazio{ text-align:center; padding:22px 10px; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:6px; }
+
+body:not(.tv-mode) #tbody-piso .piso-col .pc{ min-width:0; grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:7px; column-gap:10px; align-items:start; padding:12px 14px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ content:attr(data-l); display:block; font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); margin-bottom:1px; font-family:'Inter',sans-serif; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-flag{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1 / 3; grid-row:1; font-size:1.35rem; line-height:1.1; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:3 / 5; grid-row:1; text-align:right; font-size:.9rem; color:var(--text); }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca::before{ display:inline; margin-right:5px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; font-size:1.05rem; line-height:1.25; align-self:center; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:1 / 2; grid-row:3; display:block; border-top:1px solid var(--line); padding-top:7px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol::before{ display:block; width:auto; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol .pc-bar{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol b{ display:block; font-size:1.35rem; text-align:left; min-width:0; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:2 / 3; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:1.35rem; color:var(--band); }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:3 / 4; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:1.35rem; color:var(--band); }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-d1.d1n{ color:var(--danger); }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:4 / 5; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:.9rem; font-weight:600; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-lib::before{ margin-bottom:5px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-column:1 / -1; grid-row:4; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select, body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.82rem; padding:8px 10px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-column:1 / -1; grid-row:5; font-weight:700; font-size:.95rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-column:1 / -1; grid-row:6; font-size:.82rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod:has(> .dash), body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs:has(> .dash){ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-column:1 / -1; grid-row:7; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-column:1 / -1; grid-row:8; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-column:1 / -1; grid-row:9; }
+@media (max-width:899px){
+  body:not(.tv-mode) #tbody-piso{ display:flex; flex-direction:column; gap:14px; }
+  .piso-col-head{ top:40px; }
+}
+@media print{ #tbody-piso .piso-col-head{ position:static; } }
+</style>
+<script id="enter-global-js">
+/* =====================================================================
+   TECLA ENTER EM TODO O SISTEMA
+   · campo de texto/número/data/senha → vai para o próximo campo do mesmo formulário;
+     no último campo (ou campo isolado) aciona o botão de ação ao lado (Entrar, Cadastrar, Salvar, Importar…)
+   · dentro de janelas (modais) e do login funciona do mesmo jeito
+   · campo editado direto na tabela/cartão → confirma o valor (sai do campo)
+   · caixa de texto grande (colar do Excel): Ctrl + Enter aciona o botão principal da janela; Enter continua quebrando linha
+   · campos de busca/filtro e os que já tinham Enter próprio não mudam.
+   Para um campo ignorar: data-enter="off". Para escolher o botão: data-enter="#idDoBotao".
+   ===================================================================== */
+(function(){
+  const NAO_CAMPO = new Set(['checkbox','radio','file','button','submit','reset','image','range','color','hidden','search']);
+  const visivel = el => !!el && el.getClientRects().length > 0 && !el.disabled;
+  const ehCampo = c => c.tagName === 'INPUT' && !NAO_CAMPO.has(c.type) && !c.readOnly && visivel(c);
+  const ehCancelar = b => /cancel|fechar|voltar|✕/i.test(b.textContent || '');
+  const ehDanger = b => b.classList.contains('btn-danger');
+  const candidatos = esc => Array.from(esc.querySelectorAll('button.btn, button[data-enter-ok]')).filter(b => visivel(b) && !ehDanger(b) && !ehCancelar(b));
+  const escolhe = lista => lista.find(b => b.classList.contains('btn-primary') || b.classList.contains('btn-ok') || b.hasAttribute('data-enter-ok')) || lista[0] || null;
+  const depois = (el, lista) => lista.filter(b => el.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  function resolver(el){
+    const ex = el.closest('[data-enter]');
+    if(ex && ex.getAttribute('data-enter') && ex.getAttribute('data-enter') !== 'off'){
+      const alvo = document.querySelector(ex.getAttribute('data-enter'));
+      return { esc: ex.contains(alvo) ? ex : (alvo ? alvo.parentElement : ex), botao: alvo && visivel(alvo) ? alvo : null };
+    }
+    const modal = el.closest('.modal-box, .v5-box, .login-card');
+    if(modal) return { esc: modal, botao: escolhe(depois(el, candidatos(modal))) || escolhe(candidatos(modal).filter(b => b.classList.contains('btn-primary'))) };
+    if(el.closest('td, th')) return { esc: null, botao: null };       // edição direta na tabela: só confirma
+    let n = el.parentElement;
+    for(let i = 0; n && i < 3 && !n.matches('section, main, .panel, body'); i++, n = n.parentElement){
+      const b = escolhe(depois(el, candidatos(n)));
+      if(b) return { esc: n, botao: b };
+    }
+    return { esc: null, botao: null };
+  }
+
+  function acionar(el){
+    const { esc, botao } = resolver(el);
+    if(el.type !== 'password' && esc){
+      const campos = Array.from(esc.querySelectorAll('input')).filter(ehCampo);
+      const prox = campos[campos.indexOf(el) + 1];
+      if(prox && campos.indexOf(el) >= 0){ prox.focus(); try{ prox.select(); }catch(e){} return; }
+    }
+    if(botao && botao.isConnected){ el.blur(); setTimeout(() => { if(botao.isConnected && !botao.disabled) botao.click(); }, 0); return; }
+    el.blur();   // sem botão: só confirma o valor digitado
+  }
+
+  document.addEventListener('keydown', ev => {
+    if(ev.key !== 'Enter' || ev.defaultPrevented || ev.isComposing || ev.shiftKey || ev.altKey) return;
+    if(typeof tvAtivo !== 'undefined' && tvAtivo) return;
+    const el = ev.target;
+    if(!(el instanceof HTMLElement)) return;
+    if(el.matches('[data-enter="off"]') || el.closest('[data-enter="off"]')) return;
+
+    if(el.tagName === 'TEXTAREA'){
+      if(!(ev.ctrlKey || ev.metaKey)) return;                    // Enter normal = nova linha
+      const modal = el.closest('.modal-box, .v5-box');
+      const b = modal ? candidatos(modal).find(x => x.classList.contains('btn-primary')) : null;
+      if(b){ ev.preventDefault(); b.click(); }
+      return;
+    }
+    if(el.tagName !== 'INPUT' || NAO_CAMPO.has(el.type) || el.readOnly) return;
+    if(ev.ctrlKey || ev.metaKey) return;
+    if(/busca/i.test(el.id) || /^buscar/i.test(el.getAttribute('placeholder') || '')) return;   // filtros ao vivo
+
+    if(el.hasAttribute('list')){ setTimeout(() => acionar(el), 0); return; }   // deixa o navegador aceitar a sugestão da lista antes
+    ev.preventDefault();
+    acionar(el);
+  });
+})();
 </script>
 
 </body>

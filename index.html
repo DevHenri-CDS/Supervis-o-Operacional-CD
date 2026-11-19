@@ -2792,6 +2792,7 @@ async function doLogin(){
   document.getElementById('btn-foto-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.body.classList.add('logado');
   document.body.classList.toggle('is-admin', isAdmin);
+  ['admin','encarregado','conferente','supervisor','operador','tv'].forEach(r => document.body.classList.toggle('role-' + r, r === role));
 
   applySectorVisibility();
   switchTab('piso');
@@ -3540,7 +3541,7 @@ function switchTab(name){
 function forceLogout(motivo){
   if(typeof tvStop === 'function') tvStop();
   currentUser = null;
-  document.body.classList.remove('piso-view', 'logado', 'is-admin');
+  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('in-senha').value = '';
@@ -10617,6 +10618,98 @@ body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-lib{ grid-column:1 / 3; }
 body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-d1{ grid-column:3 / 4; }
 body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:4 / 5; }
 @media print{ #tbody-piso .piso-col > .piso-grp{ position:static; } }
+</style>
+<style id="mobile-compacto-css">
+/* ======= CELULAR · perfis Administrador (ADM) e Conferente (Conf30): layout resumido, simples e com menos espaço ======= */
+@media (max-width:640px){
+  :is(body.role-admin, body.role-conferente) #topbar{ position:static; padding:6px 8px; gap:4px; }
+  :is(body.role-admin, body.role-conferente) #topbar .brand{ gap:7px; flex:1 1 100%; min-width:0; }
+  :is(body.role-admin, body.role-conferente) #topbar .brand .dot{ width:7px; height:7px; box-shadow:none; }
+  :is(body.role-admin, body.role-conferente) #topbar h1{ font-size:.82rem; letter-spacing:.02em; }
+  :is(body.role-admin, body.role-conferente) #topbar .who{ font-size:.62rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:calc(100vw - 40px); }
+  :is(body.role-admin, body.role-conferente) #topbar .actions{ flex:1 1 100%; gap:5px; overflow-x:auto; flex-wrap:nowrap; scrollbar-width:none; }
+  :is(body.role-admin, body.role-conferente) #topbar .actions::-webkit-scrollbar{ display:none; }
+  :is(body.role-admin, body.role-conferente) #topbar .actions > *{ flex:0 0 auto; }
+  :is(body.role-admin, body.role-conferente) #topbar .actions .seg,
+  :is(body.role-admin, body.role-conferente) #topbar .actions button[onclick="openQrModal()"]{ display:none; }
+  :is(body.role-admin, body.role-conferente) #topbar .btn-sm,
+  :is(body.role-admin, body.role-conferente) #topbar .tag{ padding:4px 8px; font-size:.64rem; }
+
+  :is(body.role-admin, body.role-conferente) .tabnav{ flex-wrap:nowrap; overflow-x:auto; gap:0; padding:0 4px; scrollbar-width:none; }
+  :is(body.role-admin, body.role-conferente) .tabnav::-webkit-scrollbar{ display:none; }
+  :is(body.role-admin, body.role-conferente) .tab-btn{ flex:0 0 auto; white-space:nowrap; padding:9px 11px 8px; font-size:.72rem; }
+
+  :is(body.role-admin, body.role-conferente).logado main{ padding:8px 8px 50px; }
+  :is(body.role-admin, body.role-conferente) .panel-header{ padding:8px 10px; gap:6px; }
+  :is(body.role-admin, body.role-conferente) .panel-header h2{ font-size:1rem; }
+  :is(body.role-admin, body.role-conferente) .stat-row{ gap:12px; }
+
+  :is(body.role-admin, body.role-conferente) #dock{ padding:2px 4px; gap:0; }
+  :is(body.role-admin, body.role-conferente) #dock button{ padding:6px 8px; font-size:.64rem; }
+  :is(body.role-admin, body.role-conferente) #dock button::after{ display:none; }
+
+  :is(body.role-admin, body.role-conferente) .piso-head{ margin-bottom:6px; gap:6px; align-items:center; }
+  :is(body.role-admin, body.role-conferente) .piso-head h2{ font-size:1.1rem; }
+  :is(body.role-admin, body.role-conferente) .piso-date{ font-size:.64rem; margin-top:1px; }
+  :is(body.role-admin, body.role-conferente) .piso-print-grp{ gap:5px; }
+  :is(body.role-admin, body.role-conferente) .piso-print-btn{ padding:5px 9px; font-size:.68rem; gap:5px; }
+  :is(body.role-admin, body.role-conferente) .piso-print-btn svg{ width:12px; height:12px; }
+
+  :is(body.role-admin, body.role-conferente) .piso-kpis{ display:flex; gap:6px; overflow-x:auto; margin-bottom:6px; scrollbar-width:none; }
+  :is(body.role-admin, body.role-conferente) .piso-kpis::-webkit-scrollbar{ display:none; }
+  :is(body.role-admin, body.role-conferente) .kpi{ flex:0 0 auto; min-width:84px; padding:5px 9px; border-top-width:2px; }
+  :is(body.role-admin, body.role-conferente) .kpi-l{ font-size:.54rem; letter-spacing:.05em; white-space:nowrap; }
+  :is(body.role-admin, body.role-conferente) .kpi-n{ font-size:1.1rem; margin:0; }
+  :is(body.role-admin, body.role-conferente) .kpi-s, :is(body.role-admin, body.role-conferente) .kpi-bar{ display:none; }
+
+  :is(body.role-admin, body.role-conferente) .piso-chips{ flex-wrap:nowrap; overflow-x:auto; gap:5px; margin-bottom:6px; scrollbar-width:none; }
+  :is(body.role-admin, body.role-conferente) .piso-chips::-webkit-scrollbar{ display:none; }
+  :is(body.role-admin, body.role-conferente) .piso-chip{ flex:0 0 auto; padding:4px 10px; font-size:.68rem; gap:5px; }
+
+  :is(body.role-admin, body.role-conferente) .piso-toolbar{ justify-content:stretch; gap:6px; margin-bottom:6px; }
+  :is(body.role-admin, body.role-conferente) .piso-search{ flex:1 1 100%; }
+  :is(body.role-admin, body.role-conferente) .piso-search label{ display:none; }
+  :is(body.role-admin, body.role-conferente) .piso-search input{ width:100%; padding:7px 10px; font-size:.82rem; }
+  :is(body.role-admin, body.role-conferente) .piso-actions{ flex:1 1 100%; flex-wrap:nowrap; overflow-x:auto; gap:5px; scrollbar-width:none; }
+  :is(body.role-admin, body.role-conferente) .piso-actions::-webkit-scrollbar{ display:none; }
+  :is(body.role-admin, body.role-conferente) .pbtn{ flex:0 0 auto; padding:5px 10px; font-size:.68rem; white-space:nowrap; }
+
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso{ gap:8px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col{ gap:5px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col > .piso-grp{ top:0; font-size:.7rem; padding:5px 9px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col-grid{ grid-template-columns:1fr; gap:5px; }
+
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc{ grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:3px; column-gap:6px; padding:6px 9px; border-radius:5px; align-items:center; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c{ font-size:.74rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ display:inline; font-size:.5rem; margin:0 3px 0 0; opacity:.8; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1 / 3; grid-row:1; font-size:.98rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:3 / 5; grid-row:1; text-align:right; font-size:.74rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; font-size:.76rem; line-height:1.15; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn small{ display:inline; margin-left:5px; font-size:.6rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:1 / 2; grid-row:3; text-align:left; font-size:.7rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:2 / 3; grid-row:3; text-align:left; font-size:.72rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:3 / 4; grid-row:3; text-align:left; font-size:.72rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:4 / 5; grid-row:3; justify-content:flex-end; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol::before{ display:inline; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol .pc-bar{ display:none; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol b{ min-width:0; font-size:.86rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-row:4; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select{ font-size:.68rem; padding:4px 20px 4px 7px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.68rem; padding:3px 7px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-row:5; font-size:.72rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-row:6; font-size:.68rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-prod::before,
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-obs::before{ display:inline; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-row:7; gap:4px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act:not(:has(*)){ display:none; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act .btn{ padding:3px 7px; font-size:.62rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-row:8; padding-top:2px; font-size:.66rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-row:9; grid-template-columns:1fr 1fr; gap:6px 8px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-carga{ grid-column:1 / -1; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-lib{ grid-column:1 / 2; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-d1{ grid-column:2 / 3; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:3 / 4; }
+}
 </style>
 </body>
 </html>

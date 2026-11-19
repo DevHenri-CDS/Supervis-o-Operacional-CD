@@ -55,6 +55,18 @@
       radial-gradient(circle at 80% 80%, #100a05 0%, transparent 55%),
       var(--bg);
   }
+  #enc-escolha{
+    min-height:100vh; display:none; align-items:center; justify-content:center; padding:24px;
+    background:
+      radial-gradient(circle at 20% 20%, #231208 0%, transparent 55%),
+      radial-gradient(circle at 80% 80%, #100a05 0%, transparent 55%),
+      var(--bg);
+  }
+  .enc-op{
+    display:block; width:100%; margin:0 0 14px; padding:22px 16px; border:none; border-radius:4px; cursor:pointer;
+    background:var(--band); color:var(--band-text); font-family:'Oswald',sans-serif; font-weight:700; font-size:1.5rem; letter-spacing:.04em;
+  }
+  .enc-op:hover{ filter:brightness(1.08); }
   .login-card{
     width:100%;
     max-width:420px;
@@ -1428,6 +1440,21 @@
   </div>
 </div>
 
+<!-- ===================== ENCARREGADO: ESCOLHA DO SETOR ===================== -->
+<div id="enc-escolha">
+  <div class="login-card">
+    <div class="login-band">
+      <h1>SUPERVISÃO OPERACIONAL</h1>
+      <p>Olá, <b id="enc-nome"></b> — escolha o setor</p>
+    </div>
+    <div class="login-body">
+      <button type="button" class="enc-op" onclick="encEscolher('recebimento')">RECEBIMENTO</button>
+      <button type="button" class="enc-op" onclick="encEscolher('distribuicao')">DISTRIBUIÇÃO</button>
+      <button type="button" class="btn btn-ghost btn-sm" style="margin-top:6px;width:100%" onclick="encCancelar()">Voltar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ===================== APP ===================== -->
 <div id="app">
   <div id="ro-banner"></div>
@@ -1450,6 +1477,7 @@
       <button class="btn btn-ghost btn-sm so-admin" onclick="opPreviewToggle()" title="Ver como o Operador enxerga no celular">📱 Ver como Operador</button>
       <span class="tag" id="sync-status">Nuvem: conectando…</span>
       <button class="btn btn-ghost btn-sm" onclick="openQrModal()">Código do site</button>
+      <button class="btn btn-ghost btn-sm" id="btn-trocar-visao" style="display:none" onclick="encTrocarVisao()" title="Voltar para a escolha Recebimento / Distribuição">⇄ Trocar setor</button>
       <button class="btn btn-ghost btn-sm" onclick="logout()">Sair</button>
     </div>
   </div>
@@ -2863,14 +2891,21 @@ async function doLogin(){
   turnoAtivo = turnoLogin;
   distTabAtiva = turnoAtivo;
 
+  /* Encarregado: depois da senha escolhe o setor (Recebimento = visão do Operador · Distribuição = visão do Conferente) */
+  if(role === 'encarregado'){ currentUser.roleReal = 'encarregado'; encMostrarEscolha(); return; }
+  entrarNoApp(role);
+}
+
+function entrarNoApp(role){
   if(role !== 'tv' && 'Notification' in window && Notification.permission === 'default'){
     Notification.requestPermission();
   }
 
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('who-name').textContent = nome;
-  document.getElementById('who-role').textContent = ROLE_LABELS[role] + ' · ' + turnoLogin;
+  document.getElementById('who-name').textContent = currentUser.nome;
+  document.getElementById('who-role').textContent = (currentUser.roleReal ? ROLE_LABELS[currentUser.roleReal] + ' · ' + (currentUser.visao === 'recebimento' ? 'Recebimento' : 'Distribuição') : ROLE_LABELS[role]) + ' · ' + turnoLogin;
+  { const bt = document.getElementById('btn-trocar-visao'); if(bt) bt.style.display = currentUser.roleReal ? 'inline-block' : 'none'; }
 
   const isAdmin = role === 'admin';
   document.getElementById('titulo-piso').setAttribute('contenteditable', isAdmin ? 'true' : 'false');
@@ -2889,10 +2924,34 @@ async function doLogin(){
   if(role === 'operador'){ tvAudioDestravar(); setTimeout(opChecarAviso, 400); }
   renderAll();
   aplicarSomenteLeitura();
-  watchOwnUserStatus(forceLogout);
+  if(!currentUser._vigia){ currentUser._vigia = true; watchOwnUserStatus(forceLogout); }
   if(typeof setPresence === 'function') setPresence(true);
   if(role !== 'tv' && typeof verificarVirada === 'function') verificarVirada();
   if(role === 'tv') tvStart();
+}
+
+/* ---------- Encarregado: escolha do setor após a senha ---------- */
+function encMostrarEscolha(){
+  if(!currentUser || currentUser.roleReal !== 'encarregado') return;
+  currentUser.role = 'encarregado'; currentUser.visao = '';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'none';
+  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
+  document.getElementById('enc-nome').textContent = currentUser.nome;
+  document.getElementById('enc-escolha').style.display = 'flex';
+}
+function encEscolher(visao){
+  if(!currentUser || currentUser.roleReal !== 'encarregado') return;
+  currentUser.visao = visao;
+  currentUser.role = visao === 'recebimento' ? 'operador' : 'conferente';   // enxerga exatamente como o Operador30 / o Conf30
+  document.getElementById('enc-escolha').style.display = 'none';
+  entrarNoApp(currentUser.role);
+}
+function encTrocarVisao(){ encMostrarEscolha(); }
+function encCancelar(){
+  document.getElementById('enc-escolha').style.display = 'none';
+  if(typeof setPresence === 'function') setPresence(false);
+  forceLogout('');
 }
 
 /* ===================== MODO APRESENTAÇÃO (perfil TV) ===================== */
@@ -3669,6 +3728,7 @@ function forceLogout(motivo){
   if(typeof tvStop === 'function') tvStop();
   currentUser = null;
   document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
+  { const ee = document.getElementById('enc-escolha'); if(ee) ee.style.display = 'none'; }
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
   document.getElementById('in-senha').value = '';
@@ -3689,7 +3749,7 @@ function applySectorVisibility(){
   const op = currentUser && currentUser.role === 'operador';
   document.getElementById('bloco-distribuicao').style.display = op ? 'none' : 'block';
   document.getElementById('tabnav').style.display = op ? 'none' : 'flex';
-  { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp && op) pp.style.display = 'none'; }
+  { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp) pp.style.display = op ? 'none' : ''; }
   document.getElementById('tab-btn-fech').style.display = podeVerFechamentos() ? 'inline-block' : 'none';
 }
 
@@ -8714,7 +8774,7 @@ function renderDistClockOnly(){
     if(!currentUser) return;
     setDoc(doc(usuariosCol, currentUser.id), {
       online: !!online, visto: Date.now(),
-      nome: currentUser.nome, role: currentUser.role, celular: currentUser.celular, turno: currentUser.turno || ''
+      nome: currentUser.nome, role: (currentUser.roleReal || currentUser.role), celular: currentUser.celular, turno: currentUser.turno || ''
     }, { merge:true }).catch(()=>{});
   };
   /* Supervisão ao vivo: grava o último movimento do usuário (Relatório/Separação) no próprio documento dele */
@@ -10459,7 +10519,7 @@ function cadAposMudar(){
   try{
     if(currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv'){
       const c = cadAcha(currentUser.nome);
-      if(currentUser.role === 'conferente' && cadPronto && (!c || c.funcao !== 'conferente')){ forceLogout('Seu cadastro de conferente foi removido pelo Administrador.'); return; }
+      if((currentUser.roleReal || currentUser.role) === 'conferente' && cadPronto && (!c || c.funcao !== 'conferente')){ forceLogout('Seu cadastro de conferente foi removido pelo Administrador.'); return; }
       if(c && c.turno && c.turno !== currentUser.turno){ currentUser.turno = c.turno; turnoAtivo = c.turno; distTabAtiva = c.turno; aplicarSomenteLeitura(); renderAll(); }
     }
     if(ufAba === 'cad') cadRender();

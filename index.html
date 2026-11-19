@@ -4059,12 +4059,14 @@ function pisoAgingOrdem(a, b){
 }
 function cargaCritica(row){ return Math.abs(Number(row.d1) || 0) >= D1_CRITICO; }
 
+/* na fila: cargas etiquetadas OU cargas 100% montadas vindas do Relatório (preenchidas com "Preencher com Rel.") */
+function pisoNaFila(r){ return !!r && (r.status === 'CARGA ETIQUETADA' || r.rel === true); }
 function renderFila(){
   const canDistribuir = PERFIS_DISTRIBUICAO.includes(currentUser.role);
   const grid = document.getElementById('fila-grid');
   grid.innerHTML = '';
 
-  const fila = pisoData.map((r,i)=>({...r, _idx:i})).filter(r => r.status === 'CARGA ETIQUETADA');
+  const fila = pisoData.map((r,i)=>({...r, _idx:i})).filter(pisoNaFila);
 
   if(fila.length === 0){
     grid.innerHTML = '<div class="fila-empty">Nenhuma carga aguardando distribuição.</div>';
@@ -6781,7 +6783,7 @@ function confirmarProdutivos(){
     return;
   }
   // reencontra a carga pelo número (a lista pode ter mudado com a janela aberta)
-  const idx = pisoData.findIndex(r => String(r.carga).trim() === produtivosPendente && r.status === 'CARGA ETIQUETADA');
+  const idx = pisoData.findIndex(r => String(r.carga).trim() === produtivosPendente && pisoNaFila(r));
   if(idx === -1){
     fecharProdutivosModal();
     showToast('Essa carga não está mais disponível na fila.', true);
@@ -6915,7 +6917,7 @@ function imprimirCargasPisoRetrato(){
   /* ---- Fila de Distribuição + Portaria + Resumo da Distribuição (não vão para o Operador, que não enxerga esse bloco) ---- */
   let secoesDist = '';
   if(currentUser.role !== 'operador'){
-    const fila = pisoData.filter(r => r.status === 'CARGA ETIQUETADA').slice().sort((a,b) => (cargaCritica(b)?1:0) - (cargaCritica(a)?1:0));
+    const fila = pisoData.filter(pisoNaFila).slice().sort((a,b) => (cargaCritica(b)?1:0) - (cargaCritica(a)?1:0));
     const nFilaCrit = fila.filter(r => cargaCritica(r)).length;
     const cardFila = r => {
       const crit = cargaCritica(r);
@@ -10769,36 +10771,33 @@ body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:4 / 5; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col > .piso-grp{ top:0; font-size:.7rem; padding:5px 9px; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col-grid{ grid-template-columns:1fr; gap:5px; }
 
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc{ grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:3px; column-gap:6px; padding:6px 9px; border-radius:5px; align-items:center; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c{ font-size:.74rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ display:inline; font-size:.5rem; margin:0 3px 0 0; opacity:.8; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1 / 3; grid-row:1; font-size:.98rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:3 / 5; grid-row:1; text-align:right; font-size:.74rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; font-size:.76rem; line-height:1.15; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  /* cartão resumido, sem cortar números: [carga · doca] / [fornecedor] / [liberação · D-1] / [SKU · volume] / status */
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc{ grid-template-columns:repeat(2, minmax(0,1fr)); row-gap:4px; column-gap:10px; padding:7px 10px; border-radius:5px; align-items:center; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c{ font-size:.76rem; overflow:visible; overflow-wrap:normal; white-space:nowrap; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ display:inline; font-size:.54rem; margin:0 5px 0 0; opacity:.85; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-flag{ display:none; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1; grid-row:1; font-size:1.05rem; line-height:1.15; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-carga::before, :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn::before, :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act::before{ display:none; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:2; grid-row:1; text-align:right; font-size:.78rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; white-space:normal; overflow-wrap:anywhere; font-size:.78rem; line-height:1.2; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-forn small{ display:inline; margin-left:5px; font-size:.6rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:1 / 2; grid-row:3; text-align:left; font-size:.7rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:2 / 3; grid-row:3; text-align:left; font-size:.72rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:3 / 4; grid-row:3; text-align:left; font-size:.72rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:4 / 5; grid-row:3; justify-content:flex-end; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol::before{ display:inline; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:1; grid-row:3; text-align:left; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:2; grid-row:3; text-align:right; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:1; grid-row:4; text-align:left; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:2; grid-row:4; display:flex; align-items:baseline; justify-content:flex-end; gap:0; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol .pc-bar{ display:none; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol b{ min-width:0; font-size:.86rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-row:4; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select{ font-size:.68rem; padding:4px 20px 4px 7px; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.68rem; padding:3px 7px; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-row:5; font-size:.72rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-row:6; font-size:.68rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-prod::before,
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-obs::before{ display:inline; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-row:7; gap:4px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-vol b{ min-width:0; font-size:.95rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-column:1 / -1; grid-row:5; white-space:normal; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select{ font-size:.72rem; padding:5px 22px 5px 8px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.7rem; padding:4px 8px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-column:1 / -1; grid-row:6; white-space:normal; font-size:.74rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-column:1 / -1; grid-row:7; white-space:normal; font-size:.7rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-column:1 / -1; grid-row:8; white-space:normal; gap:4px; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act:not(:has(*)){ display:none; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act .btn{ padding:3px 7px; font-size:.62rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-row:8; padding-top:2px; font-size:.66rem; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-row:9; grid-template-columns:1fr 1fr; gap:6px 8px; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .c-act .btn{ padding:4px 8px; font-size:.64rem; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-column:1 / -1; grid-row:9; padding-top:2px; font-size:.68rem; white-space:normal; }
+  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-column:1 / -1; grid-row:10; grid-template-columns:1fr 1fr; gap:6px 8px; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-carga{ grid-column:1 / -1; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-lib{ grid-column:1 / 2; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-d1{ grid-column:2 / 3; }
-  :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:3 / 4; }
 }
 </style>
 </body>

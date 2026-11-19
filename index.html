@@ -2078,7 +2078,7 @@
       <div class="panel-header">
         <div class="title-block">
           <h2>FECHAMENTOS</h2>
-          <span class="sub">Distribuição de cada dia, salva em imagem por turno (o dia vira às 06:00, quando a distribuição é salva)</span>
+          <span class="sub">Distribuição de cada dia, salva em imagem por turno (o dia vira às 06:20, quando a distribuição é salva)</span>
         </div>
         <div class="stat-row">
           <div class="stat"><div class="n" id="st-fech-count">0</div><div class="l">Dias fechados</div></div>
@@ -2718,11 +2718,11 @@ function turnoPorHorario(date){
   return 'T3';                                 // 22:01 a 05:39
 }
 
-/* "dia operacional": o dia só vira às 06:00 (hora em que a distribuição é salva em Fechamentos), pra o T3 (que passa da meia-noite)
+/* "dia operacional": o dia só vira às 06:20 (hora em que a distribuição é salva em Fechamentos), pra o T3 (que passa da meia-noite)
    ficar inteiro no mesmo dia. Retorna yyyy-mm-dd. */
 function diaOperacional(date){
   date = date || new Date();
-  const d = new Date(date.getTime() - (6*60)*60000);
+  const d = new Date(date.getTime() - (6*60 + 20)*60000);   // o dia operacional vira às 06:20 (fechamento do T3)
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
@@ -3290,13 +3290,14 @@ function tvVozPt(){
     return vs.find(v => /^pt[-_]BR/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null;
   }catch(e){ return null; }
 }
-function tvFalar(frases){
+function tvFalar(frases, opcoes){
   try{
     if(!('speechSynthesis' in window) || !frases || !frases.length) return;
     frases.forEach(txt => {
       const u = new SpeechSynthesisUtterance(txt);
       const v = tvVozPt(); if(v){ u.voice = v; u.lang = v.lang; } else u.lang = 'pt-BR';
-      u.rate = TV_VOZ.rate; u.pitch = TV_VOZ.pitch; u.volume = TV_VOZ.volume;
+      const vz = Object.assign({}, TV_VOZ, opcoes || {});
+      u.rate = vz.rate; u.pitch = vz.pitch; u.volume = vz.volume;
       speechSynthesis.speak(u);
     });
   }catch(e){}
@@ -3315,6 +3316,66 @@ function tvFrasesImpressa(cargas){
   return fr;
 }
 try{ if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } }catch(e){}
+/* ---- TV: narração a cada 5000 VOLUMES distribuídos no turno (5000, 10000, 15000…) ----
+   Fala: "Fornecedor FONEX adicionada à distribuição do turno 3, alcançando 5000 volumes."
+   Soa um sinal diferente do aviso de impressão (arpejo ascendente) e a voz é um pouco mais clara/rápida. */
+const TV_MARCO_VOLUME = 5000;
+const TV_VOZ_MARCO = { rate: 0.85, pitch: 1.0, volume: 1 };
+let tvMarcosFalados = {};   // "dia|turno|marco" → já narrado (não repete se a carga for devolvida e distribuída de novo)
+function tvSomMarco(depois){
+  let chamou = false;
+  const seguir = () => { if(chamou) return; chamou = true; try{ if(depois) depois(); }catch(e){} };
+  try{
+    tvAudioDestravar();
+    const ctx = tvAudioCtx; if(!ctx){ seguir(); return; }
+    const base = ctx.currentTime + 0.05;
+    [[523.25, 0], [659.25, 0.12], [783.99, 0.24], [1046.5, 0.36]].forEach(([f, dt]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = base + dt;
+      o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(TV_SOM_VOLUME, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.5);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(t); o.stop(t + 0.55);
+    });
+    setTimeout(seguir, 900);
+  }catch(e){ seguir(); }
+}
+function tvNomeFalado(n){   // tira "ID:8883/8882" e símbolos, que ficam ruins na voz
+  return String(n || '').replace(/\bID\s*:?\s*[\d\s\/,.\-]+/gi, ' ').replace(/[_*\\/|]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function tvRowRecente(h){   // só narra o que foi distribuído agora há pouco (TV reaberta depois não repete o passado)
+  const m = /^(\d{1,2}):(\d{2})/.exec(String(h || '').trim());
+  if(!m) return true;
+  const agora = new Date(), min = agora.getHours() * 60 + agora.getMinutes();
+  return ((min - (Number(m[1]) * 60 + Number(m[2]))) + 1440) % 1440 <= 20;
+}
+/* antes = distribuição que a TV já tinha · depois = a que acabou de chegar · novas = cargas novas dessa atualização */
+function tvMarcosVolume(antes, depois, novas){
+  try{
+    if(!tvAtivo || !novas || !novas.length) return;
+    const chave = r => String(r.carga) + '|' + String(r.horaDist);
+    const frases = [];
+    TURNOS.forEach(t => {
+      const novasT = new Set(novas.filter(r => turnoDaCarga(r) === t).map(chave));
+      if(!novasT.size) return;
+      let tot = depois.filter(r => turnoDaCarga(r) === t && !novasT.has(chave(r))).reduce((a, r) => a + Number(r.volume || 0), 0);
+      depois.filter(r => turnoDaCarga(r) === t && novasT.has(chave(r))).forEach(r => {
+        const antesMarco = Math.floor(tot / TV_MARCO_VOLUME);
+        tot += Number(r.volume || 0);
+        const depoisMarco = Math.floor(tot / TV_MARCO_VOLUME);
+        if(depoisMarco <= antesMarco || !tvRowRecente(r.horaDist)) return;
+        const marco = depoisMarco * TV_MARCO_VOLUME;
+        const k = diaOperacional() + '|' + t + '|' + marco;
+        if(tvMarcosFalados[k]) return;
+        tvMarcosFalados[k] = true;
+        const nome = tvNomeFalado(r.descricao) || 'sem nome';
+        frases.push('Fornecedor ' + nome + ' adicionada à distribuição do turno ' + t.replace(/\D/g, '') + ', alcançando ' + marco + ' volumes.');
+      });
+    });
+    if(frases.length) tvSomMarco(() => tvFalar(frases, TV_VOZ_MARCO));
+  }catch(e){}
+}
 /* ---- TV: aviso "IMPRESSA!" (carga nova em PENDENTE DE ETIQUETAGEM) ---- */
 let tvAvisoUltimo = null, tvAvisoRec = [], tvAvisoCargas = [], tvAvisoTimer = 0, tvAvisoAberto = false, tvAvisoVistosMem = [];
 function tvAvisoVistos(){
@@ -8478,6 +8539,7 @@ function renderDistClockOnly(){
         } else {
           novasLinhas.forEach(r => { if(typeof notifyDistribuicao === 'function') notifyDistribuicao(r); });
         }
+        if(novasLinhas.length && typeof tvMarcosVolume === 'function') tvMarcosVolume(distData, novasRows, novasLinhas);   // TV: narra cada 5000 volumes do turno
       }
 
       distData = novasRows;
@@ -8691,7 +8753,7 @@ function renderDistClockOnly(){
     }
   }
 
-  /* Virada do dia (06:00): numa transação, arquiva a distribuição do dia que acabou em
+  /* Virada do dia (06:20): numa transação, arquiva a distribuição do dia que acabou em
      "fechamentos/{dia}" e zera a distribuição pro dia novo. A transação garante que, mesmo com
      várias pessoas com o painel aberto, só UMA arquiva. Depois, quem arquivou gera as imagens
      (se não gerar, a aba Fechamentos gera sozinha a partir dos dados salvos). */
@@ -9476,7 +9538,7 @@ dockItens = function(){
   return it;
 };
 
-/* vira o dia sozinho (06:00) se a pessoa não estiver olhando um dia antigo de propósito */
+/* vira o dia sozinho (06:20) se a pessoa não estiver olhando um dia antigo de propósito */
 setInterval(() => {
   if(!spdManual && spdDia !== diaOperacional()){
     spdDia = diaOperacional(); spdRegs = [];
@@ -9524,7 +9586,7 @@ setInterval(() => {
    BASE — cargas no piso / distribuídas, vindas do Relatório
    • a cada relatório colado (guia Relatório), as linhas das cargas que estão no PISO ou na DISTRIBUIÇÃO
      são gravadas aqui; cargas de colagens anteriores continuam (a carga que vem de novo é atualizada)
-   • zera na virada do dia (06:00), no mesmo momento em que a distribuição é salva em Fechamentos
+   • zera na virada do dia (06:20), no mesmo momento em que a distribuição é salva em Fechamentos
    ===================================================================== */
 let baseRows = [];        // linhas acumuladas do dia
 let baseDia = '';         // dia operacional a que a Base pertence
@@ -9636,7 +9698,7 @@ function baseRender(force){
   document.getElementById('st-base-cargas').textContent = lista.length;
   document.getElementById('st-base-vol').textContent = fmtInt(totVol);
   document.getElementById('st-base-itens').textContent = fmtInt(totItens);
-  document.getElementById('base-sub').textContent = (baseDia ? fmtDia(baseDia) : 'sem dados') + ' · só cargas 100% montadas · salva uma vez, sem substituir · zera na virada do dia (06:00)';
+  document.getElementById('base-sub').textContent = (baseDia ? fmtDia(baseDia) : 'sem dados') + ' · só cargas 100% montadas · salva uma vez, sem substituir · zera na virada do dia (06:20)';
   /* cargas no piso/distribuição que ainda têm item agrupado e por isso ainda não entraram */
   const salvas = new Set(baseRows.map(r => sepNorm(r.carga)));
   const noP = new Set((pisoData || []).concat(distData || []).map(r => sepNorm(r.carga)));
@@ -10345,7 +10407,7 @@ function oppAbrir(idx){
         <button type="button" class="btn btn-primary btn-sm" style="width:auto;" onclick="oppSalvar()">＋ Adicionar</button>
       </div>
       <div id="opp-tab"></div>
-      <div class="v5-sub">Ficam ao lado da programação até a rotação das 06:00 e contam na Produtividade Dia de cada produtivo.</div>
+      <div class="v5-sub">Ficam ao lado da programação até a rotação das 06:20 e contam na Produtividade Dia de cada produtivo.</div>
     </div></div>`;
   m.style.display = 'flex';
   oppChips(); oppRender();
@@ -10438,7 +10500,7 @@ sepProdPaginaHtml = function(){
   const db = getFirestore(getApp());
   const erro = (p, err) => { console.error(p, err); if(typeof showToast === 'function') showToast('⚠️ ' + p + ' ' + (err && err.message ? err.message : err), true); };
 
-  /* oportunidades: um documento por dia operacional (vira às 06:00 → o dia novo começa vazio ao lado da programação) */
+  /* oportunidades: um documento por dia operacional (vira às 06:20 → o dia novo começa vazio ao lado da programação) */
   window.oppOp = async function(dia, fn){
     if(typeof somenteLeitura === 'function' && somenteLeitura()) return;
     const ref = doc(db, 'painelCD', 'sepoport_' + dia);
@@ -10710,7 +10772,7 @@ function oppPainelRender(){
   const G = oppGrupos(), t = oppTotais(G);
   document.getElementById('st-opp-n').textContent = t.n;
   document.getElementById('st-opp-q').textContent = fmtInt(t.q);
-  document.getElementById('opp-pn-sub').textContent = (typeof fmtDia === 'function' ? fmtDia(oppDiaHoje) : '') + ' · atualiza ao vivo · zera na virada do dia (06:00)';
+  document.getElementById('opp-pn-sub').textContent = (typeof fmtDia === 'function' ? fmtDia(oppDiaHoje) : '') + ' · atualiza ao vivo · zera na virada do dia (06:20)';
   box.innerHTML = G.length
     ? `<table class="v5-tab">${OPP_THEAD}<tbody>${oppLinhasTabela(G, true)}</tbody><tfoot><tr><td colspan="2">TOTAL DO DIA</td><td class="n">${fmtInt(t.q)}</td><td colspan="2">${t.n} oportunidade(s)</td></tr></tfoot></table>`
     : '<div class="v5-vazio">Monte as estações na programação para ver as oportunidades de cada produtivo.</div>';

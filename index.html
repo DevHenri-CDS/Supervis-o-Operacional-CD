@@ -3204,22 +3204,58 @@ function tvAudioDestravar(){   // o navegador só libera o som depois de um cliq
     if(tvAudioCtx.state === 'suspended') tvAudioCtx.resume();
   }catch(e){}
 }
-function tvSomImpressa(){
+function tvSomImpressa(depois){
+  let chamou = false;
+  const seguir = () => { if(chamou) return; chamou = true; try{ if(depois) depois(); }catch(e){} };
   try{
     tvAudioDestravar();
-    const ctx = tvAudioCtx; if(!ctx) return;
+    const ctx = tvAudioCtx; if(!ctx){ seguir(); return; }
     const base = ctx.currentTime + 0.05;
-    [0, 0.9].forEach(rep => [[1046.5, 0], [1318.5, 0.15], [1568, 0.3]].forEach(([f, dt]) => {   // "ta-ta-tá" ascendente, duas vezes
-      const o = ctx.createOscillator(), g = ctx.createGain(), t = base + rep + dt;
+    [[1046.5, 0], [1318.5, 0.16], [1568, 0.32]].forEach(([f, dt]) => {   // "ta-ta-tá" ascendente (sinal de alerta de galpão)
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = base + dt;
       o.type = 'triangle'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t);
       g.gain.exponentialRampToValueAtTime(TV_SOM_VOLUME, t + 0.02);
       g.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
       o.connect(g); g.connect(ctx.destination);
       o.start(t); o.stop(t + 0.5);
-    }));
+    });
+    setTimeout(seguir, 800);
+  }catch(e){ seguir(); }
+}
+/* ---- TV: voz "Alerta de galpão" — fala "Carga do fornecedor: TAL impressa." (voz pt-BR do aparelho, devagar e grave) ---- */
+const TV_VOZ = { rate: 0.8, pitch: 0.85, volume: 1 };
+function tvVozPt(){
+  try{
+    const vs = speechSynthesis.getVoices();
+    return vs.find(v => /^pt[-_]BR/i.test(v.lang)) || vs.find(v => /^pt/i.test(v.lang)) || null;
+  }catch(e){ return null; }
+}
+function tvFalar(frases){
+  try{
+    if(!('speechSynthesis' in window) || !frases || !frases.length) return;
+    frases.forEach(txt => {
+      const u = new SpeechSynthesisUtterance(txt);
+      const v = tvVozPt(); if(v){ u.voice = v; u.lang = v.lang; } else u.lang = 'pt-BR';
+      u.rate = TV_VOZ.rate; u.pitch = TV_VOZ.pitch; u.volume = TV_VOZ.volume;
+      speechSynthesis.speak(u);
+    });
   }catch(e){}
 }
+function tvFrasesImpressa(cargas){
+  const vistos = new Set(), nomes = [];
+  cargas.forEach(c => {
+    const n = String((c && c.fornecedor) || '').replace(/[_*\\/|]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const k = n.toLowerCase();
+    if(!n || vistos.has(k)) return;
+    vistos.add(k); nomes.push(n);
+  });
+  if(!nomes.length) return ['Carga impressa.'];
+  const MAXF = 5, fr = nomes.slice(0, MAXF).map(n => 'Carga do fornecedor: ' + n + ' impressa.');
+  if(nomes.length > MAXF) fr.push('E mais ' + (nomes.length - MAXF) + ' fornecedores. Veja na tela.');
+  return fr;
+}
+try{ if('speechSynthesis' in window){ speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); } }catch(e){}
 /* ---- TV: aviso "IMPRESSA!" (carga nova em PENDENTE DE ETIQUETAGEM) ---- */
 let tvAvisoUltimo = null, tvAvisoRec = [], tvAvisoCargas = [], tvAvisoTimer = 0, tvAvisoAberto = false, tvAvisoVistosMem = [];
 function tvAvisoVistos(){
@@ -3242,7 +3278,8 @@ function tvChecarAviso(){
   tvAvisoMarcarVistos(novos.map(x => x.id));
   const recentes = novos.filter(x => Date.now() - Number(x.ts || 0) <= 20 * 60000);   // aviso antigo (TV reaberta depois): não mostra
   if(!recentes.length) return;
-  tvSomImpressa();
+  const frasesVoz = tvFrasesImpressa(recentes.reduce((l, x) => l.concat(x.cargas || []), []));
+  tvSomImpressa(() => tvFalar(frasesVoz));   // sinal de alerta e, em seguida, a voz
   recentes.forEach(x => (x.cargas || []).forEach(c => {
     const k = String(c.carga).trim();
     if(!tvAvisoCargas.some(y => String(y.carga).trim() === k)) tvAvisoCargas.push(c);

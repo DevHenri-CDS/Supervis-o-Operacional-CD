@@ -2510,6 +2510,96 @@
   </div>
 </div>
 
+<style id="ui-dialog-css">
+/* ======= Janelas de aviso/confirmação no tema do site (substituem o confirm/alert do navegador) ======= */
+#ui-dlg{ position:fixed; inset:0; z-index:100000; display:none; align-items:center; justify-content:center; padding:16px;
+  background:rgba(0,0,0,.72); backdrop-filter:blur(3px); }
+#ui-dlg.on{ display:flex; animation:uiDlgFade .15s ease; }
+.ui-dlg-box{ width:100%; max-width:440px; max-height:86vh; display:flex; flex-direction:column; background:var(--panel,#0e0e0e);
+  border:1px solid var(--line,#2c2218); border-top:4px solid var(--band-strong,#FF6A00); border-radius:8px;
+  box-shadow:0 24px 70px rgba(0,0,0,.75); animation:uiDlgPop .18s ease; color:var(--text,#f3eedf); }
+#ui-dlg.perigo .ui-dlg-box{ border-top-color:var(--danger,#ff7b6f); }
+.ui-dlg-head{ display:flex; align-items:center; gap:10px; padding:14px 18px 6px; }
+.ui-dlg-ico{ flex:0 0 auto; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:rgba(255,138,31,.14); color:var(--band,#FF8A1F); font-weight:700; font-size:1rem; font-family:'Oswald',sans-serif; }
+#ui-dlg.perigo .ui-dlg-ico{ background:rgba(255,123,111,.14); color:var(--danger,#ff7b6f); }
+.ui-dlg-title{ margin:0; font-family:'Oswald',sans-serif; font-weight:600; font-size:1.1rem; letter-spacing:.03em; text-transform:uppercase; color:var(--band,#FF8A1F); }
+#ui-dlg.perigo .ui-dlg-title{ color:var(--danger,#ff7b6f); }
+.ui-dlg-msg{ padding:6px 18px 14px; font-size:.9rem; line-height:1.5; color:var(--text,#f3eedf); white-space:pre-line; overflow-y:auto; overflow-wrap:anywhere; }
+.ui-dlg-btns{ display:flex; justify-content:flex-end; gap:8px; padding:12px 18px 16px; border-top:1px solid var(--line,#2c2218); }
+.ui-dlg-btns button{ cursor:pointer; min-width:96px; padding:9px 18px; border-radius:4px; font-family:'Oswald',sans-serif; font-weight:600; font-size:.88rem; letter-spacing:.03em; }
+.ui-dlg-ok{ background:var(--band,#FF8A1F); border:1px solid var(--band,#FF8A1F); color:#000; }
+.ui-dlg-ok:hover{ filter:brightness(1.1); }
+#ui-dlg.perigo .ui-dlg-ok{ background:var(--danger,#ff7b6f); border-color:var(--danger,#ff7b6f); }
+.ui-dlg-cancel{ background:transparent; border:1px solid var(--line,#2c2218); color:var(--text,#f3eedf); }
+.ui-dlg-cancel:hover{ border-color:var(--band,#FF8A1F); color:var(--band,#FF8A1F); }
+.ui-dlg-btns button:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+@keyframes uiDlgFade{ from{ opacity:0; } to{ opacity:1; } }
+@keyframes uiDlgPop{ from{ opacity:0; transform:translateY(10px) scale(.97); } to{ opacity:1; transform:none; } }
+@media (max-width:520px){ .ui-dlg-btns{ flex-direction:column-reverse; } .ui-dlg-btns button{ width:100%; padding:12px; } }
+@media print{ #ui-dlg{ display:none !important; } }
+</style>
+<div id="ui-dlg" role="dialog" aria-modal="true" aria-labelledby="ui-dlg-t" aria-describedby="ui-dlg-m">
+  <div class="ui-dlg-box">
+    <div class="ui-dlg-head"><span class="ui-dlg-ico" id="ui-dlg-i">?</span><h3 class="ui-dlg-title" id="ui-dlg-t">Confirmar</h3></div>
+    <div class="ui-dlg-msg" id="ui-dlg-m"></div>
+    <div class="ui-dlg-btns">
+      <button type="button" class="ui-dlg-cancel" id="ui-dlg-c">Cancelar</button>
+      <button type="button" class="ui-dlg-ok" id="ui-dlg-ok">OK</button>
+    </div>
+  </div>
+</div>
+<script id="ui-dialog-js">
+(function(){
+  var fila = Promise.resolve();
+  var PERIGO = /(^|\s)(remover|apagar|limpar|banir|recalcular|substituir|substitui|apaga)\b|n[ãa]o d[áa] pra desfazer|APAGA|SUBSTITUI/i;
+  function abrir(msg, o){
+    return new Promise(function(resolve){
+      var box = document.getElementById('ui-dlg');
+      if(!box){ resolve(o.confirmar ? true : undefined); return; }
+      var okB = document.getElementById('ui-dlg-ok'), cB = document.getElementById('ui-dlg-c');
+      var texto = String(msg == null ? '' : msg);
+      var perigo = o.perigo != null ? !!o.perigo : (o.confirmar && PERIGO.test(texto));
+      document.getElementById('ui-dlg-m').textContent = texto;
+      document.getElementById('ui-dlg-t').textContent = o.titulo || (o.confirmar ? (perigo ? 'Atenção' : 'Confirmar') : 'Aviso');
+      document.getElementById('ui-dlg-i').textContent = o.confirmar ? (perigo ? '!' : '?') : (/^\s*(⛔|⚠)/.test(texto) ? '!' : 'i');
+      okB.textContent = o.ok || (o.confirmar ? (perigo ? 'Sim, continuar' : 'OK') : 'Entendi');
+      cB.textContent = o.cancelar || 'Cancelar';
+      cB.style.display = o.confirmar ? '' : 'none';
+      box.classList.toggle('perigo', perigo);
+      box.classList.add('on');
+      var anterior = document.activeElement;
+      function fechar(r){
+        box.classList.remove('on');
+        document.removeEventListener('keydown', tecla, true);
+        okB.onclick = cB.onclick = box.onclick = null;
+        try{ if(anterior && anterior.focus) anterior.focus(); }catch(e){}
+        resolve(o.confirmar ? r : undefined);
+      }
+      function tecla(ev){
+        if(ev.key === 'Escape'){ ev.preventDefault(); ev.stopPropagation(); fechar(false); }
+        else if(ev.key === 'Enter'){ ev.preventDefault(); ev.stopPropagation(); fechar(true); }
+        else if(ev.key === 'Tab'){
+          var bs = o.confirmar ? [cB, okB] : [okB], i = bs.indexOf(document.activeElement);
+          ev.preventDefault(); bs[(i + (ev.shiftKey ? bs.length - 1 : 1)) % bs.length].focus();
+        }
+      }
+      document.addEventListener('keydown', tecla, true);
+      okB.onclick = function(){ fechar(true); };
+      cB.onclick = function(){ fechar(false); };
+      box.onclick = function(ev){ if(ev.target === box) fechar(false); };
+      setTimeout(function(){ (o.confirmar && perigo ? cB : okB).focus(); }, 30);
+    });
+  }
+  function enfileirar(msg, o){
+    var p = fila.then(function(){ return abrir(msg, o); });
+    fila = p.catch(function(){});
+    return p;
+  }
+  window.uiConfirm = function(msg, o){ return enfileirar(msg, Object.assign({ confirmar:true }, o || {})); };
+  window.uiAlert = function(msg, o){ return enfileirar(msg, Object.assign({ confirmar:false }, o || {})); };
+})();
+</script>
 <script>
 /* ===================== CONFIG ===================== */
 const SITE_URL = 'https://devhenri-cds.github.io/Supervis-o-Operacional-CD/';
@@ -3507,7 +3597,7 @@ async function salvarRecebimento(){
 async function limparRecebimento(){
   if(!currentUser || !ehAdminLike(currentUser.role)) return;
   if(!recData){ showToast('Não há nada para limpar.', true); return; }
-  if(!confirm('Limpar o planejamento do recebimento colado? Não dá pra desfazer.')) return;
+  if(!await uiConfirm('Limpar o planejamento do recebimento colado? Não dá pra desfazer.')) return;
   if(typeof saveRecebimento !== 'function') return;
   const ok = await saveRecebimento(null);
   if(ok){ recData = null; renderRecebimento(); showToast('🗑 Guia Recebimento limpa.', false); }
@@ -3889,9 +3979,9 @@ function toggleMarcaEtiquetada(i, checked){
   renderAll();
 }
 
-function removePisoRow(i){
+async function removePisoRow(i){
   if(!souAdmin()) return;
-  if(!confirm('Remover esta carga do piso?')) return;
+  if(!await uiConfirm('Remover esta carga do piso?')) return;
   pisoData.splice(i,1);
   pisoEditando.clear();
   savePiso();
@@ -3914,14 +4004,14 @@ function pisoRelCandidatas(){
   });
   return Object.values(grupos).filter(g => g.montado > 0 && g.agrupado === 0);
 }
-function preencherPisoComRel(){
+async function preencherPisoComRel(){
   if(!pisoRelPode()){ showToast('🔒 Só Administrador e Conferente (dentro do horário do turno) podem preencher com o relatório.', true); return; }
   if(!crossRawData || !crossRawData.length){ showToast('Ainda não há relatório colado na guia Relatório. Cole o relatório da planilha primeiro.', true); return; }
   const todas = pisoRelCandidatas();
   const livres = todas.filter(g => !cargaJaDistribuida(g.carga));
   const naDist = todas.length - livres.length;
   if(!livres.length){ showToast(todas.length ? 'As cargas 100% montadas do relatório já estão na Distribuição.' : 'Nenhuma carga 100% montada no relatório.', true); return; }
-  if(pisoData.length && !confirm(`Preencher o piso com ${livres.length} carga(s) 100% montada(s) do relatório?\n\nIsso SUBSTITUI as ${pisoData.length} carga(s) que estão hoje no piso (Status, Produtivo e Doca preenchidos serão perdidos; prioridade e marcação de etiquetada das mesmas cargas são mantidas).\n\nPara voltar ao formato completo, use "Colar da planilha".`)) return;
+  if(pisoData.length && !await uiConfirm(`Preencher o piso com ${livres.length} carga(s) 100% montada(s) do relatório?\n\nIsso SUBSTITUI as ${pisoData.length} carga(s) que estão hoje no piso (Status, Produtivo e Doca preenchidos serão perdidos; prioridade e marcação de etiquetada das mesmas cargas são mantidas).\n\nPara voltar ao formato completo, use "Colar da planilha".`)) return;
   const antigas = {};
   pisoData.forEach(r => { antigas[String(r.carga).trim()] = r; });
   pisoData = livres.map(g => {
@@ -4040,9 +4130,9 @@ function distribuirCarga(idx){
   renderAll();
 }
 
-function devolverAoPiso(i){
+async function devolverAoPiso(i){
   const row = distData[i];
-  if(!confirm(`Devolver a carga ${row.carga} para "Cargas no piso"?`)) return;
+  if(!await uiConfirm(`Devolver a carga ${row.carga} para "Cargas no piso"?`)) return;
   pisoData.push({
     produtivo: row.etiquetagem,
     doca: row.doca,
@@ -4565,7 +4655,7 @@ async function salvarFechFoto(){
   try{
     if(!fechImagens[dia] && typeof loadFechImagens === 'function') await loadFechImagens(dia);
     if(fechImagens[dia] && fechImagens[dia][turno] &&
-       !confirm(`Já existe uma imagem salva no ${turno} de ${fmtDia(dia)}. Substituir pela nova foto?`)){
+       !await uiConfirm(`Já existe uma imagem salva no ${turno} de ${fmtDia(dia)}. Substituir pela nova foto?`)){
       return;
     }
     const img = await comprimirFotoFech(fechFotoDataUrl);
@@ -4589,7 +4679,7 @@ async function salvarFechFoto(){
 
 async function removerFotoFech(dia, turno){
   if(!currentUser || !podeVerFechamentos()) return;
-  if(!confirm(`Remover a foto da Distribuição ${turno} de ${fmtDia(dia)}?`)) return;
+  if(!await uiConfirm(`Remover a foto da Distribuição ${turno} de ${fmtDia(dia)}?`)) return;
   if(typeof removeFechFoto !== 'function') return;
   const ok = await removeFechFoto(dia, turno);
   if(ok){
@@ -4765,7 +4855,7 @@ async function confirmarApagarFech(){
   const dia = document.getElementById('fech-apagar-dia').value;
   const turnos = fechApagarTurnos();
   const rotulo = turnos.length === 3 ? 'todos os turnos' : turnos[0];
-  if(!confirm(`Apagar o fechamento de ${fmtDia(dia)} (${rotulo})? Não dá pra desfazer.`)) return;
+  if(!await uiConfirm(`Apagar o fechamento de ${fmtDia(dia)} (${rotulo})? Não dá pra desfazer.`)) return;
   if(typeof apagarFechamentoTurnos !== 'function'){ showToast('Sem conexão com a nuvem — tente de novo.', true); return; }
   const btn = document.getElementById('btn-confirmar-apagar');
   btn.disabled = true;
@@ -4904,7 +4994,7 @@ function importPisoFromPaste(){
   });
 
   if(parsed.length === 0){
-    alert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Status contém "CARGA ETIQUETADA" ou "PENDENTE DE ETIQUETAGEM".');
+    uiAlert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Status contém "CARGA ETIQUETADA" ou "PENDENTE DE ETIQUETAGEM".');
     return;
   }
 
@@ -4939,7 +5029,7 @@ function importPisoFromPaste(){
   if(novasImpressas.length && typeof publicarAvisoImpressa === 'function') publicarAvisoImpressa(novasImpressas);
   closeImportModal();
   renderAll();
-  if(avisosColagem.length) setTimeout(() => alert('⚠️ Atenção na colagem:\n\n' + avisosColagem.join('\n\n')), 80);
+  if(avisosColagem.length) setTimeout(() => uiAlert('⚠️ Atenção na colagem:\n\n' + avisosColagem.join('\n\n')), 80);
 }
 
 /* ===================== COLAR CARGAS NA DISTRIBUIÇÃO (só Administrador) ===================== */
@@ -5014,7 +5104,7 @@ function importDistFromPaste(){
   const turnoSel = document.getElementById('import-dist-turno').value;
   const parsed = parseDistPaste(document.getElementById('import-dist-textarea').value);
   if(parsed.length === 0){
-    alert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a Liberação está no formato dd/mm/aaaa.');
+    uiAlert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a Liberação está no formato dd/mm/aaaa.');
     return;
   }
   const existentes = {};
@@ -5923,16 +6013,16 @@ function importPortariaFromPaste(){
   const raw = document.getElementById('portaria-textarea').value.trim();
   if(!raw){ closePortariaModal(); return; }
   const rows = parsePortariaPaste(raw);
-  if(!rows.length){ alert('Não encontrei nenhuma linha válida. Cada linha precisa ter o número da carga e o fornecedor.'); return; }
+  if(!rows.length){ uiAlert('Não encontrei nenhuma linha válida. Cada linha precisa ter o número da carga e o fornecedor.'); return; }
   portariaData = rows;
   savePortaria();
   closePortariaModal();
   renderPortaria();
 }
-function portariaLimpar(){
+async function portariaLimpar(){
   if(!souAdmin()) return;
   if(!portariaData.length) return;
-  if(!confirm('Limpar todas as cargas da Portaria?')) return;
+  if(!await uiConfirm('Limpar todas as cargas da Portaria?')) return;
   portariaData = [];
   savePortaria();
   renderPortaria();
@@ -6226,8 +6316,8 @@ function sepRemEst(i){
   sepCommit();
 }
 function sepLimparLojasEst(){ sepData.estacoes.forEach(e => { e.lojas = []; }); sepCommit(); }
-function sepNova(){
-  if(!confirm('Limpar cargas, lojas e estações desta separação?')) return;
+async function sepNova(){
+  if(!await uiConfirm('Limpar cargas, lojas e estações desta separação?')) return;
   sepData.cargas = []; sepData.lojasOff = []; sepData.estacoes = []; sepOpenEst = {};
   sepCommit();
 }
@@ -6253,13 +6343,13 @@ function sepAplicarFaixa(i){
 function sepOpenToggle(i, aberto){ if(aberto) sepOpenEst[i] = true; else delete sepOpenEst[i]; }
 
 /* cria N estações de uma vez (mantém produtivo/lojas das que já existem) */
-function sepCriarEst(){
+async function sepCriarEst(){
   const inp = document.getElementById('sep-n-est');
   const n = Math.max(1, Math.min(60, parseInt(inp && inp.value) || parseInt(sepData.nEst) || 1));
   const atual = sepData.estacoes.length;
   if(n < atual){
     const comLojas = sepData.estacoes.slice(n).filter(e => (e.lojas || []).length).length;
-    if(comLojas && !confirm('Isso remove ' + (atual - n) + ' estação(ões), ' + comLojas + ' com lojas. Continuar?')) return;
+    if(comLojas && !await uiConfirm('Isso remove ' + (atual - n) + ' estação(ões), ' + comLojas + ' com lojas. Continuar?')) return;
     sepData.estacoes = sepData.estacoes.slice(0, n);
     sepOpenEst = {};
   } else {
@@ -6357,10 +6447,10 @@ function sepAddProdutivo(valor){
   if(!r.novos) showToast('Esse(s) produtivo(s) já estava(m) cadastrado(s).', true);
   sepCommit();
 }
-function sepRemProdutivo(nome){
+async function sepRemProdutivo(nome){
   if(!sepPode() || somenteLeitura()) return;
   const em = sepData.estacoes.map((e, i) => sepNomeProd(e.produtivo) === nome ? i + 1 : 0).filter(Boolean);
-  if(!confirm('Remover "' + nome + '" do cadastro?' + (em.length ? ' Ele está na(s) estação(ões) ' + em.join(', ') + ' e continuará lá, marcado como não cadastrado.' : ''))) return;
+  if(!await uiConfirm('Remover "' + nome + '" do cadastro?' + (em.length ? ' Ele está na(s) estação(ões) ' + em.join(', ') + ' e continuará lá, marcado como não cadastrado.' : ''))) return;
   sepData.produtivos = sepData.produtivos.filter(x => x !== nome);
   sepData.prodTurnos = (sepData.prodTurnos || []).filter(x => x.n !== nome);
   delete orgSel[nome];
@@ -6597,14 +6687,14 @@ function importCrossFromPaste(){
 
   const rows = parseCrossPaste(raw);
   if(rows.length === 0){
-    alert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Carga está preenchida.\n\nNada foi alterado: o relatório anterior, as marcações, a Base e a Separação continuam salvos.');
+    uiAlert('Não encontrei nenhuma linha válida para importar. Confira se colou as colunas do Excel (com TAB entre elas) e se a coluna Carga está preenchida.\n\nNada foi alterado: o relatório anterior, as marcações, a Base e a Separação continuam salvos.');
     return;
   }
 
   /* trava de segurança: só substitui o relatório salvo se o que foi colado realmente for o relatório Montada/Agrupada */
   const erros = validarRelatorioCross(raw, rows);
   if(erros.length){
-    alert('⛔ RELATÓRIO NÃO IMPORTADO — o que foi colado não parece o relatório certo.\n\n• ' + erros.join('\n• ')
+    uiAlert('⛔ RELATÓRIO NÃO IMPORTADO — o que foi colado não parece o relatório certo.\n\n• ' + erros.join('\n• ')
       + '\n\nNada foi alterado: o relatório anterior, as marcações, a Base e a Separação continuam salvos. Cole o relatório correto para atualizar.');
     showToast('⛔ Relatório errado: nada foi alterado, as informações anteriores continuam salvas.', true);
     return;   // a janela continua aberta para corrigir/colar de novo
@@ -8590,9 +8680,9 @@ function renderDistClockOnly(){
     if(currentUser && souAdmin()) renderSolicitacoes();
   }, err => reportError('Erro ao ler solicitações de acesso:', err));
 
-  window.banUser = function(id){
+  window.banUser = async function(id){
     if(!souAdmin()) return;
-    if(!confirm('Banir esse usuário? Ele será desconectado agora e, se tentar entrar de novo, você vai receber um pedido de acesso pra aprovar ou recusar.')) return;
+    if(!await uiConfirm('Banir esse usuário? Ele será desconectado agora e, se tentar entrar de novo, você vai receber um pedido de acesso pra aprovar ou recusar.')) return;
     setDoc(doc(usuariosCol, id), { status:'banido' }, { merge:true })
       .catch(err => reportError('Erro ao banir usuário:', err));
   };
@@ -8602,10 +8692,10 @@ function renderDistClockOnly(){
       .catch(err => reportError('Erro ao expulsar usuário:', err));
   };
   /* Remover: apaga o registro do membro e desconecta a pessoa (sem punição) — ela pode entrar de novo normalmente. */
-  window.removerUsuario = function(id){
+  window.removerUsuario = async function(id){
     if(!currentUser || !souAdmin()) return;
     const u = usuariosData.find(x => x.id === id);
-    if(!confirm(`Remover "${u ? u.nome : id}" do sistema? Ela será desconectada agora, sem punição, e pode entrar de novo normalmente.`)) return;
+    if(!await uiConfirm(`Remover "${u ? u.nome : id}" do sistema? Ela será desconectada agora, sem punição, e pode entrar de novo normalmente.`)) return;
     deleteDoc(doc(usuariosCol, id))
       .then(() => showToast('🧹 Membro removido da lista.', false))
       .catch(err => reportError('Erro ao remover usuário:', err));
@@ -9051,9 +9141,9 @@ function spdAplicar(dia, fn){
   if(dia === spdDia){ spdRegs = fn(spdRegs.map(r => Object.assign({}, r))); spdRender(); }
   return window.sepProdOp ? window.sepProdOp(dia, fn) : Promise.resolve();
 }
-function spdRemProd(nome){
+async function spdRemProd(nome){
   if(!sepPode() || somenteLeitura()) return;
-  if(!confirm('Remover o volume de "' + nome + '" neste dia?')) return;
+  if(!await uiConfirm('Remover o volume de "' + nome + '" neste dia?')) return;
   spdAplicar(spdDia, arr => arr.filter(r => spdNomeKey(r.produtivo) !== nome));
 }
 function spdMudarDia(v){
@@ -9119,10 +9209,10 @@ async function spdSincronizar(silencioso, tudo){
   return novos.length;
 }
 async function spdLancarSeparacao(silencioso){ return spdSincronizar(!!silencioso, false); }
-function spdRecalcularDia(){
+async function spdRecalcularDia(){
   if(!sepPode() || somenteLeitura()) return;
   if(spdDia !== diaOperacional()){ showToast('Só dá para recalcular o dia de hoje.', true); return; }
-  if(!confirm('Recalcular a Produtividade de hoje pela programação atual?\n\nIsso APAGA os registros de hoje e deixa só o que está na programação (estações e cargas selecionadas agora).')) return;
+  if(!await uiConfirm('Recalcular a Produtividade de hoje pela programação atual?\n\nIsso APAGA os registros de hoje e deixa só o que está na programação (estações e cargas selecionadas agora).')) return;
   spdSincronizar(false, true);
 }
 /* qualquer alteração local na programação atualiza a produtividade (com atraso curto) */
@@ -10036,8 +10126,8 @@ function nrAdd(modo){
   ['nr-qtd','nr-vol','nr-sku'].forEach((id, i) => { document.getElementById(id).value = i === 0 ? 1 : 0; });
   saveDist(); renderDist(); nrRender();
 }
-function nrRem(id){
-  if(!nrPode() || !confirm('Remover este lançamento?')) return;
+async function nrRem(id){
+  if(!nrPode() || !await uiConfirm('Remover este lançamento?')) return;
   distExtras[nrTurno].naoRastreado = nrLista(nrTurno).filter(x => x.id !== id);
   saveDist(); renderDist(); nrRender();
 }
@@ -10151,8 +10241,8 @@ function oppSalvar(){
   oppAplicar(arr => arr.concat([rec]));
   oppMot = []; document.getElementById('opp-loja').value = ''; document.getElementById('opp-qtd').value = 1; ['opp-cod','opp-item'].forEach(id => { const el = document.getElementById(id); el.value = ''; el.dataset.auto = ''; el.dataset.man = ''; }); document.getElementById('opp-item-st').textContent = ''; oppChips();
 }
-function oppRem(id){
-  if(!oppPode() || !confirm('Remover esta oportunidade?')) return;
+async function oppRem(id){
+  if(!oppPode() || !await uiConfirm('Remover esta oportunidade?')) return;
   oppAplicar(arr => arr.filter(o => o.id !== id));
 }
 function oppRender(){
@@ -10327,7 +10417,7 @@ function cadAdd(){
   document.getElementById('cad-nome').value = '';
 }
 function cadSetTurno(id, t){ if(!souAdmin()) return; cadGravar(cadLista.map(x => x.id === id ? Object.assign({}, x, { turno: t }) : x)); }
-function cadRem(id){ if(!souAdmin() || !confirm('Remover este cadastro? Se for conferente, ele deixa de conseguir entrar.')) return; cadGravar(cadLista.filter(x => x.id !== id)); }
+async function cadRem(id){ if(!souAdmin() || !await uiConfirm('Remover este cadastro? Se for conferente, ele deixa de conseguir entrar.')) return; cadGravar(cadLista.filter(x => x.id !== id)); }
 const _renderUsuariosV6 = renderUsuarios;
 renderUsuarios = function(){ _renderUsuariosV6.apply(this, arguments); try{ if(ufAba === 'cad') cadRender(); }catch(e){} };
 

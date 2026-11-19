@@ -1506,9 +1506,9 @@
           <div class="piso-date" id="data-piso"></div>
         </div>
         <div class="piso-print-grp no-print">
-        <button class="piso-print-btn no-print" onclick="copiarPrintPainel('panel-piso','Cargas no Piso')" title="Copia uma imagem das Cargas no Piso para colar em qualquer lugar (Ctrl+V)">
+        <button class="piso-print-btn no-print" onclick="baixarFotoPiso()" title="Baixa uma foto (PNG) completa das Cargas no Piso, sempre no mesmo layout, independente do tamanho da tela">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          Print
+          Baixar foto
         </button>
         <button class="piso-print-btn no-print" onclick="imprimirCargasPisoRetrato()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg>
@@ -7886,6 +7886,58 @@ async function copiarPrintPainel(id, nome){
     } catch(e2){
       showToast('⚠️ Não consegui gerar a imagem (confira a internet e tente de novo).', true);
     }
+  }
+}
+
+/* ===== FOTO DAS CARGAS NO PISO: baixa um PNG completo, sempre no layout de desktop (não depende da tela do aparelho) ===== */
+let _fotoPisoOcupada = false;
+async function baixarFotoPiso(){
+  if(_fotoPisoOcupada) return;
+  const el = document.getElementById('panel-piso');
+  if(!el){ showToast('Não achei o painel Cargas no Piso.', true); return; }
+  _fotoPisoOcupada = true;
+  showToast('📷 Gerando a foto das Cargas no Piso…', false);
+  const LARGURA = 1500;   // largura fixa de referência (layout de computador)
+  const gerar = async (escalaMax) => {
+    const fundo = getComputedStyle(document.body).backgroundColor;
+    const altEst = Math.max(el.scrollHeight, 800);
+    // limita o tamanho total da imagem (celulares têm limite de memória)
+    const escala = Math.max(0.6, Math.min(escalaMax, Math.sqrt(16000000 / (LARGURA * altEst))));
+    const canvas = await html2canvas(el, {
+      backgroundColor: (fundo && fundo !== 'rgba(0, 0, 0, 0)') ? fundo : '#0a0a0a',
+      scale: escala, useCORS: true, logging: false,
+      windowWidth: LARGURA, windowHeight: 1000,     // faz o clone renderizar como numa tela larga
+      scrollX: 0, scrollY: 0,
+      ignoreElements: n => !!(n.classList && n.classList.contains('no-print')),
+      onclone: (doc) => {
+        const st = doc.createElement('style');
+        st.textContent = '#tbody-piso .piso-col > .piso-grp{ position:static !important; }'
+          + '#panel-piso::before{ background-attachment:scroll !important; }'
+          + '#panel-piso, #tbody-piso, .piso-kpis, .piso-chips{ overflow:visible !important; max-height:none !important; }'
+          + '#panel-piso .piso-chips{ flex-wrap:wrap !important; }';
+        doc.head.appendChild(st);
+        const c = doc.getElementById('panel-piso');
+        if(c){ c.style.height = 'auto'; }
+      }
+    });
+    return await new Promise((ok, erro) => canvas.toBlob(b => b ? ok(b) : erro(new Error('imagem vazia')), 'image/png'));
+  };
+  try{
+    await carregarScript(LIB_H2C);
+    let blob;
+    try{ blob = await gerar(2); }
+    catch(e1){ blob = await gerar(1); }   // se faltar memória, tenta de novo em qualidade menor
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'cargas-no-piso-' + diaOperacional() + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    showToast('✅ Foto baixada: cargas-no-piso-' + diaOperacional() + '.png', false);
+  } catch(err){
+    showToast('⚠️ Não consegui gerar a foto (confira a internet e tente de novo).', true);
+  } finally {
+    _fotoPisoOcupada = false;
   }
 }
 

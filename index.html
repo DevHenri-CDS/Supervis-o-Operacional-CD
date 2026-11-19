@@ -3761,16 +3761,34 @@ function renderPiso(){
       : 'Nenhuma carga encontrada para o filtro.';
     tbody.innerHTML = `<div class="piso-empty">${msg}</div>`;
   } else {
-    tbody.appendChild(pisoHeadRow());
     /* prioridades no topo de cada grupo; depois por aging (mais antigas primeiro) */
     const porPrioAging = (a, b) => ((b.row.prioridade ? 1 : 0) - (a.row.prioridade ? 1 : 0)) || pisoAgingOrdem(a.row, b.row);
     const modoRel = lista.every(v => v.row.rel);
-    (modoRel ? [{ id:'*', titulo:'CARGAS 100% MONTADAS (RELATÓRIO)', kind:'ok' }] : PISO_GRUPOS).forEach(g => {
-      const itens = lista.filter(v => g.id === '*' || pisoGrupoDe(v.row.status) === g.id).sort(porPrioAging);
-      if(!itens.length) return;
-      tbody.appendChild(buildPisoGroupHeaderRow(`${g.titulo} — ${itens.length}`, g.kind));
-      itens.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
-    });
+    const grupos = modoRel ? [{ id:'*', titulo:'CARGAS 100% MONTADAS (RELATÓRIO)', kind:'ok' }] : PISO_GRUPOS;
+    if(document.body.classList.contains('tv-mode')){
+      /* TV: lista com os grupos um abaixo do outro */
+      tbody.appendChild(pisoHeadRow());
+      grupos.forEach(g => {
+        const itens = lista.filter(v => g.id === '*' || pisoGrupoDe(v.row.status) === g.id).sort(porPrioAging);
+        if(!itens.length) return;
+        tbody.appendChild(buildPisoGroupHeaderRow(`${g.titulo} — ${itens.length}`, g.kind));
+        itens.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
+      });
+    } else {
+      /* tela: uma COLUNA por status, lado a lado; dentro de cada coluna, 2 cargas por linha */
+      grupos.forEach(g => {
+        const itens = lista.filter(v => g.id === '*' || pisoGrupoDe(v.row.status) === g.id).sort(porPrioAging);
+        const col = document.createElement('div');
+        col.className = 'piso-col piso-col-' + g.id.replace('*', 'all');
+        col.appendChild(buildPisoGroupHeaderRow(`${g.titulo} — ${itens.length}`, g.kind));
+        const grade = document.createElement('div');
+        grade.className = 'piso-col-grid';
+        if(itens.length) itens.forEach(({row,i}) => grade.appendChild(buildPisoRow(row, i, perm, maxVol)));
+        else grade.innerHTML = '<div class="piso-col-vazio">Nenhuma carga</div>';
+        col.appendChild(grade);
+        tbody.appendChild(col);
+      });
+    }
   }
 
   // chips de status
@@ -10549,6 +10567,56 @@ body.tv-mode #tbody-piso .pc.pc-rel .c-st, body.tv-mode #tbody-piso .pc.pc-rel .
   .pp-ret.ppr-rel .ppr-cols span:nth-child(1), .pp-ret.ppr-rel .ppr-cols span:nth-child(8), .pp-ret.ppr-rel .ppr-cols span:nth-child(9),
   .pp-ret.ppr-rel .ppr-row > div:nth-child(1), .pp-ret.ppr-rel .ppr-row > div:nth-child(8), .pp-ret.ppr-rel .ppr-row > div:nth-child(9){ display:none; }
 }
+</style>
+<style id="piso-colunas2-css">
+/* ---------- Cargas no Piso: colunas de status lado a lado, 2 cargas por linha em cada coluna ---------- */
+@media (min-width:1000px){
+  body:not(.tv-mode) #tbody-piso{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:12px; align-items:start; overflow:visible; }
+  body:not(.tv-mode) #tbody-piso .piso-col-all{ grid-column:1 / -1; }
+  body:not(.tv-mode) #tbody-piso .piso-col-all .piso-col-grid{ grid-template-columns:repeat(6, minmax(0,1fr)); }
+}
+@media (max-width:999px){
+  body:not(.tv-mode) #tbody-piso{ display:flex; flex-direction:column; gap:12px; }
+}
+body:not(.tv-mode) #tbody-piso .piso-col{ min-width:0; display:flex; flex-direction:column; gap:8px; }
+body:not(.tv-mode) #tbody-piso .piso-col > .piso-grp{ margin-top:0; font-size:.8rem; padding:8px 10px; position:sticky; top:46px; z-index:4; }
+body:not(.tv-mode) #tbody-piso .piso-col-grid{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; align-items:start; min-width:0; }
+@media (max-width:560px){ body:not(.tv-mode) #tbody-piso .piso-col-grid{ grid-template-columns:1fr; } }
+.piso-col-vazio{ grid-column:1 / -1; text-align:center; padding:18px 8px; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:6px; font-size:.82rem; }
+
+/* cartão compacto (cabe em ~1/6 da tela) */
+body:not(.tv-mode) #tbody-piso .piso-col .pc{ min-width:0; grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:6px; column-gap:6px; align-items:start; padding:9px 10px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ content:attr(data-l); display:block; font-size:.52rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim); margin-bottom:1px; font-family:'Inter',sans-serif; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-flag{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1 / 3; grid-row:1; font-size:1.05rem; line-height:1.1; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:3 / 5; grid-row:1; text-align:right; font-size:.8rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca::before{ display:inline; margin-right:4px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; font-size:.82rem; line-height:1.2; white-space:normal; overflow-wrap:anywhere; align-self:center; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:1 / 3; grid-row:3; font-size:.78rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:3 / 4; grid-row:3; font-size:.82rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:4 / 5; grid-row:3; font-size:.82rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:1 / -1; grid-row:4; flex-wrap:nowrap; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-column:1 / -1; grid-row:5; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select, body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.74rem; padding:6px 24px 6px 8px; width:100%; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-column:1 / -1; grid-row:6; font-size:.82rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-column:1 / -1; grid-row:7; font-size:.76rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod:has(> .dash), body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs:has(> .dash){ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-column:1 / -1; grid-row:8; display:flex; flex-wrap:wrap; gap:5px; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act::before{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act .btn{ padding:4px 7px; font-size:.66rem; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-column:1 / -1; grid-row:9; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-column:1 / -1; grid-row:10; }
+
+/* cargas vindas do Relatório: sem Status / Produtivo / Doca */
+body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-st, body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-prod, body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-doca, body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-obs{ display:none; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-carga{ grid-column:1 / -1; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-lib{ grid-column:1 / 3; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-d1{ grid-column:3 / 4; }
+body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:4 / 5; }
+@media print{ #tbody-piso .piso-col > .piso-grp{ position:static; } }
 </style>
 </body>
 </html>

@@ -420,55 +420,53 @@
   .fech-foto-bar{ border-top:none; border-bottom:1px solid var(--line); align-items:center; flex-wrap:wrap; }
 
 
-  /* ---------- IMPRESSÃO: CARGAS NO PISO — RETRATO, PRETO E BRANCO, LETRA GRANDE ---------- */
+  /* ---------- IMPRESSÃO: CARGAS NO PISO — RETRATO, LETRA GRANDE, LEGÍVEL EM PRETO E BRANCO ---------- */
   .piso-print-grp{ display:flex; gap:8px; flex-wrap:wrap; }
   #piso-print-area.pp-ret{ font-family:Arial,Helvetica,sans-serif; color:#000; background:#fff; }
   .pp-ret *{ box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact; color:#000; }
   .pp-ret .ppr-fit{ background:#fff; }
-  .pp-ret .ppr-head{ display:flex; justify-content:space-between; align-items:flex-end; background:#fff; padding:4px 2px 8px; border-bottom:4px solid #000; }
-  .pp-ret .ppr-head h1{ margin:0; font:900 30px Arial,sans-serif; letter-spacing:.02em; color:#000; }
+  .pp-ret .ppr-head{ display:flex; justify-content:space-between; align-items:flex-end; background:#fff; padding:6px 2px 8px; border-bottom:4px solid #000; }
+  .pp-ret .ppr-head h1{ margin:0; font:900 28px Arial,sans-serif; letter-spacing:.02em; }
   .pp-ret .ppr-head .ppr-data{ font-size:13px; font-weight:700; text-align:right; line-height:1.35; }
   .pp-ret .ppr-kpis{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:10px 0; }
   .pp-ret .ppr-kpi{ border:2px solid #000; border-radius:3px; padding:5px 7px 6px; }
   .pp-ret .ppr-kpi .l{ font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.02em; }
-  .pp-ret .ppr-kpi .n{ font-size:28px; font-weight:900; line-height:1.1; margin-top:1px; }
+  .pp-ret .ppr-kpi .n{ font-size:27px; font-weight:900; line-height:1.1; margin-top:1px; }
   .pp-ret .ppr-kpi .s{ font-size:10.5px; font-weight:600; min-height:12px; }
   .pp-ret .ppr-kpi .b{ height:8px; border:1.5px solid #000; border-radius:4px; margin-top:4px; overflow:hidden; background:#fff; }
   .pp-ret .ppr-kpi .b i{ display:block; height:100%; background:#000; }
-  .pp-ret .ppr-grp{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin:12px 0 6px; padding:6px 10px; font-size:16px; font-weight:900; letter-spacing:.03em; text-transform:uppercase; border:2px solid #000; border-left:10px solid #000; background:#e8e8e8; break-after:avoid; page-break-after:avoid; }
-  .pp-ret .ppr-grp span:last-child{ font-size:13px; font-weight:700; text-transform:none; letter-spacing:0; }
-  .pp-ret .ppr-2col{ display:grid; grid-template-columns:1fr 1fr; gap:7px; align-items:start; }
-  .pp-ret .ppr-pk{ border:1.5px solid #000; border-radius:4px; padding:6px 8px 7px; break-inside:avoid; page-break-inside:avoid; min-width:0; background:#fff; }
-  .pp-ret .ppr-pk.prio{ border-width:4px; }
-  .pp-ret .pk-top{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
-  .pp-ret .pk-carga{ font-size:23px; font-weight:900; letter-spacing:.01em; line-height:1.05; }
-  .pp-ret .pk-doca{ font-size:14px; font-weight:800; border:1.5px solid #000; border-radius:3px; padding:1px 6px; white-space:nowrap; }
-  .pp-ret .pk-flags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:3px; }
-  .pp-ret .pk-flag{ font-size:11.5px; font-weight:900; border:2px solid #000; border-radius:3px; padding:0 5px; text-transform:uppercase; }
-  .pp-ret .pk-forn{ font-size:15px; font-weight:800; line-height:1.15; margin:3px 0 5px; overflow-wrap:anywhere; }
-  .pp-ret .pk-forn small{ display:block; font-size:10.5px; font-weight:600; text-transform:uppercase; }
-  .pp-ret .pk-nums{ display:grid; grid-template-columns:1fr 0.7fr 0.7fr 1.5fr; gap:4px; border-top:1.5px solid #000; padding-top:4px; }
-  .pp-ret .pk-nums b{ display:block; font-size:19px; font-weight:900; line-height:1.1; }
-  .pp-ret .pk-nums .lib b{ font-size:14px; padding-top:3px; }
-  .pp-ret .pk-nums b.neg{ text-decoration:underline; text-decoration-thickness:2px; }
-  .pp-ret .pk-nums i{ display:block; font-style:normal; font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; }
-  .pp-ret .pk-st{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:5px; }
-  .pp-ret .pk-pill{ display:inline-block; font-size:12.5px; font-weight:900; border:2px solid #000; border-radius:10px; padding:1px 8px; line-height:1.25; }
-  .pp-ret .pk-prod{ font-size:14px; font-weight:800; }
-  .pp-ret .pk-prod i{ font-style:normal; font-size:9.5px; font-weight:800; text-transform:uppercase; margin-right:3px; }
-  .pp-ret .pk-obs{ font-size:12px; font-weight:600; margin-top:4px; border-top:1px dashed #000; padding-top:3px; }
-  .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:8px 12px; border:3px solid #000; font-size:15px; font-weight:900; background:#fff; }
+  .pp-ret .ppr-grp{ margin:12px 0 0; padding:6px 10px; font-size:16px; font-weight:900; letter-spacing:.03em; text-transform:uppercase; border:2px solid #000; border-left:10px solid #000; background:#e8e8e8; break-after:avoid; page-break-after:avoid; }
+  .pp-ret .ppr-cols, .pp-ret .ppr-row{ display:grid; grid-template-columns:44px 68px minmax(0,1fr) 76px 34px 66px 40px 112px 92px; column-gap:6px; align-items:center; }
+  .pp-ret .ppr-cols{ padding:4px 6px; font-size:10px; font-weight:900; text-transform:uppercase; border-bottom:2px solid #000; break-after:avoid; page-break-after:avoid; }
+  .pp-ret .ppr-row{ padding:5px 6px; border-bottom:1.5px solid #000; border-left:5px solid #000; font-size:13px; font-weight:600; break-inside:avoid; page-break-inside:avoid; }
+  .pp-ret .ppr-row.prio{ border-left-width:12px; border-top:2px solid #000; }
+  .pp-ret .ppr-row .doca{ font-weight:900; font-size:14px; }
+  .pp-ret .ppr-row .carga{ font-weight:900; font-size:15px; }
+  .pp-ret .ppr-row .forn{ font-weight:800; font-size:13px; line-height:1.15; overflow-wrap:anywhere; }
+  .pp-ret .ppr-row .forn small{ display:block; font-weight:600; font-size:10px; text-transform:uppercase; }
+  .pp-ret .ppr-row .lib{ font-size:12px; font-weight:700; }
+  .pp-ret .ppr-row .d1{ font-weight:800; font-size:14px; }
+  .pp-ret .ppr-row .d1.neg{ font-weight:900; text-decoration:underline; text-decoration-thickness:2px; }
+  .pp-ret .ppr-row .vol{ font-weight:900; font-size:14px; }
+  .pp-ret .ppr-row .vol .bar{ height:5px; border:1px solid #000; border-radius:2px; margin-top:2px; overflow:hidden; background:#fff; }
+  .pp-ret .ppr-row .vol .bar i{ display:block; height:100%; background:#000; }
+  .pp-ret .ppr-row .sku{ font-weight:800; font-size:14px; }
+  .pp-ret .ppr-row .pill{ display:inline-block; font-size:11px; font-weight:900; padding:1px 6px; border:1.5px solid #000; border-radius:8px; background:#fff; line-height:1.2; }
+  .pp-ret .ppr-row .prod{ font-weight:800; font-size:12.5px; line-height:1.15; overflow-wrap:anywhere; }
+  .pp-ret .ppr-row .obs{ grid-column:3 / -1; font-size:12px; font-weight:600; margin-top:2px; }
+  .pp-ret .ppr-row .obs b{ font-weight:900; border:1.5px solid #000; padding:0 4px; }
+  .pp-ret .ppr-total{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; padding:8px 12px; background:#fff; border:3px solid #000; font-size:15px; font-weight:900; }
   .pp-ret .ppr-total b{ font-size:22px; margin:0 4px 0 12px; }
 
   .pp-ret .ppr-sec{ margin:16px 0 6px; padding:6px 10px; background:#e8e8e8; border:2px solid #000; border-left:10px solid #000; font-size:16px; font-weight:900; letter-spacing:.03em; text-transform:uppercase; display:flex; justify-content:space-between; align-items:baseline; break-after:avoid; page-break-after:avoid; }
   .pp-ret .ppr-sec small{ font-weight:700; font-size:12px; text-transform:none; letter-spacing:0; }
   .pp-ret .ppr-cards{ display:grid; gap:7px; }
-  .pp-ret .ppr-cards.c2{ grid-template-columns:repeat(2,1fr); }
   .pp-ret .ppr-cards.c3{ grid-template-columns:repeat(3,1fr); }
-  .pp-ret .ppr-card{ border:1.5px solid #000; border-radius:4px; padding:5px 8px; font-size:12px; break-inside:avoid; page-break-inside:avoid; min-width:0; }
-  .pp-ret .ppr-card.crit{ border-width:4px; }
-  .pp-ret .ppr-card .t{ font-weight:900; font-size:15px; }
-  .pp-ret .ppr-card .f{ font-weight:700; font-size:13px; overflow-wrap:anywhere; margin:1px 0 3px; }
+  .pp-ret .ppr-cards.c4{ grid-template-columns:repeat(4,1fr); }
+  .pp-ret .ppr-card{ border:1.5px solid #000; border-left:6px solid #000; border-radius:3px; padding:5px 7px; font-size:12px; break-inside:avoid; page-break-inside:avoid; min-width:0; }
+  .pp-ret .ppr-card.crit{ border-width:1.5px 1.5px 1.5px 12px; }
+  .pp-ret .ppr-card .t{ font-weight:900; font-size:14px; }
+  .pp-ret .ppr-card .f{ font-weight:700; font-size:12.5px; overflow-wrap:anywhere; margin:1px 0 3px; }
   .pp-ret .ppr-card .m{ font-size:12px; font-weight:600; }
   .pp-ret .ppr-card .m b{ font-size:14px; font-weight:900; }
   .pp-ret .ppr-card .m .neg{ font-weight:900; text-decoration:underline; }
@@ -657,6 +655,7 @@
     font-weight:700; font-size:.78rem; letter-spacing:.07em; text-transform:uppercase; }
   .piso-grp.grp-pend{ color:var(--band); border-left:4px solid var(--band-strong); }
   .piso-grp.grp-ok{ color:var(--ok-text); border-left:4px solid var(--ok-text); }
+  .piso-grp.grp-proc{ color:#4aa8ff; border-left:4px solid #4aa8ff; }
   .piso-empty{ text-align:center; padding:22px; color:var(--text-dim); font-style:italic; }
   #tbody-piso{ overflow-x:auto; padding-bottom:2px; }
   .pc-head, .pc{ display:grid; min-width:1260px;
@@ -771,6 +770,17 @@
     body[data-print-target="prod"] .prod-turno{ break-inside:avoid; border:1px solid #999; background:#fff; margin:0 0 10px; }
     body[data-print-target="prod"] .prod-chart{ overflow:visible; }
     body[data-print-target="prod"] .prod-chart svg{ width:100%; height:auto; }
+    /* "Todos juntos": os 3 turnos cabem em UMA página (paisagem) */
+    body[data-print-target="prod"][data-print-turno="todos"] #prod-print-title{ font-size:13px; margin:0 0 4px; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-turno{ margin:0 0 5px; break-inside:avoid; page-break-inside:avoid; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-turno-head{ padding:3px 10px; gap:2px 18px; flex-wrap:nowrap; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-turno-head .tt{ font-size:1rem; min-width:30px; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-kpi .v{ font-size:.95rem; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-kpi .v.vol{ font-size:1.05rem; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-kpi .l{ font-size:.5rem; letter-spacing:.04em; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-chart{ padding:2px 6px; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-chart svg{ display:block; width:100%; height:46mm; }
+    body[data-print-target="prod"][data-print-turno="todos"] .prod-vazio{ padding:6px; }
     #dock, #users-float{ display:none !important; }
   }
 
@@ -1495,10 +1505,16 @@
           <h2 contenteditable="false" id="titulo-piso">CARGAS NO PISO</h2>
           <div class="piso-date" id="data-piso"></div>
         </div>
+        <div class="piso-print-grp no-print">
+        <button class="piso-print-btn no-print" onclick="copiarPrintPainel('panel-piso','Cargas no Piso')" title="Copia uma imagem das Cargas no Piso para colar em qualquer lugar (Ctrl+V)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          Print
+        </button>
         <button class="piso-print-btn no-print" onclick="imprimirCargasPisoRetrato()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="6" y="14" width="12" height="7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/></svg>
           Impressão
         </button>
+        </div>
       </div>
 
       <div class="piso-kpis" id="sec-indicadores">
@@ -1540,6 +1556,7 @@
           <input type="search" id="piso-busca" placeholder="Carga ou fornecedor" autocomplete="off" oninput="setPisoBusca(this.value)">
         </div>
         <div class="piso-actions" id="piso-actions" style="display:none;">
+          <button class="pbtn" id="btn-rel-piso" onclick="preencherPisoComRel()" title="Preenche o piso com as cargas 100% montadas do relatório (sem Status/Produtivo/Doca)">Preencher com Rel.</button>
           <button class="pbtn" id="btn-colar-piso" onclick="openImportModal()">Colar da planilha</button>
           <button class="pbtn" id="btn-foto-piso" onclick="openPhotoImportModal()">Preencher por foto</button>
           <button class="pbtn pbtn-primary" id="btn-add-piso" onclick="addPisoRow()">+ Adicionar carga</button>
@@ -1605,6 +1622,7 @@
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T1')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T1','Distribuição T1')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T1')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1658,6 +1676,7 @@
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T2')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T2','Distribuição T2')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T2')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1711,6 +1730,7 @@
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T3')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T3','Distribuição T3')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T3')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1763,7 +1783,10 @@
           <h2>RESUMO</h2>
           <span class="sub">Turnos que já têm alguma carga distribuída — cada um com sua própria grade e total</span>
         </div>
-        <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('TODOS')">📋 Copiar tudo para Excel</button>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-resumo','Resumo da Distribuição')" title="Copia uma imagem do resumo para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('TODOS')">📋 Copiar tudo para Excel</button>
+        </div>
       </div>
       <div id="resumo-turnos-container"></div>
     </section>
@@ -2761,7 +2784,9 @@ async function doLogin(){
 
   const isAdmin = role === 'admin';
   document.getElementById('titulo-piso').setAttribute('contenteditable', isAdmin ? 'true' : 'false');
-  document.getElementById('piso-actions').style.display = isAdmin ? 'flex' : 'none';
+  const podeRelPiso = role === 'admin' || role === 'conferente';
+  document.getElementById('piso-actions').style.display = (isAdmin || podeRelPiso) ? 'flex' : 'none';
+  document.getElementById('btn-rel-piso').style.display = podeRelPiso ? 'inline-block' : 'none';
   document.getElementById('btn-add-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-colar-piso').style.display = isAdmin ? 'inline-block' : 'none';
   document.getElementById('btn-foto-piso').style.display = isAdmin ? 'inline-block' : 'none';
@@ -3571,7 +3596,7 @@ function agoraCurto(){
 /* ===================== RENDER: PAINEL 1 - CARGAS NO PISO ===================== */
 function buildPisoGroupHeaderRow(label, kind){
   const el = document.createElement('div');
-  el.className = 'piso-grp ' + (kind === 'ok' ? 'grp-ok' : 'grp-pend');
+  el.className = 'piso-grp ' + (kind === 'ok' ? 'grp-ok' : (kind === 'proc' ? 'grp-proc' : 'grp-pend'));
   el.textContent = label;
   return el;
 }
@@ -3626,12 +3651,6 @@ function pisoTxt(v){
   return t ? escapeHtml(t) : '<span class="dash">—</span>';
 }
 
-/* colunas da tela (e da impressão) de Cargas no Piso */
-const PISO_COLUNAS = [
-  { id:'pend', titulo:'PENDENTES E PARCIAIS', teste: st => st !== 'EM PROCESSO DE ETIQUETAGEM' && st !== 'CARGA ETIQUETADA' },
-  { id:'proc', titulo:'EM PROCESSO DE ETIQUETAGEM', teste: st => st === 'EM PROCESSO DE ETIQUETAGEM' },
-  { id:'etq',  titulo:'ETIQUETADAS', teste: st => st === 'CARGA ETIQUETADA' }
-];
 const pisoEditando = new Set();   // cartões com o painel de edição aberto (só admin)
 
 function togglePisoEdit(i){
@@ -3649,7 +3668,7 @@ function buildPisoRow(row, i, perm, maxVol){
   const ed = perm.editAll, canMarkStatus = perm.markStatus;
   const el = document.createElement('div');
   const aberto = ed && pisoEditando.has(i);
-  el.className = 'pc ' + (row.prioridade ? 'piso-row-prio' : (row.status === 'CARGA ETIQUETADA' ? 'piso-row-ok' : 'piso-row-pend')) + (aberto ? ' editing' : '');
+  el.className = 'pc ' + (row.prioridade ? 'piso-row-prio' : (row.status === 'CARGA ETIQUETADA' ? 'piso-row-ok' : 'piso-row-pend')) + (row.rel ? ' pc-rel' : '') + (aberto ? ' editing' : '');
 
   const tem = (f) => String(row[f] == null ? '' : row[f]).trim() !== '';
   const txt = (f) => tem(f) ? escapeHtml(row[f]) : '<span class="dash">—</span>';
@@ -3742,44 +3761,16 @@ function renderPiso(){
       : 'Nenhuma carga encontrada para o filtro.';
     tbody.innerHTML = `<div class="piso-empty">${msg}</div>`;
   } else {
-    const porPrio = (a, b) => (b.row.prioridade ? 1 : 0) - (a.row.prioridade ? 1 : 0); // prioridades no topo
-    if(document.body.classList.contains('tv-mode')){
-      /* TV: mantém a apresentação em lista (não etiquetadas / etiquetadas) */
-      tbody.appendChild(pisoHeadRow());
-      const naoEtq = [];
-      const etq = [];
-      lista.forEach(v => (v.row.status === 'CARGA ETIQUETADA' ? etq : naoEtq).push(v));
-      naoEtq.sort(porPrio); etq.sort(porPrio);
-      if(naoEtq.length){
-        tbody.appendChild(buildPisoGroupHeaderRow(`NÃO ETIQUETADAS — ${naoEtq.length}`, 'pend'));
-        naoEtq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
-      }
-      if(etq.length){
-        tbody.appendChild(buildPisoGroupHeaderRow(`ETIQUETADAS — ${etq.length}`, 'ok'));
-        etq.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
-      }
-    } else {
-      /* 3 colunas: pendentes/parciais/demais · em processo de etiquetagem · etiquetadas */
-      PISO_COLUNAS.forEach(c => {
-        const itens = lista.filter(v => c.teste(v.row.status)).sort(porPrio);
-        const vol = itens.reduce((t, v) => t + Number(v.row.volume || 0), 0);
-        const col = document.createElement('div');
-        col.className = 'piso-col piso-col-' + c.id;
-        const cab = document.createElement('div');
-        cab.className = 'piso-col-head';
-        cab.innerHTML = `<span class="pch-t">${c.titulo}</span><span class="pch-n">${itens.length}</span><span class="pch-v">${fmtInt(vol)} vol.</span>`;
-        col.appendChild(cab);
-        if(itens.length){
-          itens.forEach(({row,i}) => col.appendChild(buildPisoRow(row, i, perm, maxVol)));
-        } else {
-          const v = document.createElement('div');
-          v.className = 'piso-col-vazio';
-          v.textContent = 'Nenhuma carga';
-          col.appendChild(v);
-        }
-        tbody.appendChild(col);
-      });
-    }
+    tbody.appendChild(pisoHeadRow());
+    /* prioridades no topo de cada grupo; depois por aging (mais antigas primeiro) */
+    const porPrioAging = (a, b) => ((b.row.prioridade ? 1 : 0) - (a.row.prioridade ? 1 : 0)) || pisoAgingOrdem(a.row, b.row);
+    const modoRel = lista.every(v => v.row.rel);
+    (modoRel ? [{ id:'*', titulo:'CARGAS 100% MONTADAS (RELATÓRIO)', kind:'ok' }] : PISO_GRUPOS).forEach(g => {
+      const itens = lista.filter(v => g.id === '*' || pisoGrupoDe(v.row.status) === g.id).sort(porPrioAging);
+      if(!itens.length) return;
+      tbody.appendChild(buildPisoGroupHeaderRow(`${g.titulo} — ${itens.length}`, g.kind));
+      itens.forEach(({row,i}) => tbody.appendChild(buildPisoRow(row, i, perm, maxVol)));
+    });
   }
 
   // chips de status
@@ -3789,7 +3780,9 @@ function renderPiso(){
   STATUS_LIST.forEach(st => {
     if(counts[st]) chips.push(`<button class="piso-chip ${pisoFiltroStatus === st ? 'on' : ''}" onclick="setPisoFiltro('${st}')">${PISO_CHIP_LABELS[st] || st} <b>${counts[st]}</b></button>`);
   });
-  document.getElementById('piso-chips').innerHTML = chips.join('');
+  document.getElementById('piso-chips').innerHTML = (rowsVis.length && rowsVis.every(r => r.rel))
+    ? '<span class="piso-rel-note">📄 Preenchido com o Relatório: cargas 100% montadas, sem Status, Produtivo e Doca. Use "Colar da planilha" para voltar ao formato completo.</span>'
+    : chips.join('');
 
   // indicadores
   const etqRows = rowsVis.filter(r => r.status === 'CARGA ETIQUETADA');
@@ -3885,6 +3878,45 @@ function removePisoRow(i){
   savePiso();
   renderAll();
 }
+/* ===================== PREENCHER COM REL. (cargas 100% montadas do Relatório) ===================== */
+function pisoRelPode(){ return !!currentUser && (currentUser.role === 'admin' || currentUser.role === 'conferente') && !somenteLeitura(); }
+/* carga 100% montada = no relatório (Cross-Docking) só tem quantidade MONTADA, nada agrupado */
+function pisoRelCandidatas(){
+  const grupos = {};
+  (crossRawData || []).filter(ehCrossDocking).forEach(r => {
+    const k = String(r.carga == null ? '' : r.carga).trim();
+    if(!k) return;
+    const g = grupos[k] || (grupos[k] = { carga:k, fornecedor:'', recebimento:'', ref:r, montado:0, agrupado:0, skus:new Set() });
+    if(!g.fornecedor && r.fornecedor) g.fornecedor = r.fornecedor;
+    if(!g.recebimento && r.recebimento) { g.recebimento = r.recebimento; g.ref = r; }
+    const st = String(r.status || '').toUpperCase(), q = Number(r.qtd) || 0;
+    if(st.includes('MONTAD')){ g.montado += q; g.skus.add(String(r.cod || r.descricao || '').trim()); }
+    else if(st.includes('AGRUPAD')) g.agrupado += q;
+  });
+  return Object.values(grupos).filter(g => g.montado > 0 && g.agrupado === 0);
+}
+function preencherPisoComRel(){
+  if(!pisoRelPode()){ showToast('🔒 Só Administrador e Conferente (dentro do horário do turno) podem preencher com o relatório.', true); return; }
+  if(!crossRawData || !crossRawData.length){ showToast('Ainda não há relatório colado na guia Relatório. Cole o relatório da planilha primeiro.', true); return; }
+  const todas = pisoRelCandidatas();
+  const livres = todas.filter(g => !cargaJaDistribuida(g.carga));
+  const naDist = todas.length - livres.length;
+  if(!livres.length){ showToast(todas.length ? 'As cargas 100% montadas do relatório já estão na Distribuição.' : 'Nenhuma carga 100% montada no relatório.', true); return; }
+  if(pisoData.length && !confirm(`Preencher o piso com ${livres.length} carga(s) 100% montada(s) do relatório?\n\nIsso SUBSTITUI as ${pisoData.length} carga(s) que estão hoje no piso (Status, Produtivo e Doca preenchidos serão perdidos; prioridade e marcação de etiquetada das mesmas cargas são mantidas).\n\nPara voltar ao formato completo, use "Colar da planilha".`)) return;
+  const antigas = {};
+  pisoData.forEach(r => { antigas[String(r.carga).trim()] = r; });
+  pisoData = livres.map(g => {
+    const dias = agingDias(g.ref);
+    const row = { produtivo:'', doca:'', carga:g.carga, fornecedor:g.fornecedor || '', liberacao:g.recebimento || '', d1:(dias == null ? 0 : dias), volume:g.montado, sku:g.skus.size, departamento:'', status:'NÃO ANALISADO', obs:'', rel:true };
+    const velha = antigas[g.carga];
+    if(velha){ if(velha.prioridade) row.prioridade = velha.prioridade; if(velha.marcadoEtq) row.marcadoEtq = velha.marcadoEtq; }
+    return row;
+  }).sort(pisoAgingOrdem);
+  savePiso();
+  renderAll();
+  showToast(`✔ Piso preenchido com ${livres.length} carga(s) 100% montada(s) do relatório` + (naDist ? ` (${naDist} já estavam na Distribuição)` : '') + '.', false);
+}
+
 function addPisoRow(){
   if(!souAdmin()) return;
   pisoData.push({produtivo:'', doca:'', carga:'', fornecedor:'', liberacao: todayLabel().curto, d1:0, volume:0, sku:0, departamento:'', status:'PENDENTE DE ETIQUETAGEM', obs:''});
@@ -3895,6 +3927,27 @@ function addPisoRow(){
 /* ===================== RENDER: PAINEL 2 - FILA DE DISTRIBUIÇÃO ===================== */
 /* carga crítica: 3 dias (ou mais) no D-1 — vale tanto pra +3 quanto -3 */
 const D1_CRITICO = 3;
+/* Cargas no Piso: 3 grupos por status. "Entre outros" = tudo que não é Em processo nem Etiquetada
+   (pendente, parcialmente etiquetada, aguardando impressão, não analisado, em conferência…).
+   PARCIALMENTE DISTRIBUIDA vai junto com as ETIQUETADAS. */
+const PISO_GRUPOS = [
+  { id:'outros', titulo:'ENTRE OUTROS', kind:'pend' },
+  { id:'proc',   titulo:'EM PROCESSO DE ETIQUETAGEM', kind:'proc' },
+  { id:'etq',    titulo:'ETIQUETADAS', kind:'ok' }
+];
+function pisoGrupoDe(st){
+  if(st === 'CARGA ETIQUETADA' || st === 'PARCIALMENTE DISTRIBUIDA') return 'etq';
+  if(st === 'EM PROCESSO DE ETIQUETAGEM') return 'proc';
+  return 'outros';
+}
+/* aging: liberação mais antiga primeiro; em empate, maior D-1 primeiro */
+function pisoAgingOrdem(a, b){
+  const da = parseDataBR(a.liberacao), db = parseDataBR(b.liberacao);
+  if(da && db && da.getTime() !== db.getTime()) return da - db;
+  if(da && !db) return -1;
+  if(!da && db) return 1;
+  return Math.abs(Number(b.d1) || 0) - Math.abs(Number(a.d1) || 0);
+}
 function cargaCritica(row){ return Math.abs(Number(row.d1) || 0) >= D1_CRITICO; }
 
 function renderFila(){
@@ -6711,6 +6764,9 @@ function imprimirCargasPisoRetrato(){
   const porPrio = (a, b) => (b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0);
   const naoEtq = vis.filter(r => r.status !== 'CARGA ETIQUETADA').sort(porPrio);
   const etq = vis.filter(r => r.status === 'CARGA ETIQUETADA').sort(porPrio);
+  const modoRelPrint = vis.length > 0 && vis.every(r => r.rel);
+  const gruposPrint = (modoRelPrint ? [{ id:'etq', titulo:'CARGAS 100% MONTADAS (RELATÓRIO)', kind:'ok' }] : PISO_GRUPOS).map(g => ({ g, lista: vis.filter(r => modoRelPrint || pisoGrupoDe(r.status) === g.id)
+    .sort((a, b) => ((b.prioridade ? 1 : 0) - (a.prioridade ? 1 : 0)) || pisoAgingOrdem(a, b)) }));
   const soma = (lista, campo) => lista.reduce((s, r) => s + Number(r[campo] || 0), 0);
   const pctDe = (a, b) => b > 0 ? Math.round((a / b) * 100) : 0;
   const maxVol = vis.reduce((m, r) => Math.max(m, Number(r.volume || 0)), 0);
@@ -6722,32 +6778,30 @@ function imprimirCargasPisoRetrato(){
   const nCrit = vis.filter(r => cargaCritica(r)).length;
   const nPrio = vis.filter(r => r.prioridade).length;
 
-  /* cartão em preto e branco: fonte grande, bordas fortes, sem texto colorido sobre fundo escuro */
-  const cartao = r => {
+  const linha = (r, ok) => {
+    const vol = Number(r.volume || 0);
+    let pct = maxVol > 0 ? (vol / maxVol) * 100 : 0;
+    if(vol > 0 && pct < 3) pct = 3;
     const neg = Number(r.d1) < 0 || cargaCritica(r);
-    const crit = cargaCritica(r);
-    const flags = (r.prioridade ? '<span class="pk-flag">⚑ PRIORIDADE</span>' : '') +
-                  (crit ? `<span class="pk-flag">⚠ CRÍTICO · ${Math.abs(Number(r.d1))} dias no D-1</span>` : '');
+    const obsTxt = (r.prioridade ? '<b>⚑ PRIORIDADE</b> ' : '') + (vazio(r.obs) ? '' : escapeHtml(r.obs));
     const marca = r.marcadoEtq ? ' ✔' : '';
-    const obsTxt = vazio(r.obs) ? '' : escapeHtml(r.obs);
-    return `<div class="ppr-pk ${r.prioridade ? 'prio' : ''}">
-      <div class="pk-top"><span class="pk-carga">${txt(r.carga)}</span>${vazio(r.doca) ? '' : `<span class="pk-doca">DOCA ${escapeHtml(r.doca)}</span>`}</div>
-      ${flags ? `<div class="pk-flags">${flags}</div>` : ''}
-      <div class="pk-forn">${txt(r.fornecedor)}${vazio(r.departamento) ? '' : `<small>${escapeHtml(r.departamento)}</small>`}</div>
-      <div class="pk-nums">
-        <div><b>${fmtInt(r.volume || 0)}</b><i>Volume</i></div>
-        <div><b>${r.sku == null ? 0 : escapeHtml(r.sku)}</b><i>SKU</i></div>
-        <div><b class="${neg ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</b><i>D-1</i></div>
-        <div class="lib"><b>${txt(r.liberacao)}</b><i>Liberação</i></div>
-      </div>
-      <div class="pk-st"><span class="pk-pill">${escapeHtml(STATUS_LABELS[r.status] || r.status || '')}${marca}</span>${vazio(r.produtivo) ? '' : `<span class="pk-prod"><i>Produtivo</i> ${escapeHtml(r.produtivo)}</span>`}</div>
-      ${obsTxt ? `<div class="pk-obs">Obs.: ${obsTxt}</div>` : ''}
+    return `<div class="ppr-row ${r.prioridade ? 'prio' : (ok ? 'ok' : '')}">
+      <div class="doca">${txt(r.doca)}</div>
+      <div class="carga">${txt(r.carga)}</div>
+      <div class="forn">${txt(r.fornecedor)}${vazio(r.departamento) ? '' : `<small>${escapeHtml(r.departamento)}</small>`}</div>
+      <div class="lib">${txt(r.liberacao)}</div>
+      <div class="d1 ${neg ? 'neg' : ''}">${r.d1 == null ? 0 : escapeHtml(r.d1)}</div>
+      <div class="vol">${fmtInt(vol)}<div class="bar"><i style="width:${pct.toFixed(1)}%"></i></div></div>
+      <div class="sku">${r.sku == null ? 0 : escapeHtml(r.sku)}</div>
+      <div><span class="pill">${escapeHtml(STATUS_LABELS[r.status] || r.status || '')}${marca}</span></div>
+      <div class="prod">${txt(r.produtivo)}</div>
+      ${obsTxt ? `<div class="obs">${obsTxt}</div>` : ''}
     </div>`;
   };
-  const grupo = (titulo, lista) => lista.length
-    ? `<div class="ppr-grp"><span>${titulo} — ${lista.length}</span><span>${fmtInt(soma(lista, 'volume'))} volumes · ${fmtInt(soma(lista, 'sku'))} SKU</span></div><div class="ppr-2col">${lista.map(cartao).join('')}</div>`
+  const colunas = '<div class="ppr-cols"><span>Doca</span><span>Carga</span><span>Fornecedor</span><span>Liberação</span><span>D-1</span><span>Volume</span><span>SKU</span><span>Status</span><span>Produtivo</span></div>';
+  const grupo = (titulo, lista, ok) => lista.length
+    ? `<div class="ppr-grp ${ok ? 'ok' : ''}">${titulo} — ${lista.length}</div>${colunas}${lista.map(r => linha(r, ok)).join('')}`
     : '';
-  const gruposHtml = PISO_COLUNAS.map(c => grupo(c.titulo, vis.filter(r => c.teste(r.status)).sort(porPrio))).join('');
 
   /* ---- Fila de Distribuição + Portaria + Resumo da Distribuição (não vão para o Operador, que não enxerga esse bloco) ---- */
   let secoesDist = '';
@@ -6764,7 +6818,7 @@ function imprimirCargasPisoRetrato(){
       </div>`;
     };
     const secFila = `<div class="ppr-sec"><span>Fila de distribuição</span><small>Turno ativo ${escapeHtml(turnoAtivo || '—')} · ${fila.length} aguardando · ${nFilaCrit} crítica(s)</small></div>` +
-      (fila.length ? `<div class="ppr-cards c2">${fila.map(cardFila).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga aguardando distribuição.</div>');
+      (fila.length ? `<div class="ppr-cards c3">${fila.map(cardFila).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga aguardando distribuição.</div>');
 
     const noPiso = new Set((pisoData || []).map(r => String(r.carga)));
     const aLiberar = portariaData.filter(r => !noPiso.has(String(r.carga))).length;
@@ -6773,7 +6827,7 @@ function imprimirCargasPisoRetrato(){
       return `<div class="ppr-card por ${ja ? 'ja' : ''}"><div class="t">Carga ${txt(r.carga)}</div><div class="f">${txt(r.fornecedor)}</div><div class="tag">${ja ? '✔ já no piso' : 'Aguardando liberação'}</div></div>`;
     };
     const secPor = `<div class="ppr-sec"><span>Portaria</span><small>Cargas que ainda vão ser liberadas · ${aLiberar} a liberar</small></div>` +
-      (portariaData.length ? `<div class="ppr-cards c3">${portariaData.map(cardPor).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga na Portaria.</div>');
+      (portariaData.length ? `<div class="ppr-cards c4">${portariaData.map(cardPor).join('')}</div>` : '<div class="ppr-vazio">Nenhuma carga na Portaria.</div>');
 
     const turnosAtivos = TURNOS.filter(t => distData.some(r => turnoDaCarga(r) === t));
     const blocoTurno = turno => {
@@ -6800,7 +6854,7 @@ function imprimirCargasPisoRetrato(){
   const hora = String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 
   const area = document.getElementById('piso-print-area');
-  area.className = 'pp-ret';
+  area.className = 'pp-ret' + (modoRelPrint ? ' ppr-rel' : '');
   area.removeAttribute('style');
   area.innerHTML = `<div class="ppr-fit">
     <div class="ppr-head">
@@ -6814,7 +6868,7 @@ function imprimirCargasPisoRetrato(){
       <div class="ppr-kpi crit ${nCrit > 0 ? 'on' : ''}"><div class="l">Cargas críticas</div><div class="n">${nCrit}</div><div class="s">3 dias ou mais no D-1</div></div>
       <div class="ppr-kpi"><div class="l">Prioridades</div><div class="n">${nPrio}</div><div class="s">sinalizadas pelo supervisor</div></div>
     </div>
-    ${gruposHtml}
+    ${gruposPrint.map(x => grupo(x.g.titulo, x.lista, x.g.id === 'etq')).join('')}
     <div class="ppr-total"><span>VOLUME TOTAL</span><span><b>${fmtInt(volAll)}</b>volumes<b>${fmtInt(skuAll)}</b>SKU</span></div>
     ${secoesDist}
     <div class="ppr-foot">Supervisão Operacional — Painel CD</div>
@@ -7532,7 +7586,7 @@ function imprimirProdutividade(alvo){
   document.body.setAttribute('data-print-turno', alvo);
   const st = document.createElement('style');
   st.id = 'prod-page-style';
-  st.textContent = '@page{ size:A4 landscape; margin:10mm; }';
+  st.textContent = '@page{ size:A4 landscape; margin:' + (alvo === 'todos' ? '8mm' : '10mm') + '; }';
   document.head.appendChild(st);
   window.print();
 }
@@ -7647,8 +7701,45 @@ function carregarScript(src){
     document.head.appendChild(el);
   });
 }
+const LIB_H2C = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
 const LIB_QR  = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
 const LIB_OCR = 'https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js';
+
+/* ===== PRINT: copia uma imagem de um painel (para colar em qualquer lugar) ===== */
+async function copiarPrintPainel(id, nome){
+  const el = document.getElementById(id);
+  if(!el){ showToast('Não achei o painel para o print.', true); return; }
+  showToast('📷 Gerando imagem de ' + nome + '…', false);
+  const blobPromise = (async () => {
+    await carregarScript(LIB_H2C);
+    const escala = Math.max(1, Math.min(2, 14000 / Math.max(1, el.scrollHeight)));
+    const fundo = getComputedStyle(document.body).backgroundColor;
+    const canvas = await html2canvas(el, {
+      backgroundColor: (fundo && fundo !== 'rgba(0, 0, 0, 0)') ? fundo : '#0a0a0a',
+      scale: escala, useCORS: true, logging: false,
+      ignoreElements: n => !!(n.classList && n.classList.contains('no-print'))
+    });
+    return await new Promise((ok, erro) => canvas.toBlob(b => b ? ok(b) : erro(new Error('imagem vazia')), 'image/png'));
+  })();
+  blobPromise.catch(() => {});
+  try{
+    if(!(navigator.clipboard && window.ClipboardItem)) throw new Error('sem área de transferência de imagem');
+    await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blobPromise }) ]);
+    showToast('📋 Print de ' + nome + ' copiado. Cole com Ctrl+V onde quiser.', false);
+  } catch(err){
+    try{
+      const blob = await blobPromise;
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'print-' + id + '-' + diaOperacional() + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      showToast('Este navegador não deixou copiar direto — a imagem foi baixada.', true);
+    } catch(e2){
+      showToast('⚠️ Não consegui gerar a imagem (confira a internet e tente de novo).', true);
+    }
+  }
+}
 
 /* ===================== OPÇÃO "BORDAS" (encurtamento de bordas) ===================== */
 function setBordas(modo){
@@ -9786,7 +9877,13 @@ body.is-admin.logado #cam-float{ display:flex; }
 /* ---------- 1) guias que acompanham na rolagem ---------- */
 .tabnav{ position:sticky; top:0; z-index:49; background:#070707; box-shadow:0 3px 10px rgba(0,0,0,.45); }
 
-/* ---------- 2) cargas no piso: 2 cargas por linha ---------- */
+/* ---------- 2) cargas no piso: 2 cargas por linha (3 em telas largas) ---------- */
+@media (min-width:1180px){
+  body:not(.tv-mode) #tbody-piso{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+  body:not(.tv-mode) #tbody-piso .pc{ padding:10px 11px; column-gap:8px; }
+  body:not(.tv-mode) #tbody-piso .pc .c-forn{ font-size:.92rem; line-height:1.2; }
+  body:not(.tv-mode) #tbody-piso .pc .c-act{ flex-wrap:wrap; }
+}
 @media (min-width:900px){
   body:not(.tv-mode) #tbody-piso{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:var(--row-gap,8px); overflow:visible; align-items:start; }
   body:not(.tv-mode) #tbody-piso .pc-head{ display:none; }
@@ -10365,55 +10462,6 @@ dockItens = function(){ const it = _dockItensOpp(); if(abaAtual === 'sep'){ cons
 try{ oppPainelRender(); }catch(e){}
 </script>
 
-<style id="piso-colunas-css">
-/* ---------- Cargas no Piso: 3 colunas por status + cartão simples (igual à fila de distribuição) ---------- */
-@media (min-width:900px){
-  body:not(.tv-mode) #tbody-piso{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:14px; align-items:start; overflow:visible; }
-}
-body:not(.tv-mode) #tbody-piso .piso-col{ min-width:0; display:flex; flex-direction:column; gap:10px; }
-.piso-col-head{ display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:6px; background:#0b0b0b; border:1px solid var(--line); border-top:4px solid var(--band-strong); position:sticky; top:46px; z-index:5; }
-.piso-col-proc .piso-col-head{ border-top-color:#4aa8ff; }
-.piso-col-etq .piso-col-head{ border-top-color:var(--ok-text); }
-.pch-t{ flex:1; font-family:'Oswald',sans-serif; font-weight:700; font-size:.92rem; letter-spacing:.06em; color:var(--text); }
-.pch-n{ min-width:30px; text-align:center; padding:1px 10px; border-radius:12px; background:var(--band-strong); color:#000; font-family:'Oswald',sans-serif; font-weight:700; font-size:1rem; }
-.piso-col-proc .pch-n{ background:#4aa8ff; }
-.piso-col-etq .pch-n{ background:var(--ok-text); }
-.pch-v{ font-size:.74rem; color:var(--text-dim); white-space:nowrap; }
-.piso-col-vazio{ text-align:center; padding:22px 10px; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:6px; }
-
-body:not(.tv-mode) #tbody-piso .piso-col .pc{ min-width:0; grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:7px; column-gap:10px; align-items:start; padding:12px 14px; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c::before{ content:attr(data-l); display:block; font-size:.6rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); margin-bottom:1px; font-family:'Inter',sans-serif; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-flag{ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga{ grid-column:1 / 3; grid-row:1; font-size:1.35rem; line-height:1.1; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-carga::before{ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca{ grid-column:3 / 5; grid-row:1; text-align:right; font-size:.9rem; color:var(--text); }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-doca::before{ display:inline; margin-right:5px; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn{ grid-column:1 / -1; grid-row:2; font-size:1.05rem; line-height:1.25; align-self:center; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-forn::before{ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol{ grid-column:1 / 2; grid-row:3; display:block; border-top:1px solid var(--line); padding-top:7px; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol::before{ display:block; width:auto; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol .pc-bar{ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-vol b{ display:block; font-size:1.35rem; text-align:left; min-width:0; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-sku{ grid-column:2 / 3; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:1.35rem; color:var(--band); }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-d1{ grid-column:3 / 4; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:1.35rem; color:var(--band); }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-d1.d1n{ color:var(--danger); }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-lib{ grid-column:4 / 5; grid-row:3; border-top:1px solid var(--line); padding-top:7px; text-align:left; font-size:.9rem; font-weight:600; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-lib::before{ margin-bottom:5px; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st{ grid-column:1 / -1; grid-row:4; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st select.status-select, body:not(.tv-mode) #tbody-piso .piso-col .pc .c-st .pill{ font-size:.82rem; padding:8px 10px; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod{ grid-column:1 / -1; grid-row:5; font-weight:700; font-size:.95rem; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs{ grid-column:1 / -1; grid-row:6; font-size:.82rem; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-prod:has(> .dash), body:not(.tv-mode) #tbody-piso .piso-col .pc .c-obs:has(> .dash){ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act{ grid-column:1 / -1; grid-row:7; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .c-act::before{ display:none; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc .pc-sub{ grid-column:1 / -1; grid-row:8; }
-body:not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-column:1 / -1; grid-row:9; }
-@media (max-width:899px){
-  body:not(.tv-mode) #tbody-piso{ display:flex; flex-direction:column; gap:14px; }
-  .piso-col-head{ top:40px; }
-}
-@media print{ #tbody-piso .piso-col-head{ position:static; } }
-</style>
 <script id="enter-global-js">
 /* =====================================================================
    TECLA ENTER EM TODO O SISTEMA
@@ -10488,5 +10536,19 @@ body:not(.tv-mode) #tbody-piso .piso-col .pc > .pc-edit{ grid-column:1 / -1; gri
 })();
 </script>
 
+<style id="piso-rel-css">
+.piso-rel-note{ display:block; padding:8px 12px; border:1px dashed var(--line); border-radius:6px; color:var(--text-dim); font-size:.82rem; }
+body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-st, body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-prod, body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-doca, body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-obs{ display:none; }
+body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-lib{ grid-column:1; }
+body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-d1{ grid-column:2; }
+body:not(.tv-mode) #tbody-piso .pc.pc-rel .c-sku{ grid-column:3; }
+body.tv-mode #tbody-piso .pc.pc-rel .c-st, body.tv-mode #tbody-piso .pc.pc-rel .c-prod, body.tv-mode #tbody-piso .pc.pc-rel .c-doca{ visibility:hidden; }
+.piso-print-grp{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+@media print{
+  .pp-ret.ppr-rel .ppr-cols, .pp-ret.ppr-rel .ppr-row{ grid-template-columns:72px minmax(0,1fr) 90px 44px 90px 50px; }
+  .pp-ret.ppr-rel .ppr-cols span:nth-child(1), .pp-ret.ppr-rel .ppr-cols span:nth-child(8), .pp-ret.ppr-rel .ppr-cols span:nth-child(9),
+  .pp-ret.ppr-rel .ppr-row > div:nth-child(1), .pp-ret.ppr-rel .ppr-row > div:nth-child(8), .pp-ret.ppr-rel .ppr-row > div:nth-child(9){ display:none; }
+}
+</style>
 </body>
 </html>

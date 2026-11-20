@@ -2985,7 +2985,7 @@ function entrarNoApp(role){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   document.getElementById('who-name').textContent = currentUser.nome;
-  document.getElementById('who-role').textContent = (currentUser.roleReal ? ROLE_LABELS[currentUser.roleReal] + ' · ' + (currentUser.visao === 'recebimento' ? 'Recebimento' : 'Distribuição') : ROLE_LABELS[role]) + ' · ' + turnoLogin;
+  document.getElementById('who-role').textContent = (currentUser.roleReal ? ROLE_LABELS[currentUser.roleReal] + ' · ' + (currentUser.visao === 'recebimento' ? 'Recebimento' : 'Distribuição') : ROLE_LABELS[role]) + (role === 'gerente' ? '' : ' · ' + turnoLogin);
   { const bt = document.getElementById('btn-trocar-visao'); if(bt) bt.style.display = currentUser.roleReal ? 'inline-block' : 'none'; }
 
   const isAdmin = role === 'admin';
@@ -10860,16 +10860,22 @@ function cadRender(){
   box.innerHTML = `<div class="uf-cad-t">CONFERENTE(S) · LIBERAÇÃO DE ACESSO AO PORTAL</div>
     <div class="uf-cad-f">
       <label>Usuário<input type="text" id="cad-nome" placeholder="Nome do usuário" maxlength="40" autocomplete="off" onkeydown="if(event.key==='Enter'){ event.preventDefault(); cadAdd(); }"></label>
-      <label>Turno<select id="cad-turno"><option>T1</option><option>T2</option><option>T3</option></select></label>
-      <label>Função<select id="cad-func">${fOpts}</select></label>
+      <label id="cad-turno-lb">Turno<select id="cad-turno"><option>T1</option><option>T2</option><option>T3</option></select></label>
+      <label>Função<select id="cad-func" onchange="cadAjustaForm()">${fOpts}</select></label>
       <button type="button" class="btn btn-primary btn-sm" onclick="cadAdd()">＋ Cadastrar e liberar acesso</button>
     </div>
     <div class="uf-cad-t" style="margin-top:4px">CADASTRADOS (${lista.length})</div>
     ${lista.length ? lista.map(c => `<div class="uf-cad-r"><div class="nm" title="${escapeHtml(c.nome)}">${escapeHtml(c.nome)}<div class="fn">${escapeHtml(ROLE_LABELS[c.funcao] || c.funcao)}</div></div>
-      <select data-id="${escapeHtml(c.id)}" onchange="cadSetTurno(this.dataset.id, this.value)">${['T1','T2','T3'].map(t => `<option ${t === c.turno ? 'selected' : ''}>${t}</option>`).join('')}</select>
+      ${c.funcao === 'gerente' ? '<span class="fn" style="min-width:48px;text-align:center">sem turno</span>' : `<select data-id="${escapeHtml(c.id)}" onchange="cadSetTurno(this.dataset.id, this.value)">${['T1','T2','T3'].map(t => `<option ${t === c.turno ? 'selected' : ''}>${t}</option>`).join('')}</select>`}
       <div class="uf-act"><button class="bad" data-id="${escapeHtml(c.id)}" title="Remover cadastro" onclick="cadRem(this.dataset.id)">✕</button></div></div>`).join('') : '<div class="uf-vazio">Nenhum usuário cadastrado.</div>'}`;
   if(v[0] != null){ document.getElementById('cad-nome').value = v[0]; if(v[1]) document.getElementById('cad-turno').value = v[1]; if(v[2]) document.getElementById('cad-func').value = v[2]; }
   if(foco){ const el = document.getElementById(foco); if(el) el.focus(); }
+  cadAjustaForm();
+}
+/* Gerente não tem turno: o campo Turno some quando a função escolhida é Gerente */
+function cadAjustaForm(){
+  const f = document.getElementById('cad-func'), l = document.getElementById('cad-turno-lb');
+  if(f && l) l.style.display = f.value === 'gerente' ? 'none' : '';
 }
 function cadGravar(lista){ cadLista = lista; if(window.cadSalvar) window.cadSalvar(lista); cadRender(); }
 function cadAdd(){
@@ -10877,7 +10883,8 @@ function cadAdd(){
   const nome = String(document.getElementById('cad-nome').value || '').trim().replace(/\s+/g, ' ');
   if(!nome){ showToast('Digite o nome do usuário.', true); return; }
   const id = slugifyName(nome); if(!id){ showToast('Nome inválido.', true); return; }
-  const rec = { id, nome, turno: document.getElementById('cad-turno').value, funcao: document.getElementById('cad-func').value };
+  const funcao = document.getElementById('cad-func').value;
+  const rec = { id, nome, turno: funcao === 'gerente' ? '' : document.getElementById('cad-turno').value, funcao };
   cadGravar(cadLista.filter(x => x.id !== id).concat([rec]));
   document.getElementById('cad-nome').value = '';
 }

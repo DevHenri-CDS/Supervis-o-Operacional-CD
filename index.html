@@ -1939,6 +1939,7 @@
             <button class="btn btn-ghost btn-sm" onclick="sepImportarProdutivos()" title="Cadastra os nomes que já estão nas estações e na produtividade do dia">Importar nomes já usados</button>
           </div>
           <span class="hint" id="sep-prod-turno-hint" style="display:block; margin-top:6px;"></span>
+          <div class="sep-linha" id="sep-prod-filtro" style="margin-top:8px;"></div>
           <div class="sep-chips sep-chips-prod" id="sep-prod-chips"></div>
           <span class="hint" style="display:block; margin-top:8px;">Cada estação escolhe o produtivo nesta lista, e o gráfico de Produtividade soma o volume feito por esses nomes. Cadastre uma vez e fica salvo para todos.</span>
         </div>
@@ -2892,7 +2893,7 @@ async function doLogin(){
   distTabAtiva = turnoAtivo;
 
   /* Encarregado: depois da senha escolhe o setor (Recebimento = visão do Operador · Distribuição = visão do Conferente) */
-  if(role === 'encarregado'){ currentUser.roleReal = 'encarregado'; encMostrarEscolha(); return; }
+  if(role === 'encarregado' || role === 'conferente'){ currentUser.roleReal = role; encMostrarEscolha(); return; }
   entrarNoApp(role);
 }
 
@@ -2932,8 +2933,8 @@ function entrarNoApp(role){
 
 /* ---------- Encarregado: escolha do setor após a senha ---------- */
 function encMostrarEscolha(){
-  if(!currentUser || currentUser.roleReal !== 'encarregado') return;
-  currentUser.role = 'encarregado'; currentUser.visao = '';
+  if(!currentUser || !currentUser.roleReal) return;
+  currentUser.role = currentUser.roleReal; currentUser.visao = '';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
   document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
@@ -2941,7 +2942,7 @@ function encMostrarEscolha(){
   document.getElementById('enc-escolha').style.display = 'flex';
 }
 function encEscolher(visao){
-  if(!currentUser || currentUser.roleReal !== 'encarregado') return;
+  if(!currentUser || !currentUser.roleReal) return;
   currentUser.visao = visao;
   currentUser.role = visao === 'recebimento' ? 'operador' : 'conferente';   // enxerga exatamente como o Operador30 / o Conf30
   document.getElementById('enc-escolha').style.display = 'none';
@@ -6580,6 +6581,9 @@ function sepSetTurnoProd(nome, t){
   if(x) x.t = t; else l.push({ n, t });
   l.sort((a, b) => a.n.localeCompare(b.n, 'pt-BR'));
 }
+let sepFiltroTime = '';   // '' = todos · T1 · T2 · T3 (filtra a lista de produtivos e a escolha nas estações)
+function sepSetFiltroTime(t){ sepFiltroTime = TURNOS.includes(t) ? t : ''; try{ renderSep(); }catch(e){ sepRenderProdutivos(); } }
+function sepListaTime(){ const l = sepData.produtivos || []; return sepFiltroTime ? l.filter(n => sepTurnoDe(n) === sepFiltroTime) : l; }
 function sepEscolherTurnoCad(v){ sepProdTurnoManual = TURNOS.includes(v) ? v : ''; sepRenderProdutivos(); try{ orgRenderForm(); }catch(e){} }
 function sepMudarTurnoProd(nome, t){
   if(!sepPode() || somenteLeitura()) return;
@@ -6633,9 +6637,16 @@ function sepRenderProdutivos(){
   const box = document.getElementById('sep-prod-chips');
   if(!box) return;
   const usados = new Set(sepData.estacoes.map(e => sepNomeProd(e.produtivo)).filter(Boolean));
-  box.innerHTML = sepData.produtivos.length
-    ? sepData.produtivos.map(n => `<span class="sep-chip ${usados.has(n) ? 'on-use' : ''}" title="${usados.has(n) ? 'Em uso em uma estação' : ''}"><span class="sep-chip-t"><b class="cn">${sepEsc(n)}</b></span><select class="sep-chip-tn" data-n="${sepEsc(n)}" onchange="sepMudarTurnoProd(this.dataset.n, this.value)" title="Turno do produtivo">${sepTurnoDe(n) ? '' : '<option value="" selected>—</option>'}${TURNOS.map(t => `<option value="${t}" ${sepTurnoDe(n) === t ? 'selected' : ''}>${t}</option>`).join('')}</select><button type="button" data-n="${sepEsc(n)}" onclick="sepRemProdutivo(this.dataset.n)" aria-label="Remover" title="Remover do cadastro">✕</button></span>`).join('')
-    : '<div class="sep-vazio">Nenhum produtivo cadastrado ainda. Digite o nome e clique em Cadastrar.</div>';
+  { const fb = document.getElementById('sep-prod-filtro');
+    if(fb){
+      const cont = t => (sepData.produtivos || []).filter(n => !t || sepTurnoDe(n) === t).length;
+      fb.innerHTML = '<span class="lb">Time</span>' + [['', 'Todos'], ...TURNOS.map(t => [t, 'Time ' + t])].map(([t, l]) =>
+        `<button type="button" class="btn btn-sm ${sepFiltroTime === t ? 'btn-primary' : 'btn-ghost'}" style="width:auto;" onclick="sepSetFiltroTime('${t}')">${l} (${cont(t)})</button>`).join('');
+    } }
+  const listaTime = sepListaTime();
+  box.innerHTML = listaTime.length
+    ? listaTime.map(n => `<span class="sep-chip ${usados.has(n) ? 'on-use' : ''}" title="${usados.has(n) ? 'Em uso em uma estação' : ''}"><span class="sep-chip-t"><b class="cn">${sepEsc(n)}</b></span><select class="sep-chip-tn" data-n="${sepEsc(n)}" onchange="sepMudarTurnoProd(this.dataset.n, this.value)" title="Turno do produtivo">${sepTurnoDe(n) ? '' : '<option value="" selected>—</option>'}${TURNOS.map(t => `<option value="${t}" ${sepTurnoDe(n) === t ? 'selected' : ''}>${t}</option>`).join('')}</select><button type="button" data-n="${sepEsc(n)}" onclick="sepRemProdutivo(this.dataset.n)" aria-label="Remover" title="Remover do cadastro">✕</button></span>`).join('')
+    : '<div class="sep-vazio">' + (sepData.produtivos.length ? 'Nenhum produtivo no Time ' + sepFiltroTime + '.' : 'Nenhum produtivo cadastrado ainda. Digite o nome e clique em Cadastrar.') + '</div>';
   const selT = document.getElementById('sep-prod-turno');
   if(selT && document.activeElement !== selT){
     selT.innerHTML = `<option value="">Auto · ${sepTurnoPadrao()}</option>` + TURNOS.map(t => `<option value="${t}">${t}</option>`).join('');
@@ -6646,10 +6657,10 @@ function sepRenderProdutivos(){
 }
 function sepProdOpts(atual){
   const a = sepNomeProd(atual);
-  const lista = sepData.produtivos || [];
+  const lista = sepListaTime();
   let h = `<option value="">${lista.length ? '— escolher produtivo —' : '— cadastre os produtivos acima —'}</option>`;
   h += lista.map(n => `<option value="${sepEsc(n)}" ${n === a ? 'selected' : ''}>${sepEsc(n)}</option>`).join('');
-  if(a && !lista.includes(a)) h += `<option value="${sepEsc(a)}" selected>${sepEsc(a)} (não cadastrado)</option>`;
+  if(a && !lista.includes(a)) h += `<option value="${sepEsc(a)}" selected>${sepEsc(a)}${(sepData.produtivos || []).includes(a) ? '' : ' (não cadastrado)'}</option>`;
   return h;
 }
 
@@ -9586,7 +9597,7 @@ setInterval(() => {
    BASE — cargas no piso / distribuídas, vindas do Relatório
    • a cada relatório colado (guia Relatório), as linhas das cargas que estão no PISO ou na DISTRIBUIÇÃO
      são gravadas aqui; cargas de colagens anteriores continuam (a carga que vem de novo é atualizada)
-   • zera na virada do dia (06:20), no mesmo momento em que a distribuição é salva em Fechamentos
+   • na virada do dia (06:20), quando a distribuição é salva em Fechamentos, saem só as cargas já distribuídas; a carga que continua no piso mantém as informações do relatório montado
    ===================================================================== */
 let baseRows = [];        // linhas acumuladas do dia
 let baseDia = '';         // dia operacional a que a Base pertence
@@ -9598,8 +9609,8 @@ function baseOrigemCls(o){ return o === 'ambas' ? 'amb' : (o === 'distribuida' ?
 function baseCapturar(rows){
   const hoje = diaOperacional();
   let resetou = false;
-  if(baseDia !== hoje){ baseRows = []; baseDia = hoje; resetou = true; }   // base de outro dia: recomeça do zero
   const noPiso = new Set((pisoData || []).map(r => sepNorm(r.carga)).filter(Boolean));
+  if(baseDia !== hoje){ baseRows = baseRows.filter(r => noPiso.has(sepNorm(r.carga))); baseDia = hoje; resetou = true; }   // virou o dia: só continuam as cargas que ainda estão no piso
   const naDist = new Set((distData || []).map(r => sepNorm(r.carga)).filter(Boolean));
   const agora = new Date().toLocaleString('pt-BR');
   const por = currentUser ? currentUser.nome : '';
@@ -9698,7 +9709,7 @@ function baseRender(force){
   document.getElementById('st-base-cargas').textContent = lista.length;
   document.getElementById('st-base-vol').textContent = fmtInt(totVol);
   document.getElementById('st-base-itens').textContent = fmtInt(totItens);
-  document.getElementById('base-sub').textContent = (baseDia ? fmtDia(baseDia) : 'sem dados') + ' · só cargas 100% montadas · salva uma vez, sem substituir · zera na virada do dia (06:20)';
+  document.getElementById('base-sub').textContent = (baseDia ? fmtDia(baseDia) : 'sem dados') + ' · só cargas 100% montadas · salva uma vez, sem substituir · a carga fica salva enquanto estiver no piso, até ser distribuída e salva no Fechamento (06:20)';
   /* cargas no piso/distribuição que ainda têm item agrupado e por isso ainda não entraram */
   const salvas = new Set(baseRows.map(r => sepNorm(r.carga)));
   const noP = new Set((pisoData || []).concat(distData || []).map(r => sepNorm(r.carga)));
@@ -9887,11 +9898,17 @@ renderSep = function(soft){ _renderSepBase(soft); try{ baseRender(); }catch(e){}
   };
   window.baseZerar = async function(dia){
     try{
+      /* a carga que continua nas Cargas no Piso mantém as informações do relatório montado;
+         só saem da Base as cargas já distribuídas e salvas no Fechamento */
+      const noPiso = new Set((pisoData || []).map(r => sepNorm(r.carga)).filter(Boolean));
+      const manter = (baseRows || []).filter(r => noPiso.has(sepNorm(r.carga)));
+      const chunks = manter.length ? chunkCrossRows(manter) : [];
+      await Promise.all(chunks.map((linhas, i) => setDoc(doc(baseChunksCol, String(i)), { indice: i, rows: linhas })));
       const snap = await getDocs(baseChunksCol);
-      await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
-      baseNumChunks = 0;
-      await setDoc(baseRef, { dia, numChunks: 0, atualizadoEm: new Date().toLocaleString('pt-BR'), atualizadoPor: 'virada do dia' });
-    } catch(err){ reportErro('Erro ao zerar a Base:', err); }
+      await Promise.all(snap.docs.filter(d => Number(d.id) >= chunks.length).map(d => deleteDoc(d.ref)));
+      baseNumChunks = chunks.length;
+      await setDoc(baseRef, { dia, numChunks: chunks.length, atualizadoEm: new Date().toLocaleString('pt-BR'), atualizadoPor: 'virada do dia' });
+    } catch(err){ reportErro('Erro ao atualizar a Base:', err); }
   };
   onSnapshot(baseRef, snap => {
     const d = snap.exists() ? snap.data() : {};

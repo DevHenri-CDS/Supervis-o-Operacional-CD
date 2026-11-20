@@ -1386,6 +1386,74 @@
     #org-print-area .org-etq:last-child{ page-break-after:auto; break-after:auto; }
   }
 </style>
+
+<style id="ger-css">
+  #ger-view{ display:none; max-width:520px; margin:0 auto; padding:10px 12px 40px; }
+  body.role-gerente #ro-banner, body.role-gerente #dock, body.role-gerente #topbar .actions .seg,
+  body.role-gerente #topbar .actions button[onclick="openQrModal()"]{ display:none !important; }
+  body.role-gerente #topbar{ position:static; padding:8px 12px; gap:6px; }
+  body.role-gerente #topbar .brand .who{ font-size:.66rem; }
+  body.role-gerente.logado main{ padding:6px 0 30px; }
+  .ger-top{ display:flex; align-items:flex-end; justify-content:space-between; gap:8px; margin:4px 2px 12px; }
+  .ger-top h2{ font-size:1.25rem; margin:0; letter-spacing:.01em; }
+  .ger-top small{ color:var(--text-dim); font-size:.72rem; text-transform:capitalize; }
+  .ger-live{ display:flex; align-items:center; gap:6px; font-size:.68rem; color:var(--ok-text); font-weight:700; white-space:nowrap; }
+  .ger-live i{ width:8px; height:8px; border-radius:50%; background:var(--ok-text); box-shadow:0 0 8px var(--ok-text); }
+  .ger-card{ background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:14px; }
+  .ger-h{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px; }
+  .ger-h span{ font-weight:800; font-size:.95rem; letter-spacing:.02em; }
+  .ger-h i{ font-style:normal; font-size:.72rem; color:var(--band-text); background:var(--band); padding:3px 10px; border-radius:99px; font-weight:800; }
+  .ger-piso-top{ display:flex; align-items:center; gap:16px; margin-bottom:12px; }
+  .ger-donut{ width:118px; height:118px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center; }
+  .ger-donut > div{ width:84px; height:84px; border-radius:50%; background:var(--panel); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .ger-donut b{ font-size:1.5rem; line-height:1; } .ger-donut small{ font-size:.6rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+  .ger-bigs{ display:flex; flex-direction:column; gap:8px; flex:1; }
+  .ger-bigs.three{ flex-direction:row; margin-bottom:12px; }
+  .ger-bigs > div{ flex:1; background:var(--row-alt); border:1px solid var(--line); border-radius:12px; padding:8px 10px; }
+  .ger-bigs b{ display:block; font-size:1.55rem; line-height:1.1; color:var(--band); }
+  .ger-bigs.three b{ font-size:1.3rem; }
+  .ger-bigs small{ color:var(--text-dim); font-size:.64rem; text-transform:uppercase; letter-spacing:.05em; }
+  .ger-stack{ display:flex; height:14px; border-radius:99px; overflow:hidden; background:var(--line); margin-bottom:10px; }
+  .ger-stack span{ display:block; height:100%; }
+  .ger-leg{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+  .ger-leg > div{ display:flex; align-items:center; gap:8px; font-size:.8rem; }
+  .ger-leg i{ width:10px; height:10px; border-radius:3px; flex:0 0 auto; }
+  .ger-leg span{ flex:1; color:var(--text-dim); } .ger-leg b{ font-size:.95rem; } .ger-leg small{ color:var(--text-dim); min-width:64px; text-align:right; }
+  .ger-leg.three{ flex-direction:row; gap:6px; }
+  .ger-leg.three > div{ flex:1; flex-wrap:wrap; gap:2px 6px; background:var(--row-alt); border:1px solid var(--line); border-radius:10px; padding:7px 8px; }
+  .ger-leg.three span{ flex:0 0 auto; font-weight:800; color:var(--text); } .ger-leg.three b{ flex:1 1 100%; font-size:1.05rem; } .ger-leg.three small{ min-width:0; text-align:left; }
+  .ger-sub{ font-size:.66rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.07em; font-weight:800; margin:6px 0 6px; }
+  .ger-ag{ display:flex; gap:6px; margin-bottom:10px; }
+  .ger-ag > div{ flex:1; border-radius:12px; padding:8px 6px; text-align:center; border:1px solid var(--line); }
+  .ger-ag b{ display:block; font-size:1.4rem; line-height:1.1; } .ger-ag span{ display:block; font-size:.62rem; text-transform:uppercase; letter-spacing:.04em; margin-top:1px; } .ger-ag small{ display:block; font-size:.62rem; opacity:.75; margin-top:2px; }
+  .ger-ag .ok{ background:var(--ok-bg); color:var(--ok-text); } .ger-ag .warn{ background:var(--warn-bg); color:var(--warn-text); } .ger-ag .bad{ background:#3a1612; color:var(--danger); }
+  .ger-list > div{ display:flex; align-items:center; gap:8px; padding:7px 2px; border-top:1px solid var(--line); font-size:.8rem; }
+  .ger-list b{ min-width:58px; } .ger-list span{ flex:1; color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ger-list em{ font-style:normal; font-weight:800; font-size:.72rem; padding:2px 8px; border-radius:99px; } .ger-list em.bad{ background:#3a1612; color:var(--danger); } .ger-list em.warn{ background:var(--warn-bg); color:var(--warn-text); }
+  .ger-list small{ min-width:44px; text-align:right; color:var(--text-dim); }
+  .ger-turno{ background:var(--row-alt); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .ger-turno.agora{ border-color:var(--band); }
+  .ger-turno-top{ display:flex; align-items:baseline; gap:8px; } .ger-turno-top strong{ font-size:1.05rem; color:var(--band); }
+  .ger-turno-top em{ font-style:normal; font-size:.6rem; background:var(--band); color:var(--band-text); padding:1px 7px; border-radius:99px; font-weight:800; text-transform:uppercase; }
+  .ger-turno-top b{ margin-left:auto; font-size:1.35rem; }
+  .ger-bar{ height:10px; border-radius:99px; background:var(--line); overflow:hidden; margin:7px 0; } .ger-bar span{ display:block; height:100%; background:var(--band); border-radius:99px; }
+  .ger-turno-m{ display:flex; justify-content:space-between; gap:6px; font-size:.7rem; color:var(--text-dim); flex-wrap:wrap; }
+  .ger-fech{ background:var(--row-alt); border:1px solid var(--line); border-radius:12px; padding:10px 10px 8px; margin-bottom:8px; }
+  .ger-fech-top{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; font-size:.7rem; color:var(--text-dim); margin-bottom:8px; } .ger-fech-top strong{ font-size:1.05rem; } .ger-fech-top b{ color:var(--text); }
+  .ger-bars{ display:flex; align-items:flex-end; gap:2px; height:84px; border-bottom:1px solid var(--line); }
+  .ger-bars i{ flex:1; border-radius:2px 2px 0 0; min-width:0; opacity:.9; } .ger-bars i.hoje{ opacity:.45; } .ger-bars i.dom{ opacity:.25; } .ger-bars i.best{ outline:2px solid #fff; outline-offset:0; opacity:1; }
+  .ger-axis{ display:flex; justify-content:space-between; font-size:.6rem; color:var(--text-dim); margin-top:3px; }
+  .ger-ult{ font-size:.72rem; color:var(--text-dim); text-align:center; margin-top:4px; } .ger-ult b{ color:var(--text); }
+  .ger-sub.bad{ color:var(--danger); }
+  .ger-crit{ background:#2a110e; border:1px solid #6b2b24; border-left:4px solid var(--danger); border-radius:12px; padding:10px 12px; margin-bottom:8px; }
+  .ger-crit-top{ display:flex; align-items:center; justify-content:space-between; } .ger-crit-top strong{ font-size:1.15rem; }
+  .ger-crit-top em{ font-style:normal; font-weight:800; font-size:.72rem; background:var(--danger); color:#000; padding:2px 9px; border-radius:99px; }
+  .ger-crit-forn{ font-size:.82rem; color:var(--text); margin:3px 0 8px; }
+  .ger-crit-g{ display:grid; grid-template-columns:repeat(2,1fr); gap:6px 10px; }
+  .ger-crit-g small{ display:block; font-size:.58rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; } .ger-crit-g b{ font-size:.86rem; }
+  .ger-crit-p{ margin-top:8px; font-size:.72rem; color:var(--warn-text); }
+  .ger-foot{ text-align:center; font-size:.64rem; color:var(--text-dim); margin-top:4px; }
+</style>
 </head>
 <body>
 <div id="toast-layer"></div>
@@ -2124,6 +2192,7 @@
   <!-- fim da aba "Fechamentos" -->
 
   <div id="op-view"></div>
+  <div id="ger-view"></div>
   </main>
 </div>
 
@@ -2645,16 +2714,17 @@ const ROLE_PASSWORDS = {
   'Conf30': 'conferente',
   'Sup30': 'supervisor',
   'Operador30': 'operador',
-  'TVSECOS': 'tv'
+  'TVSECOS': 'tv',
+  'GG30SECOS': 'gerente'
 };
-const ROLE_LABELS = { admin:'Administrador', encarregado:'Encarregado', conferente:'Conferente', supervisor:'Supervisor', operador:'Operador', tv:'TV · Apresentação' };
+const ROLE_LABELS = { admin:'Administrador', encarregado:'Encarregado', conferente:'Conferente', supervisor:'Supervisor', operador:'Operador', tv:'TV · Apresentação', gerente:'Gerente' };
 
 /* quais status cada perfil enxerga em "Cargas no Piso" (perfil ausente = vê tudo) */
 const STATUS_VISIVEL = {
   operador: ['PENDENTE DE ETIQUETAGEM', 'EM PROCESSO DE ETIQUETAGEM', 'PARCIALMENTE ETIQUETADA', 'AGUARDANDO IMPRESSÃO']
 };
 /* todos os perfis têm as funções do Administrador, menos o Operador (só vê pendências e marca etiquetadas) */
-function ehAdminLike(role){ return !!role && role !== 'operador' && role !== 'tv'; }
+function ehAdminLike(role){ return !!role && role !== 'operador' && role !== 'tv' && role !== 'gerente'; }
 /* só o Administrador: editar cargas, limpar o piso, ver Usuários/Solicitações (remover, expulsar, banir, aprovar) */
 function souAdmin(){ return !!currentUser && currentUser.role === 'admin'; }
 /* importar cargas no piso e distribuição (colar da planilha / foto): Administrador e Conf30 (conferente) */
@@ -2753,6 +2823,7 @@ function preencherCatalogoTurno(){
 }
 /* só o Administrador mexe fora do horário do próprio turno; os demais ficam só consultando */
 function somenteLeitura(){
+  if(currentUser && currentUser.role === 'gerente') return true;   // Gerente: só visualiza
   return !!currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv' && currentUser.turno !== turnoPorHorario();
 }
 function nrVol(e){ return ((e && e.naoRastreado) || []).reduce((s,x)=>s+(Number(x.volume)||0),0); }
@@ -2907,7 +2978,7 @@ async function doLogin(){
 }
 
 function entrarNoApp(role){
-  if(role !== 'tv' && 'Notification' in window && Notification.permission === 'default'){
+  if(role !== 'tv' && role !== 'gerente' && 'Notification' in window && Notification.permission === 'default'){
     Notification.requestPermission();
   }
 
@@ -2927,7 +2998,7 @@ function entrarNoApp(role){
   document.getElementById('btn-foto-piso').style.display = (isAdmin || role === 'conferente') ? 'inline-block' : 'none';
   document.body.classList.add('logado');
   document.body.classList.toggle('is-admin', isAdmin);
-  ['admin','encarregado','conferente','supervisor','operador','tv'].forEach(r => document.body.classList.toggle('role-' + r, r === role));
+  ['admin','encarregado','conferente','supervisor','operador','gerente','tv'].forEach(r => document.body.classList.toggle('role-' + r, r === role));
 
   applySectorVisibility();
   switchTab('piso');
@@ -2946,7 +3017,7 @@ function encMostrarEscolha(){
   currentUser.role = currentUser.roleReal; currentUser.visao = '';
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
-  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
+  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-gerente', 'role-tv');
   document.getElementById('enc-nome').textContent = currentUser.nome;
   document.getElementById('enc-escolha').style.display = 'flex';
 }
@@ -3134,6 +3205,117 @@ function renderOperador(){
     h += `<div class="op-grp g${g}">${g < OP_GRUPOS.length ? OP_GRUPOS[g][1] : 'OUTRAS'} — ${itens.length}</div>` + itens.map(v => opCard(v.row, v.i)).join('');
   }
   document.getElementById('op-lista').innerHTML = h || '<div class="piso-empty">Nenhuma carga no momento.</div>';
+}
+
+
+/* ===== GERENTE: visão apresentativa, resumida, de uma página só (feita para celular) ===== */
+function gerPct(a, b){ return b > 0 ? Math.round(a / b * 100) : 0; }
+function renderGerente(){
+  const box = document.getElementById('ger-view');
+  if(!box || !currentUser || currentUser.role !== 'gerente') return;
+  box.style.display = 'block';
+  const agora = new Date();
+  const hh = String(agora.getHours()).padStart(2,'0') + ':' + String(agora.getMinutes()).padStart(2,'0');
+  const vol = r => Number(r.volume) || 0, sku = r => Number(r.sku) || 0, dd = r => Math.abs(Number(r.d1) || 0);
+
+  /* ---------- 1 · CARGAS NO PISO ---------- */
+  const piso = pisoData || [];
+  const G = { etq:{ l:'Etiquetadas', c:'#6fdc9a', n:0, v:0 }, proc:{ l:'Em etiquetagem', c:'#f3b75a', n:0, v:0 }, outros:{ l:'Pendentes e outras', c:'#f2935a', n:0, v:0 } };
+  piso.forEach(r => { const g = G[pisoGrupoDe(r.status)]; g.n++; g.v += vol(r); });
+  const totN = piso.length, totV = piso.reduce((x, r) => x + vol(r), 0), totS = piso.reduce((x, r) => x + sku(r), 0);
+  const pEtq = gerPct(G.etq.v, totV);
+  const a1 = totV ? G.etq.v / totV * 100 : 0, a2 = a1 + (totV ? G.proc.v / totV * 100 : 0);
+  const ring = totV ? `conic-gradient(${G.etq.c} 0 ${a1}%, ${G.proc.c} ${a1}% ${a2}%, ${G.outros.c} ${a2}% 100%)` : 'conic-gradient(#2c2218 0 100%)';
+  const ag = [
+    { l:'Até 1 dia', cls:'ok', f:r => dd(r) <= 1 },
+    { l:'2 dias', cls:'warn', f:r => dd(r) === 2 },
+    { l:'3 dias ou mais', cls:'bad', f:r => dd(r) >= 3 }
+  ].map(x => { const L = piso.filter(x.f); return Object.assign({}, x, { n:L.length, v:L.reduce((s, r) => s + vol(r), 0) }); });
+  const ordem = (a, b) => dd(b) - dd(a) || vol(b) - vol(a);
+  const criticas = piso.filter(r => dd(r) >= 3).sort(ordem);
+  const atencao = piso.filter(r => dd(r) === 2).sort(ordem);
+  const cardCrit = r => { const it = (rot, v) => (v !== undefined && v !== null && String(v).trim() !== '') ? `<div><small>${rot}</small><b>${escapeHtml(v)}</b></div>` : '';
+    return `<div class="ger-crit"><div class="ger-crit-top"><strong>${escapeHtml(r.carga)}</strong><em>${dd(r)} dias</em></div>
+      <div class="ger-crit-forn">${escapeHtml(r.fornecedor || '—')}</div>
+      <div class="ger-crit-g">${it('Volume', fmtInt(vol(r)))}${it('SKU', fmtInt(sku(r)))}${it('Status', opStatusLabel(r.status))}${it('Doca', r.doca)}${it('Liberação', r.liberacao)}${it('Produtivo', r.produtivo)}${it('Departamento', r.departamento)}</div>
+      ${r.prioridade ? `<div class="ger-crit-p">⚑ ${escapeHtml(r.prioridade.nota)}</div>` : ''}</div>`; };
+
+  const secPiso = `
+  <section class="ger-card">
+    <div class="ger-h"><span>📦 Cargas no piso</span><i>${fmtInt(totN)} carga(s)</i></div>
+    <div class="ger-piso-top">
+      <div class="ger-donut" style="background:${ring}"><div><b>${pEtq}%</b><small>etiquetado</small></div></div>
+      <div class="ger-bigs">
+        <div><b>${fmtInt(totV)}</b><small>volumes no piso</small></div>
+        <div><b>${fmtInt(totS)}</b><small>SKU</small></div>
+      </div>
+    </div>
+    <div class="ger-stack">${totV ? ['etq','proc','outros'].filter(k => G[k].v > 0).map(k => `<span style="width:${G[k].v / totV * 100}%;background:${G[k].c}"></span>`).join('') : ''}</div>
+    <div class="ger-leg">${['etq','proc','outros'].map(k => `<div><i style="background:${G[k].c}"></i><span>${G[k].l}</span><b>${fmtInt(G[k].n)}</b><small>${fmtInt(G[k].v)} vol</small></div>`).join('')}</div>
+    <div class="ger-sub">Aging das cargas</div>
+    <div class="ger-ag">${ag.map(x => `<div class="${x.cls}"><b>${fmtInt(x.n)}</b><span>${x.l}</span><small>${fmtInt(x.v)} vol</small></div>`).join('')}</div>
+    ${criticas.length ? `<div class="ger-sub bad">⚠ Dias críticos (3 dias ou mais) — ${criticas.length} carga(s)</div>${criticas.map(cardCrit).join('')}` : ''}
+    ${atencao.length ? `<div class="ger-sub">Atenção (2 dias) — ${atencao.length} carga(s)</div><div class="ger-list">${atencao.map(r => `<div><b>${escapeHtml(r.carga)}</b><span>${escapeHtml(r.fornecedor || '')}</span><em class="warn">2 d</em><small>${fmtInt(vol(r))} vol</small></div>`).join('')}</div>` : ''}
+  </section>`;
+
+  /* ---------- 2 · RESUMO DA DISTRIBUIÇÃO (hoje) ---------- */
+  const dist = distData || [], ex = distExtras || {};
+  const T = TURNOS.map(t => {
+    const rs = dist.filter(r => turnoDaCarga(r) === t), e = ex[t] || distExtrasVazio();
+    const v = rs.reduce((x, r) => x + vol(r), 0) + Number(e.estocadoFull || 0) + Number(e.estocadoMix || 0) + nrVol(e);
+    const k = rs.reduce((x, r) => x + sku(r), 0) + nrSku(e), p = Number(e.qtdProdutivos || 0);
+    return { t, n:rs.length, v, k, p, hh: p > 0 ? v / p / 7 : 0 };
+  });
+  const maxT = Math.max(1, ...T.map(x => x.v)), somaV = T.reduce((x, y) => x + y.v, 0), somaK = T.reduce((x, y) => x + y.k, 0), somaN = T.reduce((x, y) => x + y.n, 0);
+  const tAgora = turnoPorHorario();
+  const secDist = `
+  <section class="ger-card">
+    <div class="ger-h"><span>🚚 Distribuição de hoje</span><i>${fmtInt(somaN)} carga(s)</i></div>
+    <div class="ger-bigs three">
+      <div><b>${fmtInt(somaV)}</b><small>volumes distribuídos</small></div>
+      <div><b>${fmtInt(somaK)}</b><small>SKU</small></div>
+      <div><b>${fmtInt(T.reduce((x, y) => x + y.p, 0))}</b><small>produtivos</small></div>
+    </div>
+    ${T.map(x => `<div class="ger-turno ${x.t === tAgora ? 'agora' : ''}">
+      <div class="ger-turno-top"><strong>${x.t}</strong>${x.t === tAgora ? '<em>no turno agora</em>' : ''}<b>${fmtInt(x.v)}</b></div>
+      <div class="ger-bar"><span style="width:${x.v / maxT * 100}%"></span></div>
+      <div class="ger-turno-m"><span>${fmtInt(x.n)} carga(s)</span><span>${fmtInt(x.k)} SKU</span><span>${fmtInt(x.p)} prod.</span><span>H/H ${x.hh ? x.hh.toFixed(1).replace('.', ',') : '—'}</span></div>
+    </div>`).join('')}
+  </section>`;
+
+  /* ---------- 3 · FECHAMENTO (mês) ---------- */
+  const hojeId = diaOperacional(), ym = hojeId.slice(0, 7), [ano, mes] = ym.split('-'), nd = prodDiasNoMes(ym);
+  const dm = prodColetar(ym);
+  const S = TURNOS.map(t => {
+    const vals = [];
+    for(let d = 1; d <= nd; d++){ const id = ym + '-' + String(d).padStart(2, '0'); const x = dm[id] && dm[id][t]; vals.push({ d, id, v:x ? x.vol : 0, k:x ? x.sku : 0 }); }
+    const com = vals.filter(x => x.v > 0), volMes = com.reduce((x, y) => x + y.v, 0);
+    return { t, vals, com, volMes, skuMes:com.reduce((x, y) => x + y.k, 0), media:com.length ? volMes / com.length : 0, melhor:com.reduce((m, y) => (!m || y.v > m.v) ? y : m, null) };
+  });
+  const maxD = Math.max(1, ...S.flatMap(x => x.vals.map(y => y.v))), totMes = S.reduce((x, y) => x + y.volMes, 0);
+  const cores = { T1:'#FF8A1F', T2:'#6ec3ff', T3:'#b48cff' };
+  const ultimo = Object.keys(dm).filter(id => id < hojeId).sort().pop();
+  const secFech = `
+  <section class="ger-card">
+    <div class="ger-h"><span>📊 Fechamento · ${mes}/${ano}</span><i>${fmtInt(totMes)} vol no mês</i></div>
+    <div class="ger-stack">${totMes ? S.filter(x => x.volMes > 0).map(x => `<span style="width:${x.volMes / totMes * 100}%;background:${cores[x.t]}"></span>`).join('') : ''}</div>
+    <div class="ger-leg three">${S.map(x => `<div><i style="background:${cores[x.t]}"></i><span>${x.t}</span><b>${fmtInt(x.volMes)}</b><small>${gerPct(x.volMes, totMes)}%</small></div>`).join('')}</div>
+    ${S.map(x => `<div class="ger-fech">
+      <div class="ger-fech-top"><strong style="color:${cores[x.t]}">${x.t}</strong>
+        <span><b>${fmtInt(x.media)}</b> média/dia</span><span><b>${x.com.length}</b> dias</span><span>★ ${x.melhor ? 'dia ' + x.melhor.d + ' · <b>' + fmtInt(x.melhor.v) + '</b>' : '—'}</span></div>
+      <div class="ger-bars">${x.vals.map(y => {
+        const dom = new Date(Number(ano), Number(mes) - 1, y.d).getDay() === 0;
+        return `<i class="${y.id === hojeId ? 'hoje' : ''} ${dom ? 'dom' : ''} ${x.melhor && x.melhor.id === y.id ? 'best' : ''}" style="height:${y.v > 0 ? Math.max(4, y.v / maxD * 100) : 0}%;background:${cores[x.t]}" title="${fmtDia(y.id)} · ${fmtInt(y.v)}"></i>`;
+      }).join('')}</div>
+      <div class="ger-axis"><span>1</span><span>${Math.round(nd / 4)}</span><span>${Math.round(nd / 2)}</span><span>${Math.round(nd * 3 / 4)}</span><span>${nd}</span></div>
+    </div>`).join('')}
+    ${ultimo ? `<div class="ger-ult">Último dia fechado · ${fmtDia(ultimo)}: ${TURNOS.map(t => `${t} <b>${fmtInt((dm[ultimo][t] || { vol:0 }).vol)}</b>`).join(' · ')}</div>` : ''}
+  </section>`;
+
+  box.innerHTML = `
+    <div class="ger-top"><div><h2>Panorama operacional</h2><small>${escapeHtml(todayLabel().extenso)}</small></div><span class="ger-live"><i></i>ao vivo · ${hh}</span></div>
+    ${secPiso}${secDist}${secFech}
+    <div class="ger-foot">Atualiza sozinho · só visualização</div>`;
 }
 
 /* Administrador: pré-visualiza a tela do Operador (moldura de celular); nada é gravado */
@@ -3798,7 +3980,7 @@ function switchTab(name){
 function forceLogout(motivo){
   if(typeof tvStop === 'function') tvStop();
   currentUser = null;
-  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-tv');
+  document.body.classList.remove('piso-view', 'logado', 'is-admin', 'role-admin', 'role-encarregado', 'role-conferente', 'role-supervisor', 'role-operador', 'role-gerente', 'role-tv');
   { const ee = document.getElementById('enc-escolha'); if(ee) ee.style.display = 'none'; }
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -3818,9 +4000,11 @@ function logout(){
 function applySectorVisibility(){
   // Operador: só enxerga o painel de Cargas no Piso (sem fila, distribuição, abas)
   const op = currentUser && currentUser.role === 'operador';
-  document.getElementById('bloco-distribuicao').style.display = op ? 'none' : 'block';
-  document.getElementById('tabnav').style.display = op ? 'none' : 'flex';
-  { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp) pp.style.display = op ? 'none' : ''; }
+  const gerOn = !!(currentUser && currentUser.role === 'gerente');
+  document.getElementById('bloco-distribuicao').style.display = (op || gerOn) ? 'none' : 'block';
+  document.getElementById('tabnav').style.display = (op || gerOn) ? 'none' : 'flex';
+  const ger = !!(currentUser && currentUser.role === 'gerente');
+  { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'), gv = document.getElementById('ger-view'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp) pp.style.display = (op || ger) ? 'none' : ''; if(gv) gv.style.display = ger ? 'block' : 'none'; }
   document.getElementById('tab-btn-fech').style.display = podeVerFechamentos() ? 'inline-block' : 'none';
 }
 
@@ -7772,6 +7956,7 @@ function recusarSolicitacao(id){ console.warn('Firebase não carregou ainda.'); 
 /* Desenha só o que está na tela: abas fechadas (Relatório/Fechamentos) só são desenhadas quando abertas. */
 function renderAll(){
   if(!currentUser) return;
+  if(currentUser.role === 'gerente'){ renderGerente(); return; }
   renderPiso();
   renderFila();
   renderPortaria();
@@ -8289,7 +8474,7 @@ function aplicarSomenteLeitura(){
   document.body.classList.toggle('readonly', ro);
   const b = document.getElementById('ro-banner');
   if(b && currentUser){
-    b.textContent = ro
+    b.textContent = (ro && currentUser.role !== 'gerente')
       ? `🔒 Somente consulta — você entrou no ${currentUser.turno} (${TURNO_HORARIOS[currentUser.turno]}) e agora é horário do ${turnoPorHorario()}. Só o Administrador altera fora do horário do turno.`
       : '';
   }
@@ -8693,6 +8878,7 @@ function renderDistClockOnly(){
   // ---------- FECHAMENTOS ----------
   onSnapshot(fechCol, snap => {
     fechamentosData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if(currentUser && currentUser.role === 'gerente'){ renderGerente(); return; }
     if(currentUser) renderFechamentos();
     if(currentUser && abaAtual === 'cross') renderCrossPendencias();
   }, err => reportError('Erro ao ler fechamentos:', err));
@@ -10630,22 +10816,24 @@ sepProdPaginaHtml = function(){
 <script id="v6-patch-js">
 /* ===== cadastro de usuários (feito pelo Administrador) ===== */
 let cadLista = [], cadPronto = false, ufAba = 'on';
-const CAD_FUNCOES = [['conferente','Conferente'],['encarregado','Encarregado'],['supervisor','Supervisor'],['operador','Operador']];
+const CAD_FUNCOES = [['conferente','Conferente'],['encarregado','Encarregado'],['supervisor','Supervisor'],['operador','Operador'],['gerente','Gerente']];
 function cadAcha(nome){ const id = slugifyName(nome || ''); return cadLista.find(x => x.id === id) || null; }
 async function cadVerificar(nome, role){
   if(role === 'tv' || role === 'admin') return { ok: true };           // TV e Administrador não dependem de cadastro
   let lista = cadLista;
-  if(window.cadLer){ try{ lista = await window.cadLer(); }catch(e){ if(!cadPronto && role === 'conferente') return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' }; } }
-  else if(role === 'conferente' && !cadPronto) return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' };
+  if(window.cadLer){ try{ lista = await window.cadLer(); }catch(e){ if(!cadPronto && (role === 'conferente' || role === 'gerente')) return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' }; } }
+  else if((role === 'conferente' || role === 'gerente') && !cadPronto) return { ok: false, motivo: 'Não consegui verificar o cadastro agora. Tente de novo.' };
   const c = lista.find(x => x.id === slugifyName(nome));
   if(role === 'conferente' && (!c || c.funcao !== 'conferente')) return { ok: false, motivo: 'Conferente só entra com cadastro feito pelo Administrador.' };
+  if(role === 'gerente' && (!c || c.funcao !== 'gerente')) return { ok: false, motivo: 'Gerente só entra com cadastro feito pelo Administrador.' };
   return { ok: true, turno: c ? c.turno : '' };
 }
 function cadAposMudar(){
   try{
     if(currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv'){
       const c = cadAcha(currentUser.nome);
-      if((currentUser.roleReal || currentUser.role) === 'conferente' && cadPronto && (!c || c.funcao !== 'conferente')){ forceLogout('Seu cadastro de conferente foi removido pelo Administrador.'); return; }
+      { const rr = currentUser.roleReal || currentUser.role;
+        if((rr === 'conferente' || rr === 'gerente') && cadPronto && (!c || c.funcao !== rr)){ forceLogout('Seu cadastro de ' + (rr === 'gerente' ? 'gerente' : 'conferente') + ' foi removido pelo Administrador.'); return; } }
       if(c && c.turno && c.turno !== currentUser.turno){ currentUser.turno = c.turno; turnoAtivo = c.turno; distTabAtiva = c.turno; aplicarSomenteLeitura(); renderAll(); }
     }
     if(ufAba === 'cad') cadRender();

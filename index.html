@@ -552,6 +552,7 @@
   .seg button.on{ background:var(--band); color:#000; }
   .so-admin{ display:none; }
   body.is-admin .so-admin{ display:inline-block; }
+  body.role-conferente .so-conf{ display:inline-block; }
 
   /* ---------- FUNDO DA ABA CARGAS NO PISO: corredor de porta-paletes ----------
      Para usar uma FOTO real, defina em #panel-piso:  --piso-foto: url("foto-corredor.jpg");  */
@@ -1649,7 +1650,7 @@
           <span class="sub" id="data-dist-T1"></span>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T1')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T1')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T1','Distribuição T1')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T1')">📋 Copiar para Excel</button>
         </div>
@@ -1703,7 +1704,7 @@
           <span class="sub" id="data-dist-T2"></span>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T2')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T2')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T2','Distribuição T2')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T2')">📋 Copiar para Excel</button>
         </div>
@@ -1757,7 +1758,7 @@
           <span class="sub" id="data-dist-T3"></span>
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm no-print so-admin" onclick="openDistImportModal('T3')">⬇ Colar da planilha</button>
+          <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T3')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T3','Distribuição T3')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T3')">📋 Copiar para Excel</button>
         </div>
@@ -2656,6 +2657,8 @@ const STATUS_VISIVEL = {
 function ehAdminLike(role){ return !!role && role !== 'operador' && role !== 'tv'; }
 /* só o Administrador: editar cargas, limpar o piso, ver Usuários/Solicitações (remover, expulsar, banir, aprovar) */
 function souAdmin(){ return !!currentUser && currentUser.role === 'admin'; }
+/* importar cargas no piso e distribuição (colar da planilha / foto): Administrador e Conf30 (conferente) */
+function podeImportar(){ return !!currentUser && (currentUser.role === 'admin' || currentUser.role === 'conferente'); }
 const PERFIS_DISTRIBUICAO = ['admin','encarregado','conferente','supervisor'];
 
 const STATUS_LIST = [
@@ -2920,8 +2923,8 @@ function entrarNoApp(role){
   document.getElementById('piso-actions').style.display = (isAdmin || podeRelPiso) ? 'flex' : 'none';
   document.getElementById('btn-rel-piso').style.display = podeRelPiso ? 'inline-block' : 'none';
   document.getElementById('btn-add-piso').style.display = isAdmin ? 'inline-block' : 'none';
-  document.getElementById('btn-colar-piso').style.display = isAdmin ? 'inline-block' : 'none';
-  document.getElementById('btn-foto-piso').style.display = isAdmin ? 'inline-block' : 'none';
+  document.getElementById('btn-colar-piso').style.display = (isAdmin || role === 'conferente') ? 'inline-block' : 'none';
+  document.getElementById('btn-foto-piso').style.display = (isAdmin || role === 'conferente') ? 'inline-block' : 'none';
   document.body.classList.add('logado');
   document.body.classList.toggle('is-admin', isAdmin);
   ['admin','encarregado','conferente','supervisor','operador','tv'].forEach(r => document.body.classList.toggle('role-' + r, r === role));
@@ -5042,7 +5045,7 @@ async function confirmarApagarFech(){
 
 /* ===================== IMPORTAR PLANILHA (colar do Excel) ===================== */
 function openImportModal(){
-  if(!souAdmin()) return;
+  if(!podeImportar()) return;
   document.getElementById('import-textarea').value = '';
   document.getElementById('import-modal').classList.add('open');
 }
@@ -5145,6 +5148,7 @@ function parsePisoRow(raw){
 }
 
 function importPisoFromPaste(){
+  if(!podeImportar()) return;
   const raw = document.getElementById('import-textarea').value.replace(/^[\r\n]+/, '').replace(/\s+$/, '');   // mantém TAB inicial (produtivo vazio) da 1ª linha
   if(!raw){ closeImportModal(); return; }
 
@@ -5257,7 +5261,7 @@ function previewDistPaste(){
     : '⚠ Nenhuma linha reconhecida ainda — confira se colou as colunas do Excel (com TAB) e se a Liberação está no formato dd/mm/aaaa.';
 }
 function openDistImportModal(turno){
-  if(!souAdmin()) return;
+  if(!podeImportar()) return;
   document.getElementById('import-dist-turno').value = TURNOS.includes(turno) ? turno : (TURNOS.includes(distTabAtiva) ? distTabAtiva : turnoAtivo);
   document.getElementById('import-dist-textarea').value = '';
   document.getElementById('import-dist-preview').textContent = '';
@@ -5267,7 +5271,7 @@ function closeDistImportModal(){
   document.getElementById('import-dist-modal').classList.remove('open');
 }
 function importDistFromPaste(){
-  if(!souAdmin()) return;
+  if(!podeImportar()) return;
   const turnoSel = document.getElementById('import-dist-turno').value;
   const parsed = parseDistPaste(document.getElementById('import-dist-textarea').value);
   if(parsed.length === 0){
@@ -5316,7 +5320,7 @@ let photoCapturedDataUrl = null;
 let photoReviewRows = [];
 
 function openPhotoImportModal(){
-  if(!souAdmin()) return;
+  if(!podeImportar()) return;
   resetPhotoCapture();
   document.getElementById('photo-status').textContent = '';
   document.getElementById('photo-review-wrap').style.display = 'none';

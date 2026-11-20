@@ -1862,6 +1862,12 @@
           <select class="cross-est-sel" onchange="crossSetEst(this.value)" title="Mostra só as lojas da estação escolhida"></select>
         </label>
       </div>
+      <div class="cross-bar no-print" data-ro-ok id="cross-regra-pedido">
+        <label class="cross-est-lb">Regra do PEDIDO · nº da carga de corte
+          <input type="number" id="cross-limite" class="cross-est-sel" min="1" step="1" inputmode="numeric" style="width:130px;" value="400000" onchange="crossSetLimite(this.value)" title="Carga abaixo deste número = Estocado; igual ou acima = Cross-Docking">
+        </label>
+        <span class="hint" id="cross-limite-txt" style="margin:0; flex:1 1 260px;"></span>
+      </div>
       <div class="table-scroll">
         <table>
           <thead>
@@ -1873,7 +1879,7 @@
         </table>
       </div>
       <div class="panel-footer-actions no-print" id="cross-pend-actions" style="display:none;">
-        <button class="btn btn-ghost btn-sm" onclick="openCrossImportModal()">Colar relatório da planilha (Excel)</button>
+        <button class="btn btn-ghost btn-sm" onclick="openCrossImportModal()">Colar relatório (Consinco WMS / Excel)</button>
       </div>
     </section>
 
@@ -2349,12 +2355,12 @@
 <div class="modal-overlay" id="import-cross-modal">
   <div class="modal-box">
     <div class="login-band">
-      <h1>Colar relatório Cross da planilha</h1>
-      <p>Cole as linhas copiadas do Excel (colunas: Agrupadora, Master, Status, Destino, Cód, Descrição, Embalagem, Qtd, Carga, Fornecedor, Recebimento, Coluna1, Pedido)</p>
+      <h1>Colar relatório Cross (Consinco WMS ou planilha)</h1>
+      <p>Cole direto do Consinco WMS (Agrupadora, Master, Status, Destino, Cód, Descrição, Embalagem, Qtd, Peso, Volume, Carga, Fornecedor, Recebimento) ou da planilha. O Pedido é preenchido sozinho pela regra do número da carga.</p>
     </div>
     <div class="modal-body">
-      <textarea id="import-cross-textarea" placeholder="Cole aqui o intervalo copiado do Excel..."></textarea>
-      <p class="hint">Isso substitui todo o relatório Cross atual pelas linhas coladas e reinicia as marcações de impressão. A tabela de pendências considera só as linhas com Pedido "Cross-Docking" e é calculada somando o QTD por carga, separando as linhas com status "Montada" das linhas com status "Agrupada". O Aging é calculado em dias a partir da data de Recebimento.</p>
+      <textarea id="import-cross-textarea" placeholder="Cole aqui o relatório copiado do Consinco WMS (ou do Excel)..."></textarea>
+      <p class="hint">Isso substitui todo o relatório Cross atual pelas linhas coladas e reinicia as marcações de impressão. O Pedido é definido pelo sistema: carga abaixo do número de corte da guia Relatório (padrão 400000) = Estocado; igual ou acima = Cross-Docking. A tabela de pendências considera só as linhas com Pedido "Cross-Docking" e é calculada somando o QTD por carga, separando as linhas com status "Montada" das linhas com status "Agrupada". O Aging é calculado em dias a partir da data de Recebimento.</p>
       <div class="modal-actions">
         <button class="btn btn-ghost btn-sm" onclick="closeCrossImportModal()">Cancelar</button>
         <button class="btn btn-primary" style="width:auto;" onclick="importCrossFromPaste()">Importar</button>
@@ -5569,6 +5575,40 @@ function toDecimalBR(v){
    FORNECEDOR, RECEBIMENTO, (Coluna1), PEDIDO. Bases antigas, com PESO e VOLUME antes da CARGA, também são aceitas. */
 const CROSS_LAYOUT_ATUAL  = ['agrupadora','master','status','destino','cod','descricao','embalagem','qtd','carga','fornecedor','recebimento',null,'pedido'];
 const CROSS_LAYOUT_ANTIGO = ['agrupadora','master','status','destino','cod','descricao','embalagem','qtd','peso','volume','carga','fornecedor','recebimento',null,'pedido'];
+/* PEDIDO padronizado pelo sistema (mesma fórmula do Excel): carga abaixo do limite = Estocado · igual ou acima = Cross-Docking */
+let crossLimite = 400000;
+function pedidoPorCarga(carga, atual){
+  const c = String(carga == null ? '' : carga).trim();
+  if(!/^\d+$/.test(c)) return atual || '';
+  return parseInt(c, 10) < crossLimite ? 'Estocado' : 'Cross-Docking';
+}
+function crossAplicarLimite(){
+  (crossRawData || []).forEach(r => { r.pedido = pedidoPorCarga(r.carga, r.pedido); });
+  try{ (baseRows || []).forEach(r => { r.pedido = pedidoPorCarga(r.carga, r.pedido); }); }catch(e){}
+}
+function crossRenderLimite(){
+  const inp = document.getElementById('cross-limite');
+  if(inp){ if(document.activeElement !== inp) inp.value = crossLimite; inp.disabled = !souAdmin(); inp.title = souAdmin() ? 'Carga abaixo deste número = Estocado; igual ou acima = Cross-Docking' : 'Só o Administrador pode alterar este número'; }
+  const t = document.getElementById('cross-limite-txt');
+  if(t){
+    const n = (crossRawData || []).length;
+    const c = (crossRawData || []).filter(ehCrossDocking).length;
+    t.textContent = fmtInt(crossLimite - 1) + ' ou menos = Estocado · ' + fmtInt(crossLimite) + ' ou mais = Cross-Docking' + (n ? ' · no relatório: ' + fmtInt(c) + ' Cross-Docking e ' + fmtInt(n - c) + ' Estocado' : '');
+  }
+}
+function crossSetLimite(v){
+  if(!souAdmin() || (typeof somenteLeitura === 'function' && somenteLeitura())){ showToast('Só o Administrador pode alterar o número de corte do Pedido.', true); crossRenderLimite(); return; }
+  const n = parseInt(String(v).replace(/\D/g, ''), 10);
+  if(!isFinite(n) || n <= 0){ showToast('Informe um número de carga válido.', true); crossRenderLimite(); return; }
+  if(n === crossLimite){ crossRenderLimite(); return; }
+  crossLimite = n;
+  crossAplicarLimite();
+  if(window.saveCross) window.saveCross();
+  try{ baseVer++; if(window.baseSalvar && baseRows.length) window.baseSalvar(baseRows, baseDia); }catch(e){}
+  renderCrossAll();
+  try{ renderDist(); }catch(e){}
+  showToast('✔ Regra do Pedido: carga abaixo de ' + fmtInt(n) + ' = Estocado · ' + fmtInt(n) + ' ou mais = Cross-Docking.', false);
+}
 function parseCrossPaste(raw){
   const lines = raw.split(/\r?\n/).filter(l => l.trim() !== '');
   if(lines.length === 0) return [];
@@ -5609,7 +5649,7 @@ function parseCrossPaste(raw){
         carga: obj.carga || '',
         fornecedor: obj.fornecedor || '',
         recebimento: obj.recebimento || '',
-        pedido: obj.pedido || '',
+        pedido: pedidoPorCarga(obj.carga, obj.pedido),
         aging: obj.aging || ''
       });
     }
@@ -5871,6 +5911,7 @@ window.addEventListener('afterprint', () => document.body.removeAttribute('data-
 
 function renderCrossAll(){
   renderCrossEstSelects();
+  crossRenderLimite();
   renderCrossPendencias();
   renderCrossRelatorio();
 }
@@ -6879,6 +6920,7 @@ function importCrossFromPaste(){
   closeCrossImportModal();
   renderCrossAll();
   try{ renderDist(); }catch(e){}
+  { const nc = rows.filter(ehCrossDocking).length; showToast('Relatório importado: ' + fmtInt(rows.length) + ' linhas · ' + fmtInt(nc) + ' Cross-Docking · ' + fmtInt(rows.length - nc) + ' Estocado (corte: carga ' + fmtInt(crossLimite) + ')', false); }
 }
 
 /* ===================== CÓDIGO (QR) PRO SITE ===================== */
@@ -8442,7 +8484,7 @@ function renderDistClockOnly(){
       await Promise.all(promessasApagar);
 
       crossNumChunksConhecido = chunks.length;
-      await setDoc(crossRef, { marcadas: crossMarcadas, numChunks: chunks.length });
+      await setDoc(crossRef, { marcadas: crossMarcadas, numChunks: chunks.length, limiteCross: crossLimite });
     } catch(err){
       reportError('Erro ao salvar relatório Cross:', err);
     }
@@ -8568,6 +8610,7 @@ function renderDistClockOnly(){
       const d = snap.data();
       crossMarcadas = d.marcadas || {};
       crossNumChunksConhecido = d.numChunks || 0;
+      crossLimite = Number(d.limiteCross) > 0 ? Number(d.limiteCross) : 400000;
     } else {
       crossMarcadas = {};
       crossNumChunksConhecido = 0;

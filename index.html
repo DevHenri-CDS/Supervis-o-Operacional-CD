@@ -1960,6 +1960,7 @@
         </div>
         <div class="stat-row">
           <div class="stat"><div class="n" id="st-cross-rel-count">0</div><div class="l">Itens no relatório</div></div>
+          <div class="stat"><div class="n" id="st-cross-bip-count">0</div><div class="l">Masters bipadas</div></div>
         </div>
       </div>
       <div class="cross-bar cross-bar-top no-print" data-ro-ok>
@@ -1970,6 +1971,18 @@
         <button class="btn btn-ghost btn-sm" id="btn-mobile-preview" onclick="toggleMobilePreview()">Visualizar como celular</button>
         <span class="hint" style="margin:0; flex:1 1 100%;">Sai impresso em paisagem, frente e verso, agrupado por loja. Na janela de impressão, escolha a impressora <b>1030-SUOP-001</b> (porta IP_10.30.2.235) e marque <b>Imprimir em ambos os lados</b> (virar pela borda curta).</span>
       </div>
+      <div class="cross-bar no-print" id="bip-bar">
+        <button type="button" class="btn btn-primary" style="width:auto;" onclick="bipAbrir()">📷 Bipar master (câmera)</button>
+        <input type="text" id="bip-input" placeholder="Leitor ou digitar a master + Enter" autocomplete="off" style="min-width:250px; padding:9px 10px; background:var(--input-bg); color:var(--text); border:1px solid var(--line); border-radius:8px;" onkeydown="if(event.key==='Enter'){ event.preventDefault(); bipManual(this); }">
+        <span class="hint" id="bip-resumo" style="margin:0; flex:1 1 220px;"></span>
+      </div>
+      <details id="bip-lista" class="no-print" style="display:none;">
+        <summary>Masters bipadas (<span id="bip-lista-n">0</span>)</summary>
+        <div class="bip-tb-wrap">
+          <table><thead><tr><th>Master</th><th>Loja</th><th>Carga</th><th>Quem</th><th>Hora</th><th></th></tr></thead><tbody id="bip-lista-tb"></tbody></table>
+          <button type="button" class="btn btn-ghost btn-sm" id="bip-lista-todas" onclick="bipDesfazerTodas()" style="margin-top:8px;">Desfazer todas</button>
+        </div>
+      </details>
       <div class="table-scroll">
         <table>
           <thead>
@@ -5932,6 +5945,7 @@ function computeRelatorioCross(){
   if(marcadas.size === 0) return [];
   return crossRowsFiltradas()
     .filter(r => marcadas.has(r.carga) && ehCrossDocking(r) && String(r.status||'').toUpperCase().includes('MONTAD'))
+    .filter(r => !(window.bipEhBipada && window.bipEhBipada(r.master)))
     .sort((a,b) => cmpNat(a.destino, b.destino) || cmpNat(a.descricao, b.descricao) || cmpNat(a.carga, b.carga));
 }
 
@@ -6031,7 +6045,7 @@ function renderCrossRelatorio(){
   const itens = computeRelatorioCross();
 
   if(itens.length === 0){
-    const msg = 'Nenhuma carga marcada para o relatório ainda.';
+    const msg = Object.keys(crossMarcadas).some(c => crossMarcadas[c]) ? (Object.keys(window.bipadasData || {}).length ? '✔ Todas as masters do relatório já foram bipadas.' : 'Nenhuma master montada nas cargas marcadas.') : 'Nenhuma carga marcada para o relatório ainda.';
     tbody.innerHTML = `<tr class="empty-row"><td class="mc-only mc-show" style="display:block;" colspan="10">${msg}</td></tr>`;
   }
 
@@ -6102,6 +6116,7 @@ function renderCrossAll(){
   crossRenderLimite();
   renderCrossPendencias();
   renderCrossRelatorio();
+  try{ if(window.bipRenderPainel) window.bipRenderPainel(); }catch(e){}
 }
 
 /* Impressão do relatório montado: página deitada (paisagem), frente e verso, agrupada por loja, tudo centralizado */
@@ -7103,6 +7118,7 @@ function importCrossFromPaste(){
   crossRawData = rows;
   crossMarcadas = {};
   saveCross();
+  try{ window.bipadasData = {}; if(window.bipLimparTodas) window.bipLimparTodas(); }catch(e){}
   try{ baseCapturar(rows); }catch(e){ console.error('Base:', e); }
   try{ spdAgendarSync(); }catch(e){}   // grava na Base as cargas que estão no piso/distribuídas
   closeCrossImportModal();
@@ -11270,5 +11286,297 @@ body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:4 / 5; }
   :is(body.role-admin, body.role-conferente):not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-carga{ grid-column:1 / -1; }
 }
 </style>
+<!-- ===================== BIPAGEM DE MASTER PELO SITE (câmera / leitor) ===================== -->
+<style id="bip-css">
+  #bip-bar{ align-items:center; gap:10px; flex-wrap:wrap; }
+  #bip-lista{ margin:6px 0 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel); }
+  #bip-lista > summary{ cursor:pointer; padding:9px 14px; font-weight:700; color:var(--band); }
+  #bip-lista .bip-tb-wrap{ max-height:260px; overflow:auto; padding:0 10px 10px; }
+  #bip-lista table{ width:100%; border-collapse:collapse; font-size:.8rem; }
+  #bip-lista th, #bip-lista td{ padding:5px 8px; border-bottom:1px solid var(--line); text-align:left; }
+  .bip-ov{ position:fixed; inset:0; z-index:2147483000; background:rgba(0,0,0,.88); display:flex; align-items:center; justify-content:center; padding:10px; }
+  .bip-ov[hidden]{ display:none; }
+  .bip-box{ width:min(560px,100%); max-height:100%; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:10px; }
+  .bip-top{ display:flex; align-items:center; gap:10px; justify-content:space-between; }
+  .bip-top b{ color:var(--band); font-size:1.05rem; }
+  .bip-vw{ position:relative; background:#000; border-radius:10px; overflow:hidden; aspect-ratio:4/3; }
+  .bip-vw video{ width:100%; height:100%; object-fit:cover; display:block; }
+  .bip-mira{ position:absolute; left:8%; right:8%; top:36%; bottom:36%; border:2px solid var(--band); border-radius:8px; box-shadow:0 0 0 9999px rgba(0,0,0,.35); pointer-events:none; }
+  .bip-st{ padding:10px 12px; border-radius:10px; font-weight:700; background:var(--input-bg); border:1px solid var(--line); text-align:center; }
+  .bip-st.ok{ background:var(--ok-bg); color:var(--ok-text); border-color:var(--ok-text); }
+  .bip-st.warn{ background:var(--warn-bg); color:var(--warn-text); border-color:var(--warn-text); }
+  .bip-st.err{ background:#3a1210; color:var(--danger); border-color:var(--danger); }
+  .bip-row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .bip-row input, .bip-row select{ flex:1 1 150px; padding:9px 10px; background:var(--input-bg); color:var(--text); border:1px solid var(--line); border-radius:8px; font-size:1rem; }
+  #bip-hist{ font-size:.78rem; color:var(--text-dim); display:flex; flex-direction:column; gap:3px; }
+  #bip-hist div.ok{ color:var(--ok-text); } #bip-hist div.warn{ color:var(--warn-text); } #bip-hist div.err{ color:var(--danger); }
+</style>
+
+<div id="bip-overlay" class="bip-ov no-print" hidden>
+  <div class="bip-box">
+    <div class="bip-top"><b>📷 Bipar master</b><span id="bip-cont" style="color:var(--text-dim);font-size:.8rem;"></span><button type="button" class="btn btn-ghost btn-sm" onclick="bipFechar()">Fechar</button></div>
+    <div class="bip-vw"><video id="bip-video" playsinline muted autoplay></video><div class="bip-mira"></div></div>
+    <div id="bip-status" class="bip-st">Aponte a câmera para o código de barras da master</div>
+    <div class="bip-row">
+      <input type="text" id="bip-manual" placeholder="ou digite / use o leitor e dê Enter" autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();bipManual(this);}">
+      <button type="button" class="btn btn-primary" style="width:auto;" onclick="bipManual(document.getElementById('bip-manual'))">OK</button>
+    </div>
+    <div class="bip-row">
+      <select id="bip-cam" onchange="bipTrocarCamera(this.value)" style="display:none;"></select>
+      <button type="button" class="btn btn-ghost btn-sm" id="bip-torch" style="display:none;" onclick="bipLanterna()">🔦 Lanterna</button>
+      <button type="button" class="btn btn-ghost btn-sm" onclick="bipDesfazerUltima()">↩ Desfazer última</button>
+    </div>
+    <div id="bip-hist"></div>
+  </div>
+</div>
+
+<script id="bip-patch-js">
+(function(){
+  window.bipadasData = window.bipadasData || {};
+  const ZX_URL = 'https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';
+  const $ = id => document.getElementById(id);
+  const norm = s => String(s == null ? '' : s).trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const semZeros = s => s.replace(/^0+/, '');
+  const ehMontadaCross = r => ehCrossDocking(r) && String(r.status || '').toUpperCase().includes('MONTAD');
+  const hhmm = ms => { const d = new Date(ms); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); };
+
+  window.bipEhBipada = function(master){ const k = norm(master); return !!k && !!window.bipadasData[k]; };
+
+  /* acha a master pelo texto lido (exato; sem zeros à esquerda; ou com dígito verificador a mais) */
+  function achar(lido){
+    const c = norm(lido); if(!c) return null;
+    const mapa = {};
+    (crossRawData || []).forEach(r => { const k = norm(r.master); if(k){ (mapa[k] = mapa[k] || []).push(r); } });
+    let k = null;
+    if(mapa[c]) k = c;
+    if(!k){ const cz = semZeros(c); if(cz){ k = Object.keys(mapa).find(m => semZeros(m) === cz) || null; } }
+    if(!k && c.length >= 7){ const sem = c.slice(0, -1); k = mapa[sem] ? sem : (Object.keys(mapa).find(m => semZeros(m) === semZeros(sem)) || null); }
+    return k ? { key: k, rows: mapa[k] } : null;
+  }
+
+  function podeBipar(){
+    if(!currentUser || currentUser.role === 'tv' || currentUser.role === 'gerente') return false;
+    return true;
+  }
+
+  window.bipProcessar = function(lido){
+    if(!podeBipar()) return { tipo:'err', msg:'Seu perfil não pode bipar.' };
+    if(somenteLeitura()) return { tipo:'err', msg:'🔒 Fora do horário do seu turno: só o Administrador altera.' };
+    const txt = String(lido == null ? '' : lido).trim();
+    if(!txt) return { tipo:'err', msg:'Código vazio.' };
+    const m = achar(txt);
+    if(!m) return { tipo:'err', msg:'Master não encontrada no relatório colado. Lido: ' + txt };
+    const ja = window.bipadasData[m.key];
+    if(ja) return { tipo:'warn', msg:'Master ' + (ja.m || txt) + ' já foi bipada por ' + (ja.por || '?') + ' às ' + hhmm(ja.em) + '.' };
+    const visiveis = m.rows.filter(r => crossMarcadas[r.carga] && ehMontadaCross(r));
+    if(!visiveis.length){
+      const r0 = m.rows[0];
+      return { tipo:'warn', msg:'Master ' + r0.master + ' existe (carga ' + r0.carga + ', loja ' + r0.destino + '), mas não está no Relatório Montado: marque a carga em "Imprimir?".' };
+    }
+    if(typeof window.bipGravar !== 'function') return { tipo:'err', msg:'Sem conexão com a nuvem: a bipagem não foi gravada.' };
+    const r0 = visiveis[0];
+    const val = { m: r0.master, por: currentUser.nome || '', em: Date.now(), t: currentUser.turno || '', lj: r0.destino || '', c: r0.carga || '', n: visiveis.length };
+    window.bipadasData[m.key] = val;           // some na hora neste aparelho; a nuvem repassa aos outros
+    window.bipGravar(m.key, val);
+    try{ renderCrossAll(); }catch(e){}
+    return { tipo:'ok', key:m.key, msg:'✔ Master ' + r0.master + ' · loja ' + r0.destino + ' · carga ' + r0.carga + ' · ' + visiveis.length + ' item(ns) saíram do relatório.' };
+  };
+
+  window.bipDesfazer = function(key){
+    const v = window.bipadasData[key]; if(!v) return false;
+    if(somenteLeitura()){ showToast('🔒 Fora do horário do seu turno: só o Administrador altera.', true); return false; }
+    delete window.bipadasData[key];
+    if(typeof window.bipRemover === 'function') window.bipRemover(key);
+    try{ renderCrossAll(); }catch(e){}
+    return true;
+  };
+  window.bipDesfazerTodas = async function(){
+    if(!souAdmin()) return;
+    if(!(await uiConfirm('Desfazer TODAS as bipagens? Todas as masters voltam para o Relatório Montado.', { perigo:true }))) return;
+    window.bipadasData = {};
+    if(typeof window.bipLimparTodas === 'function') window.bipLimparTodas();
+    try{ renderCrossAll(); }catch(e){}
+    showToast('Bipagens desfeitas: todas as masters voltaram ao relatório.', false);
+  };
+
+  /* ---------- painel do relatório (contadores + lista com "Desfazer") ---------- */
+  window.bipRenderPainel = function(){
+    const bar = $('bip-bar'); if(!bar) return;
+    const ok = podeBipar();
+    bar.style.display = ok ? 'flex' : 'none';
+    const keys = Object.keys(window.bipadasData || {});
+    const st = $('st-cross-bip-count'); if(st) st.textContent = keys.length;
+    let restantes = 0;
+    try{ restantes = new Set(computeRelatorioCross().map(r => norm(r.master)).filter(Boolean)).size; }catch(e){}
+    const rs = $('bip-resumo');
+    if(rs) rs.textContent = keys.length + ' bipada(s) · ' + restantes + ' master(s) ainda no relatório';
+    const det = $('bip-lista'); if(!det) return;
+    det.style.display = keys.length ? '' : 'none';
+    $('bip-lista-n').textContent = keys.length;
+    const podeDesf = PERFIS_DISTRIBUICAO.includes(currentUser.role);
+    const lista = keys.map(k => [k, window.bipadasData[k]]).sort((a, b) => (b[1].em || 0) - (a[1].em || 0));
+    $('bip-lista-tb').innerHTML = lista.map(([k, v]) => '<tr><td>' + escapeHtml(v.m) + '</td><td>' + escapeHtml(v.lj) + '</td><td>' + escapeHtml(v.c) + '</td><td>' + escapeHtml(v.por) + (v.t ? ' · ' + escapeHtml(v.t) : '') + '</td><td>' + hhmm(v.em) + '</td><td>'
+      + (podeDesf ? '<button type="button" class="btn btn-ghost btn-sm" onclick="bipDesfazer(\'' + k + '\')">Desfazer</button>' : '') + '</td></tr>').join('');
+    $('bip-lista-todas').style.display = souAdmin() ? '' : 'none';
+  };
+
+  /* ---------- entrada por leitor / digitação ---------- */
+  window.bipManual = function(inp){
+    if(!inp) return;
+    const v = inp.value.trim(); if(!v) return;
+    const r = window.bipProcessar(v);
+    feedback(r);
+    if(inp.id === 'bip-input') showToast(r.msg, r.tipo !== 'ok');
+    if(r.tipo === 'ok') inp.value = ''; else inp.select();
+  };
+
+  /* ---------- câmera ---------- */
+  let stream = null, detector = null, zxReader = null, timer = null, aberto = false;
+  let ultTxt = '', ultT = 0, ultKey = null;
+  const hist = [];
+
+  function bip(freq, ms){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.frequency.value = freq; g.gain.value = .15; o.connect(g); g.connect(ctx.destination); o.start();
+      setTimeout(() => { o.stop(); ctx.close(); }, ms);
+    }catch(e){}
+  }
+  function feedback(r){
+    const st = $('bip-status');
+    if(st){ st.className = 'bip-st ' + r.tipo; st.textContent = r.msg; }
+    if(r.tipo === 'ok'){ ultKey = r.key; bip(1200, 140); if(navigator.vibrate) navigator.vibrate(60); }
+    else { bip(280, 320); if(navigator.vibrate) navigator.vibrate([90, 60, 90]); }
+    hist.unshift({ tipo:r.tipo, msg:r.msg }); if(hist.length > 6) hist.pop();
+    const h = $('bip-hist'); if(h) h.innerHTML = hist.map(x => '<div class="' + x.tipo + '">' + escapeHtml(x.msg) + '</div>').join('');
+    const c = $('bip-cont'); if(c) c.textContent = Object.keys(window.bipadasData).length + ' bipada(s)';
+  }
+  function aoLer(texto){
+    if(!aberto) return;
+    const t = String(texto || '').trim(); if(!t) return;
+    const agora = Date.now();
+    if(t === ultTxt && agora - ultT < 2500) return;     // mesmo código na frente da câmera: ignora
+    ultTxt = t; ultT = agora;
+    feedback(window.bipProcessar(t));
+  }
+  window.bipDesfazerUltima = function(){
+    if(!ultKey || !window.bipadasData[ultKey]){ showToast('Nada para desfazer.', true); return; }
+    const v = window.bipadasData[ultKey];
+    if(window.bipDesfazer(ultKey)){ feedback({ tipo:'warn', msg:'↩ Desfeita: master ' + v.m + ' voltou ao relatório.' }); ultKey = null; ultTxt = ''; }
+  };
+
+  function carregarZX(){
+    return new Promise((res, rej) => {
+      if(window.ZXing) return res();
+      const s = document.createElement('script'); s.src = ZX_URL; s.onload = () => res(); s.onerror = () => rej(new Error('Não foi possível carregar o leitor (internet).'));
+      document.head.appendChild(s);
+    });
+  }
+  async function listarCameras(){
+    try{
+      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+      const sel = $('bip-cam');
+      if(devs.length > 1){
+        sel.innerHTML = devs.map((d, i) => '<option value="' + escapeHtml(d.deviceId) + '">' + escapeHtml(d.label || ('Câmera ' + (i + 1))) + '</option>').join('');
+        const atual = stream && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].getSettings().deviceId;
+        if(atual) sel.value = atual;
+        sel.style.display = '';
+      } else sel.style.display = 'none';
+    }catch(e){}
+  }
+  async function ligar(deviceId){
+    parar();
+    const constraints = { audio:false, video: deviceId ? { deviceId:{ exact:deviceId }, width:{ ideal:1280 }, height:{ ideal:720 } } : { facingMode:{ ideal:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 } } };
+    const v = $('bip-video');
+    if('BarcodeDetector' in window){
+      try{
+        const fm = (await BarcodeDetector.getSupportedFormats()).filter(f => f !== 'unknown');
+        detector = new BarcodeDetector({ formats: fm });
+      }catch(e){ detector = null; }
+    }
+    if(detector){
+      stream = await navigator.mediaDevices.getUserMedia(constraints);
+      v.srcObject = stream; await v.play();
+      timer = setInterval(async () => {
+        if(!aberto || v.readyState < 2) return;
+        try{ const c = await detector.detect(v); if(c && c.length) aoLer(c[0].rawValue); }catch(e){}
+      }, 160);
+    } else {
+      await carregarZX();
+      const Z = window.ZXing, hints = new Map();
+      hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_93, Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.ITF, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E, Z.BarcodeFormat.CODABAR, Z.BarcodeFormat.QR_CODE, Z.BarcodeFormat.DATA_MATRIX]);
+      hints.set(Z.DecodeHintType.TRY_HARDER, true);
+      zxReader = new Z.BrowserMultiFormatReader(hints, 250);
+      await zxReader.decodeFromConstraints(constraints, v, (result) => { if(result) aoLer(result.getText()); });
+      stream = v.srcObject;
+    }
+    const tr = stream && stream.getVideoTracks()[0];
+    const caps = tr && tr.getCapabilities ? tr.getCapabilities() : {};
+    $('bip-torch').style.display = caps && caps.torch ? '' : 'none';
+    listarCameras();
+  }
+  function parar(){
+    if(timer){ clearInterval(timer); timer = null; }
+    if(zxReader){ try{ zxReader.reset(); }catch(e){} zxReader = null; }
+    if(stream){ try{ stream.getTracks().forEach(t => t.stop()); }catch(e){} stream = null; }
+    const v = $('bip-video'); if(v){ try{ v.srcObject = null; }catch(e){} }
+    detector = null;
+  }
+  let lant = false;
+  window.bipLanterna = async function(){
+    const tr = stream && stream.getVideoTracks()[0]; if(!tr) return;
+    lant = !lant;
+    try{ await tr.applyConstraints({ advanced:[{ torch: lant }] }); }catch(e){ showToast('Lanterna não disponível neste aparelho.', true); lant = false; }
+  };
+  window.bipTrocarCamera = function(id){ ligar(id).catch(erroCam); };
+  function erroCam(e){
+    const st = $('bip-status');
+    const nome = e && e.name;
+    let msg = 'Não foi possível abrir a câmera.';
+    if(nome === 'NotAllowedError') msg = 'Câmera bloqueada: permita o acesso à câmera nas permissões do navegador para este site.';
+    else if(nome === 'NotFoundError') msg = 'Nenhuma câmera encontrada neste aparelho. Use o campo abaixo com o leitor ou digitando.';
+    else if(e && e.message) msg = e.message;
+    if(st){ st.className = 'bip-st err'; st.textContent = msg; }
+  }
+  window.bipAbrir = function(){
+    if(!podeBipar()){ showToast('Seu perfil não pode bipar.', true); return; }
+    if(somenteLeitura()){ showToast('🔒 Fora do horário do seu turno: o site está só para consulta.', true); return; }
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ showToast('Este navegador não permite abrir a câmera (precisa de HTTPS).', true); }
+    aberto = true; ultTxt = ''; hist.length = 0; $('bip-hist').innerHTML = '';
+    $('bip-overlay').hidden = false;
+    $('bip-cont').textContent = Object.keys(window.bipadasData).length + ' bipada(s)';
+    const st = $('bip-status'); st.className = 'bip-st'; st.textContent = 'Aponte a câmera para o código de barras da master';
+    if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ligar().catch(erroCam);
+  };
+  window.bipFechar = function(){ aberto = false; parar(); $('bip-overlay').hidden = true; lant = false; };
+  document.addEventListener('visibilitychange', () => { if(document.hidden && aberto){ parar(); } else if(!document.hidden && aberto && !$('bip-overlay').hidden){ ligar().catch(erroCam); } });
+})();
+</script>
+
+<script type="module" id="bip-patch-fb">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, updateDoc, onSnapshot, deleteField, FieldPath } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const db = getFirestore(getApp());
+  const bipRef = doc(db, 'painelCD', 'crossBipadas');
+  const erro = (p, e) => { console.error(p, e); if(typeof showToast === 'function') showToast('⚠️ ' + p + ' ' + (e && e.message ? e.message : e), true); };
+
+  window.bipGravar = function(key, val){
+    return setDoc(bipRef, { bipadas: { [key]: val } }, { merge: true }).catch(e => erro('Erro ao gravar a bipagem:', e));
+  };
+  window.bipRemover = function(key){
+    return updateDoc(bipRef, new FieldPath('bipadas', key), deleteField())
+      .catch(e => erro('Erro ao desfazer a bipagem:', e));
+  };
+  window.bipLimparTodas = function(){
+    return setDoc(bipRef, { bipadas: {} }).catch(e => erro('Erro ao limpar as bipagens:', e));
+  };
+  onSnapshot(bipRef, snap => {
+    window.bipadasData = snap.exists() ? (snap.data().bipadas || {}) : {};
+    if(typeof currentUser !== 'undefined' && currentUser && typeof renderAllSoon === 'function') renderAllSoon();
+  }, e => erro('Erro ao ler as bipagens:', e));
+</script>
+
 </body>
 </html>

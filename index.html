@@ -2302,9 +2302,9 @@
         <div class="field" style="flex:1; min-width:150px;">
           <label for="fech-foto-turno">Turno</label>
           <select id="fech-foto-turno" onchange="fechFotoVerificar()">
-            <option value="T1">T1 (05:40–14:00)</option>
-            <option value="T2">T2 (14:01–22:00)</option>
-            <option value="T3">T3 (22:01–05:39)</option>
+            <option value="T1">T1 (05:55–14:20)</option>
+            <option value="T2">T2 (14:21–22:20)</option>
+            <option value="T3">T3 (22:20–06:20)</option>
           </select>
         </div>
       </div>
@@ -2377,9 +2377,9 @@
         <div class="field" style="flex:1; min-width:150px;">
           <label for="fech-lanc-turno">Turno</label>
           <select id="fech-lanc-turno" onchange="fechLancVerificar()">
-            <option value="T1">T1 (05:40–14:00)</option>
-            <option value="T2">T2 (14:01–22:00)</option>
-            <option value="T3">T3 (22:01–05:39)</option>
+            <option value="T1">T1 (05:55–14:20)</option>
+            <option value="T2">T2 (14:21–22:20)</option>
+            <option value="T3">T3 (22:20–06:20)</option>
           </select>
         </div>
       </div>
@@ -2802,13 +2802,23 @@ let pisoData = [
 let distData = [];
 const TURNOS = ['T1','T2','T3'];
 
-/* T1: 05:40–14:00 · T2: 14:01–22:00 · T3: 22:01–05:39 */
+/* Turno "atual" (usado como padrão): T1 05:55–14:20 · T2 14:21–22:20 · T3 22:21–05:54 */
 function turnoPorHorario(date){
   date = date || new Date();
   const min = date.getHours()*60 + date.getMinutes();
-  if(min >= 340 && min <= 840) return 'T1';   // 05:40 a 14:00
-  if(min >= 841 && min <= 1320) return 'T2';  // 14:01 a 22:00
-  return 'T3';                                 // 22:01 a 05:39
+  if(min >= 355 && min <= 860) return 'T1';       // 05:55 a 14:20
+  if(min >= 861 && min <= 1340) return 'T2';      // 14:21 a 22:20
+  return 'T3';                                     // 22:21 a 05:54
+}
+/* Janela de ACESSO (pode editar) de cada turno — T1 e T3 se sobrepõem de 05:55 a 06:20 e os dois têm acesso:
+   T1 05:55–14:20 · T2 14:21–22:20 · T3 22:20–06:20 */
+function turnoLiberado(turno, date){
+  date = date || new Date();
+  const min = date.getHours()*60 + date.getMinutes();
+  if(turno === 'T1') return min >= 355 && min <= 860;
+  if(turno === 'T2') return min >= 861 && min <= 1340;
+  if(turno === 'T3') return min >= 1340 || min <= 380;
+  return false;
 }
 
 /* "dia operacional": o dia só vira às 06:20 (hora em que a distribuição é salva em Fechamentos), pra o T3 (que passa da meia-noite)
@@ -2823,7 +2833,7 @@ let turnoAtivo = turnoPorHorario();
 let distTabAtiva = turnoAtivo;
 
 /* ===== catálogo "Turno" da tela inicial + modo somente leitura fora do horário ===== */
-const TURNO_HORARIOS = { T1:'05:40–14:00', T2:'14:01–22:00', T3:'22:01–05:39' }; // mesmos horários de turnoPorHorario()
+const TURNO_HORARIOS = { T1:'05:55–14:20', T2:'14:21–22:20', T3:'22:20–06:20' }; // mesmos horários de turnoPorHorario()
 let turnoLogin = turnoPorHorario();
 let turnoLoginManual = false;
 function preencherCatalogoTurno(){
@@ -2837,7 +2847,7 @@ function preencherCatalogoTurno(){
 /* só o Administrador mexe fora do horário do próprio turno; os demais ficam só consultando */
 function somenteLeitura(){
   if(currentUser && currentUser.role === 'gerente') return true;   // Gerente: só visualiza
-  return !!currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv' && currentUser.turno !== turnoPorHorario();
+  return !!currentUser && currentUser.role !== 'admin' && currentUser.role !== 'tv' && !turnoLiberado(currentUser.turno);
 }
 function nrVol(e){ return ((e && e.naoRastreado) || []).reduce((s,x)=>s+(Number(x.volume)||0),0); }
 function nrSku(e){ return ((e && e.naoRastreado) || []).reduce((s,x)=>s+(Number(x.sku)||0),0); }

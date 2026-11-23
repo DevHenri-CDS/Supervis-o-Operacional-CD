@@ -1557,6 +1557,8 @@
     <button class="tab-btn" id="tab-btn-cross" onclick="switchTab('cross')">Relatório</button>
     <button class="tab-btn" id="tab-btn-sep" onclick="switchTab('sep')">Separação</button>
     <button class="tab-btn" id="tab-btn-org" onclick="switchTab('org')">Organizacional Operação</button>
+    <button class="tab-btn" id="tab-btn-opor" onclick="switchTab('opor')">Oportunidades</button>
+    <button class="tab-btn" id="tab-btn-inv" onclick="switchTab('inv')">Inventário Rotativo</button>
     <button class="tab-btn" id="tab-btn-fech" onclick="switchTab('fech')" style="display:none;">Fechamentos</button>
   </div>
 
@@ -1720,6 +1722,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T1')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T1','Distribuição T1')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="baixarFotoPainel('panel-dist-T1','distribuicao-T1')" title="Baixa uma foto (PNG) desta distribuição, igual às Cargas no Piso">⬇ Baixar</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T1')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1774,6 +1777,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T2')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T2','Distribuição T2')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="baixarFotoPainel('panel-dist-T2','distribuicao-T2')" title="Baixa uma foto (PNG) desta distribuição, igual às Cargas no Piso">⬇ Baixar</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T2')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1828,6 +1832,7 @@
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print so-admin so-conf" onclick="openDistImportModal('T3')">⬇ Colar da planilha</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-T3','Distribuição T3')" title="Copia uma imagem desta distribuição para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="baixarFotoPainel('panel-dist-T3','distribuicao-T3')" title="Baixa uma foto (PNG) desta distribuição, igual às Cargas no Piso">⬇ Baixar</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('T3')">📋 Copiar para Excel</button>
         </div>
       </div>
@@ -1882,6 +1887,7 @@
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarPrintPainel('panel-dist-resumo','Resumo da Distribuição')" title="Copia uma imagem do resumo para colar em qualquer lugar (Ctrl+V)">📷 Print</button>
+          <button class="btn btn-ghost btn-sm no-print" onclick="baixarFotoPainel('panel-dist-resumo','distribuicao-resumo')" title="Baixa uma foto (PNG) desta distribuição, igual às Cargas no Piso">⬇ Baixar</button>
           <button class="btn btn-ghost btn-sm no-print" onclick="copiarDistribuicao('TODOS')">📋 Copiar tudo para Excel</button>
         </div>
       </div>
@@ -2083,6 +2089,44 @@
 
   </div>
   <!-- fim da aba "Separação" -->
+
+  <div id="tab-opor" style="display:none;">
+    <section class="panel" id="panel-opor">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>OPORTUNIDADES</h2>
+          <span class="sub" id="opor-sub">Crachás das oportunidades lançadas na guia Separação, divididos por turno</span>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm no-print" onclick="oporSelTodos(true)">Selecionar todos</button>
+          <button type="button" class="btn btn-ghost btn-sm no-print" onclick="oporSelTodos(false)">Limpar seleção</button>
+          <button type="button" class="btn btn-primary btn-sm no-print" style="width:auto;" onclick="oporImprimir('sel')">🖨 Imprimir selecionados</button>
+          <button type="button" class="btn btn-primary btn-sm no-print" style="width:auto;" onclick="oporImprimir('todos')">🖨 Imprimir todos (do filtro)</button>
+        </div>
+      </div>
+      <div class="opor-filtros no-print">
+        <label>Turno<select id="opor-f-turno" onchange="oporFiltrar()"><option value="">Todos</option><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></label>
+        <label>Loja<input id="opor-f-loja" oninput="oporFiltrar()" placeholder="ex.: 12"></label>
+        <label>Código / descrição do item<input id="opor-f-item" oninput="oporFiltrar()"></label>
+        <label>Motivo<input id="opor-f-motivo" oninput="oporFiltrar()" placeholder="ex.: AVARIA"></label>
+        <label>Associado<input id="opor-f-assoc" oninput="oporFiltrar()"></label>
+        <label>Conferido por<input id="opor-f-conf" oninput="oporFiltrar()"></label>
+      </div>
+      <div id="opor-lista"></div>
+    </section>
+  </div>
+
+  <div id="tab-inv" style="display:none;">
+    <section class="panel" id="panel-inv">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>INVENTÁRIO ROTATIVO</h2>
+          <span class="sub">Guia criada — conteúdo a definir</span>
+        </div>
+      </div>
+      <div class="opor-vazio">Guia pronta para receber o Inventário Rotativo.</div>
+    </section>
+  </div>
 
   <div id="tab-org" style="display:none;">
     <section class="panel" id="panel-org-assoc">
@@ -2580,7 +2624,7 @@
     <div id="uf-cad"></div>
   </div>
   <button type="button" class="uf-pill" onclick="toggleUsersFloat()" title="Quem está online agora"><span class="uf-dot off" id="uf-dot"></span><span><b id="uf-count">0</b> online</span></button>
-  <button type="button" class="uf-pill uf-pill-cad" id="uf-pill-cad" onclick="cadAbrir()" title="Cadastrar usuário, turno e função para liberar o acesso ao portal">＋ Conferente(s) · Cadastro</button>
+  <button type="button" class="uf-pill uf-pill-cad" id="uf-pill-cad" onclick="cadAbrir()" title="Cadastrar usuário, turno e função para liberar o acesso ao portal">Cadastro</button>
 </div>
 
 <!-- área usada só na impressão de "Cargas no Piso" -->
@@ -11586,6 +11630,151 @@ body:not(.tv-mode) #tbody-piso .piso-col .pc.pc-rel .c-sku{ grid-column:4 / 5; }
     window.bipadasData = snap.exists() ? (snap.data().bipadas || {}) : {};
     if(typeof currentUser !== 'undefined' && currentUser && typeof renderAllSoon === 'function') renderAllSoon();
   }, e => erro('Erro ao ler as bipagens:', e));
+</script>
+
+<style id="tv-piso-lado-css">
+/* TV: as cargas correm lado a lado (em linhas), cada status com a sua faixa de título */
+body.tv-mode #tbody-piso{ display:grid !important; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:12px; align-items:stretch; }
+body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
+</style>
+<!-- ===================== PATCH — Oportunidades (crachás) · Inventário Rotativo · Baixar na Distribuição · TV ===================== -->
+<style id="opor-css">
+  #panel-opor .opor-filtros{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin:10px 0; }
+  #panel-opor .opor-filtros label{ font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); display:flex; flex-direction:column; gap:3px; }
+  #panel-opor .opor-filtros input, #panel-opor .opor-filtros select{ padding:8px 9px; background:var(--input-bg); color:var(--text); border:1px solid var(--line); border-radius:7px; font-size:.9rem; }
+  .opor-turno{ margin:14px 0 8px; padding:7px 12px; border-left:4px solid var(--band-strong); background:#140c04; color:var(--band); font-family:'Oswald',sans-serif; letter-spacing:.06em; }
+  .opor-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; }
+  .cracha{ border:1px solid var(--line); border-radius:10px; background:var(--panel); overflow:hidden; position:relative; }
+  .cracha.sel{ outline:2px solid var(--band); }
+  .cracha-h{ text-transform:uppercase; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:var(--band-strong); color:#000; font-weight:800; letter-spacing:.06em; font-size:.8rem; }
+  .cracha-h label{ display:flex; align-items:center; gap:5px; cursor:pointer; }
+  .cracha-b{ padding:8px 10px; display:flex; flex-direction:column; gap:5px; }
+  .cracha-b div{ font-size:.86rem; line-height:1.25; overflow-wrap:anywhere; }
+  .cracha-b small{ display:block; font-size:.55rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+  .opor-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:8px; }
+</style>
+
+<script id="opor-patch-js">
+(function(){
+  /* ---- guias novas: Oportunidades e Inventário Rotativo ---- */
+  const ABAS = ['rec','piso','cross','sep','org','opor','inv','fech'];
+  window.switchTab = function(name){
+    if(currentUser && currentUser.role === 'operador') name = 'piso';
+    if(name === 'fech' && !podeVerFechamentos()) name = 'piso';
+    if((name === 'sep' || name === 'org' || name === 'opor' || name === 'inv') && !sepPode()) name = 'piso';
+    if(ABAS.indexOf(name) === -1) name = 'piso';
+    abaAtual = name;
+    document.body.classList.toggle('piso-view', name === 'piso');
+    ABAS.forEach(n => {
+      const t = document.getElementById('tab-' + n), b = document.getElementById('tab-btn-' + n);
+      if(t) t.style.display = name === n ? 'block' : 'none';
+      if(b) b.classList.toggle('active', name === n);
+    });
+    if(name === 'rec') renderRecebimento();
+    if(name === 'sep') renderSep();
+    if(name === 'org') renderOrg();
+    if(name === 'opor') oporRender();
+    if(name === 'cross') renderCrossAll();
+    if(name === 'fech') renderFechamentos();
+    renderDock();
+  };
+  /* as oportunidades chegam ao vivo: redesenha a guia quando mudarem */
+  const _oppAposMudar = oppAposMudar;
+  oppAposMudar = function(){ _oppAposMudar.apply(this, arguments); try{ if(abaAtual === 'opor') oporRender(); }catch(e){} };
+
+  /* ---- Oportunidades em crachá ---- */
+  const sel = new Set();
+  const flt = { turno:'', loja:'', item:'', motivo:'', assoc:'', conf:'' };
+  const norm = s => String(s == null ? '' : s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const ordT = ['T1','T2','T3',''];
+
+  function turnoDe(o){
+    if(o.turno && TURNOS.includes(o.turno)) return o.turno;
+    const m = /(\d{1,2}):(\d{2})/.exec(o.em || '');
+    return m ? turnoPorHorario(new Date(2026, 0, 7, +m[1], +m[2])) : '';   // pelo horário em que foi lançada
+  }
+  function lista(){
+    /* FALTA = item não encontrado, não precisa de crachá: sai do motivo; se só tinha FALTA, não gera crachá */
+    const semFalta = o => (o.motivos || []).filter(m => norm(m).trim() !== 'falta');
+    return (oppHoje || []).filter(o => semFalta(o).length).map(o => {
+      const e = (sepData.estacoes || [])[(Number(o.est) || 0) - 1];
+      return { id:o.id, turno:turnoDe(o), loja:sepNomeLoja(o.loja), item:oppItemTxt(o), motivo:semFalta(o).join(', '), assoc:(e && e.produtivo) || o.produtivo || '', conf:o.por || '' };
+    });
+  }
+  function filtrada(){
+    return lista().filter(c => (!flt.turno || c.turno === flt.turno) && norm(c.loja).includes(norm(flt.loja)) && norm(c.item).includes(norm(flt.item))
+      && norm(c.motivo).includes(norm(flt.motivo)) && norm(c.assoc).includes(norm(flt.assoc)) && norm(c.conf).includes(norm(flt.conf)));
+  }
+  const rotTurno = t => t || 'SEM TURNO';
+  function crachaHtml(c, tela){
+    const campos = '<div><small>De</small><b>CD 30 SECOS</b></div><div><small>Loja</small><b>' + sepEsc(c.loja) + '</b></div><div><small>Código do item e descrição</small>' + sepEsc(c.item) + '</div><div><small>Associado</small>' + sepEsc(c.assoc || '—') + '</div><div><small>Conferido por</small>' + sepEsc(c.conf || '—') + '</div><div><small>Turno</small>' + sepEsc(rotTurno(c.turno)) + '</div>';
+    return tela
+      ? '<div class="cracha' + (sel.has(c.id) ? ' sel' : '') + '"><div class="cracha-h"><span>' + sepEsc(c.motivo || 'SEM MOTIVO') + '</span><label class="no-print"><input type="checkbox" ' + (sel.has(c.id) ? 'checked ' : '') + 'onchange="oporMarcar(\'' + c.id + '\', this.checked)"> imprimir</label></div><div class="cracha-b">' + campos + '</div></div>'
+      : '<div class="cr"><div class="cr-h">' + sepEsc(c.motivo || 'SEM MOTIVO') + '</div><div class="cr-b">' + campos + '</div></div>';
+  }
+  window.oporRender = function(){
+    const box = document.getElementById('opor-lista'); if(!box) return;
+    const todas = lista(), L = filtrada();
+    document.getElementById('opor-sub').textContent = 'Do dia operacional (sem FALTA) · ' + todas.length + ' oportunidade(s) · ' + L.length + ' no filtro · ' + sel.size + ' marcada(s) para imprimir';
+    if(!L.length){ box.innerHTML = '<div class="opor-vazio">' + (todas.length ? 'Nenhum crachá com esses filtros.' : 'Nenhuma oportunidade lançada na guia Separação hoje.') + '</div>'; return; }
+    box.innerHTML = ordT.filter(t => L.some(c => c.turno === t)).map(t => {
+      const g = L.filter(c => c.turno === t);
+      return '<div class="opor-turno">' + rotTurno(t) + ' — ' + g.length + '</div><div class="opor-grid">' + g.map(c => crachaHtml(c, true)).join('') + '</div>';
+    }).join('');
+  };
+  window.oporFiltrar = function(){
+    ['turno','loja','item','motivo','assoc','conf'].forEach(k => { const el = document.getElementById('opor-f-' + k); if(el) flt[k] = el.value; });
+    oporRender();
+  };
+  window.oporMarcar = function(id, on){ if(on) sel.add(id); else sel.delete(id); oporRender(); };
+  window.oporSelTodos = function(on){ filtrada().forEach(c => on ? sel.add(c.id) : sel.delete(c.id)); oporRender(); };
+
+  window.oporImprimir = function(modo){
+    let L = filtrada();
+    if(modo === 'sel'){ L = L.filter(c => sel.has(c.id)); if(!L.length){ showToast('Marque pelo menos um crachá para imprimir.', true); return; } }
+    if(!L.length){ showToast('Não há crachás para imprimir.', true); return; }
+    const pag = ordT.filter(t => L.some(c => c.turno === t)).map(t => '<section><h2>' + rotTurno(t) + '</h2><div class="g">' + L.filter(c => c.turno === t).map(c => crachaHtml(c, false)).join('') + '</div></section>').join('');
+    const css = '@page{size:A4;margin:8mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;color:#000}section{page-break-after:always}section:last-child{page-break-after:auto}h2{margin:0 0 6px;font-size:13pt}'
+      + '.g{display:grid;grid-template-columns:1fr 1fr;gap:5mm}.cr{border:1.5px solid #000;border-radius:3mm;overflow:hidden;break-inside:avoid;height:62mm}.cr-h{background:#000;color:#fff;font-weight:700;padding:2.5mm 3mm;font-size:13pt;letter-spacing:.5px;text-transform:uppercase}'
+      + '.cr-b{padding:2mm 3mm;display:flex;flex-direction:column;gap:1.2mm;font-size:10pt}.cr-b small{display:block;font-size:6.5pt;font-weight:700;text-transform:uppercase;color:#444}';
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(f);
+    f.contentDocument.open(); f.contentDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Crachás de oportunidades</title><style>' + css + '</style></head><body>' + pag + '</body></html>'); f.contentDocument.close();
+    setTimeout(() => { try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} setTimeout(() => f.remove(), 60000); }, 300);
+  };
+
+  /* ---- baixar foto (PNG) de qualquer painel — usada na Distribuição ---- */
+  let ocupada = false;
+  window.baixarFotoPainel = async function(id, nome){
+    const el = document.getElementById(id);
+    if(!el || ocupada) return;
+    ocupada = true; showToast('📷 Gerando a foto…', false);
+    const gerar = async esc => {
+      const fundo = getComputedStyle(document.body).backgroundColor;
+      const canvas = await html2canvas(el, { backgroundColor:(fundo && fundo !== 'rgba(0, 0, 0, 0)') ? fundo : '#0a0a0a', scale:esc, useCORS:true, logging:false, windowWidth:1500, windowHeight:1000, scrollX:0, scrollY:0,
+        ignoreElements: n => !!(n.classList && n.classList.contains('no-print')),
+        onclone: d => { const c = d.getElementById(id); if(c){ c.style.height = 'auto'; c.style.overflow = 'visible'; } } });
+      return await new Promise((ok, er) => canvas.toBlob(b => b ? ok(b) : er(new Error('vazio')), 'image/png'));
+    };
+    try{
+      await carregarScript(LIB_H2C);
+      let blob; try{ blob = await gerar(2); }catch(e){ blob = await gerar(1); }
+      const a = document.createElement('a'), url = URL.createObjectURL(blob), arq = nome + '-' + diaOperacional() + '.png';
+      a.href = url; a.download = arq; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 8000);
+      showToast('✅ Foto baixada: ' + arq, false);
+    }catch(e){ showToast('⚠️ Não consegui gerar a foto (confira a internet e tente de novo).', true); }
+    finally{ ocupada = false; }
+  };
+
+  /* ---- nomes editáveis das guias ---- */
+  ABAS_PADRAO.opor = 'Oportunidades'; ABAS_PADRAO.inv = 'Inventário Rotativo';
+  ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('org') + 1, 0, 'opor', 'inv');
+  const _apl = aplicarNomesAbas;
+  aplicarNomesAbas = function(){ _apl.apply(this, arguments); ['opor','inv'].forEach(n => { const e = document.getElementById('tab-btn-' + n); if(e) e.textContent = nomeAba(n); }); };
+  try{ aplicarNomesAbas(); }catch(e){}
+})();
 </script>
 
 </body>

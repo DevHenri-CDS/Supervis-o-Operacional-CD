@@ -2106,10 +2106,10 @@
       </div>
       <div class="opor-filtros no-print">
         <label>Turno<select id="opor-f-turno" onchange="oporFiltrar()"><option value="">Todos</option><option value="T1">T1</option><option value="T2">T2</option><option value="T3">T3</option></select></label>
-        <label>Loja<input id="opor-f-loja" oninput="oporFiltrar()" placeholder="ex.: 12"></label>
+        <label>Para (loja)<input id="opor-f-loja" oninput="oporFiltrar()" placeholder="ex.: 12"></label>
         <label>Código / descrição do item<input id="opor-f-item" oninput="oporFiltrar()"></label>
         <label>Motivo<input id="opor-f-motivo" oninput="oporFiltrar()" placeholder="ex.: AVARIA"></label>
-        <label>Associado<input id="opor-f-assoc" oninput="oporFiltrar()"></label>
+        <label>Associado baia<input id="opor-f-assoc" oninput="oporFiltrar()"></label>
         <label>Conferido por<input id="opor-f-conf" oninput="oporFiltrar()"></label>
       </div>
       <div id="opor-lista"></div>
@@ -11644,13 +11644,19 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   #panel-opor .opor-filtros input, #panel-opor .opor-filtros select{ padding:8px 9px; background:var(--input-bg); color:var(--text); border:1px solid var(--line); border-radius:7px; font-size:.9rem; }
   .opor-turno{ margin:14px 0 8px; padding:7px 12px; border-left:4px solid var(--band-strong); background:#140c04; color:var(--band); font-family:'Oswald',sans-serif; letter-spacing:.06em; }
   .opor-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:10px; }
-  .cracha{ border:1px solid var(--line); border-radius:10px; background:var(--panel); overflow:hidden; position:relative; }
-  .cracha.sel{ outline:2px solid var(--band); }
-  .cracha-h{ text-transform:uppercase; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; background:var(--band-strong); color:#000; font-weight:800; letter-spacing:.06em; font-size:.8rem; }
-  .cracha-h label{ display:flex; align-items:center; gap:5px; cursor:pointer; }
-  .cracha-b{ padding:8px 10px; display:flex; flex-direction:column; gap:5px; }
-  .cracha-b div{ font-size:.86rem; line-height:1.25; overflow-wrap:anywhere; }
-  .cracha-b small{ display:block; font-size:.55rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+  .opor-grid{ grid-template-columns:repeat(auto-fill,minmax(340px,1fr)) !important; gap:12px !important; }
+  .cracha{ border:2px solid var(--line); border-radius:12px; background:var(--panel); overflow:hidden; cursor:pointer; user-select:none; transition:transform .08s, border-color .1s; }
+  .cracha:hover{ border-color:var(--band); }
+  .cracha:active{ transform:scale(.99); }
+  .cracha.sel{ border-color:var(--band); box-shadow:0 0 0 3px var(--band); }
+  .cracha-h{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 14px; background:var(--band-strong); color:#000; font-weight:800; letter-spacing:.05em; font-size:1.15rem; text-transform:uppercase; }
+  .cracha-h .ck{ font-style:normal; font-size:1.3rem; min-width:1.3rem; text-align:right; }
+  .cracha-b{ padding:12px 14px; display:flex; flex-direction:column; gap:12px; }
+  .cracha .cr-row{ display:flex; gap:12px; } .cracha .cr-row .cf{ flex:1; min-width:0; }
+  .cracha .cf small{ display:block; font-size:.58rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:2px; }
+  .cracha .cr-row:first-child .cf b{ font-size:1.35rem; line-height:1.1; overflow-wrap:anywhere; }
+  .cracha .cf-item span{ font-size:1rem; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
+  .cracha .cr-rod{ border-top:1px solid var(--line); padding-top:10px; } .cracha .cr-rod .cf span{ font-size:.9rem; font-weight:600; overflow-wrap:anywhere; }
   .opor-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:8px; }
 </style>
 
@@ -11707,10 +11713,14 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   }
   const rotTurno = t => t || 'SEM TURNO';
   function crachaHtml(c, tela){
-    const campos = '<div><small>De</small><b>CD 30 SECOS</b></div><div><small>Loja</small><b>' + sepEsc(c.loja) + '</b></div><div><small>Código do item e descrição</small>' + sepEsc(c.item) + '</div><div><small>Associado</small>' + sepEsc(c.assoc || '—') + '</div><div><small>Conferido por</small>' + sepEsc(c.conf || '—') + '</div><div><small>Turno</small>' + sepEsc(rotTurno(c.turno)) + '</div>';
+    const it = sepEsc(c.item), longo = c.item.length > 70 ? ' longo' : '';
+    const campos = '<div class="cr-row"><div class="cf"><small>De</small><b>CD 30 SECOS</b></div><div class="cf"><small>Para</small><b>' + sepEsc(c.loja) + '</b></div></div>'
+      + '<div class="cf cf-item"><small>Código do item e descrição</small><span class="' + longo + '">' + it + '</span></div>'
+      + '<div class="cr-row cr-rod"><div class="cf"><small>Associado baia</small><span>' + sepEsc(c.assoc || '—') + '</span></div><div class="cf"><small>Conferido por</small><span>' + sepEsc(c.conf || '—') + '</span></div><div class="cf cf-t"><small>Turno</small><span>' + sepEsc(rotTurno(c.turno)) + '</span></div></div>';
+    const tit = sepEsc(c.motivo || 'SEM MOTIVO');
     return tela
-      ? '<div class="cracha' + (sel.has(c.id) ? ' sel' : '') + '"><div class="cracha-h"><span>' + sepEsc(c.motivo || 'SEM MOTIVO') + '</span><label class="no-print"><input type="checkbox" ' + (sel.has(c.id) ? 'checked ' : '') + 'onchange="oporMarcar(\'' + c.id + '\', this.checked)"> imprimir</label></div><div class="cracha-b">' + campos + '</div></div>'
-      : '<div class="cr"><div class="cr-h">' + sepEsc(c.motivo || 'SEM MOTIVO') + '</div><div class="cr-b">' + campos + '</div></div>';
+      ? '<div class="cracha' + (sel.has(c.id) ? ' sel' : '') + '" onclick="oporMarcar(\'' + c.id + '\')" title="Clique para selecionar / desmarcar"><div class="cracha-h"><span>' + tit + '</span><i class="ck">' + (sel.has(c.id) ? '✔' : '') + '</i></div><div class="cracha-b">' + campos + '</div></div>'
+      : '<div class="cr"><div class="cr-h">' + tit + '</div><div class="cr-b">' + campos + '</div></div>';
   }
   window.oporRender = function(){
     const box = document.getElementById('opor-lista'); if(!box) return;
@@ -11726,17 +11736,21 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     ['turno','loja','item','motivo','assoc','conf'].forEach(k => { const el = document.getElementById('opor-f-' + k); if(el) flt[k] = el.value; });
     oporRender();
   };
-  window.oporMarcar = function(id, on){ if(on) sel.add(id); else sel.delete(id); oporRender(); };
+  window.oporMarcar = function(id){ if(sel.has(id)) sel.delete(id); else sel.add(id); oporRender(); };
   window.oporSelTodos = function(on){ filtrada().forEach(c => on ? sel.add(c.id) : sel.delete(c.id)); oporRender(); };
 
   window.oporImprimir = function(modo){
     let L = filtrada();
     if(modo === 'sel'){ L = L.filter(c => sel.has(c.id)); if(!L.length){ showToast('Marque pelo menos um crachá para imprimir.', true); return; } }
     if(!L.length){ showToast('Não há crachás para imprimir.', true); return; }
-    const pag = ordT.filter(t => L.some(c => c.turno === t)).map(t => '<section><h2>' + rotTurno(t) + '</h2><div class="g">' + L.filter(c => c.turno === t).map(c => crachaHtml(c, false)).join('') + '</div></section>').join('');
-    const css = '@page{size:A4;margin:8mm}*{box-sizing:border-box}body{font-family:Arial,sans-serif;margin:0;color:#000}section{page-break-after:always}section:last-child{page-break-after:auto}h2{margin:0 0 6px;font-size:13pt}'
-      + '.g{display:grid;grid-template-columns:1fr 1fr;gap:5mm}.cr{border:1.5px solid #000;border-radius:3mm;overflow:hidden;break-inside:avoid;height:62mm}.cr-h{background:#000;color:#fff;font-weight:700;padding:2.5mm 3mm;font-size:13pt;letter-spacing:.5px;text-transform:uppercase}'
-      + '.cr-b{padding:2mm 3mm;display:flex;flex-direction:column;gap:1.2mm;font-size:10pt}.cr-b small{display:block;font-size:6.5pt;font-weight:700;text-transform:uppercase;color:#444}';
+    const pag = ordT.filter(t => L.some(c => c.turno === t)).map(t => L.filter(c => c.turno === t).map(c => crachaHtml(c, false)).join('')).join('');
+    const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#000}'
+      + '.cr{height:194mm;border:3mm solid #000;border-radius:6mm;overflow:hidden;display:flex;flex-direction:column;page-break-after:always;break-after:page}.cr:last-child{page-break-after:auto;break-after:auto}'
+      + '.cr-h{background:#000;color:#fff;font-size:46pt;font-weight:800;text-align:center;padding:5mm 6mm;text-transform:uppercase;letter-spacing:1px;line-height:1.05}'
+      + '.cr-b{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:8mm 11mm}'
+      + '.cr-row{display:flex;gap:10mm}.cr-row .cf{flex:1;min-width:0}.cf small{display:block;font-size:13pt;font-weight:700;text-transform:uppercase;color:#444;letter-spacing:.6px;margin-bottom:1.5mm}'
+      + '.cr-row:first-child .cf b{font-size:42pt;line-height:1.05;display:block;overflow-wrap:anywhere}.cf-item span{font-size:30pt;font-weight:700;line-height:1.15;display:block;overflow-wrap:anywhere}.cf-item span.longo{font-size:22pt}'
+      + '.cr-rod{border-top:1.5mm solid #000;padding-top:6mm}.cr-rod .cf span{font-size:24pt;font-weight:700;line-height:1.1;display:block;overflow-wrap:anywhere}';
     const f = document.createElement('iframe');
     f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
     document.body.appendChild(f);

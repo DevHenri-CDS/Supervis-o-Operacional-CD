@@ -11655,6 +11655,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   .cracha .cr-row{ display:flex; gap:12px; } .cracha .cr-row .cf{ flex:1; min-width:0; }
   .cracha .cf small{ display:block; font-size:.58rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:2px; }
   .cracha .cr-row:first-child .cf b{ font-size:1.35rem; line-height:1.1; overflow-wrap:anywhere; }
+  .cracha .cf-qtd{ margin-top:6px; font-size:1.15rem; font-weight:800; color:var(--band); }
   .cracha .cf-item span{ font-size:1rem; font-weight:600; line-height:1.25; overflow-wrap:anywhere; }
   .cracha .cr-rod{ border-top:1px solid var(--line); padding-top:10px; } .cracha .cr-rod .cf span{ font-size:.9rem; font-weight:600; overflow-wrap:anywhere; }
   .opor-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:8px; }
@@ -11704,7 +11705,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     const semFalta = o => (o.motivos || []).filter(m => norm(m).trim() !== 'falta');
     return (oppHoje || []).filter(o => semFalta(o).length).map(o => {
       const e = (sepData.estacoes || [])[(Number(o.est) || 0) - 1];
-      return { id:o.id, turno:turnoDe(o), loja:sepNomeLoja(o.loja), item:oppItemTxt(o), motivo:semFalta(o).join(', '), assoc:(e && e.produtivo) || o.produtivo || '', conf:o.por || '' };
+      return { id:o.id, turno:turnoDe(o), loja:sepNomeLoja(o.loja), item:oppItemTxt(o), qtd:o.qtd, motivo:semFalta(o).join(', '), assoc:(e && e.produtivo) || o.produtivo || '', conf:o.por || '' };
     });
   }
   function filtrada(){
@@ -11715,7 +11716,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   function crachaHtml(c, tela){
     const it = sepEsc(c.item), longo = c.item.length > 70 ? ' longo' : '';
     const campos = '<div class="cr-row"><div class="cf"><small>De</small><b>CD 30 SECOS</b></div><div class="cf"><small>Para</small><b>' + sepEsc(c.loja) + '</b></div></div>'
-      + '<div class="cf cf-item"><small>Código do item e descrição</small><span class="' + longo + '">' + it + '</span></div>'
+      + '<div class="cf cf-item"><small>Código do item e descrição</small><span class="' + longo + '">' + it + '</span><div class="cf-qtd">QTD: ' + sepEsc(c.qtd == null || c.qtd === '' ? '—' : c.qtd) + '</div></div>'
       + '<div class="cr-row cr-rod"><div class="cf"><small>Associado baia</small><span>' + sepEsc(c.assoc || '—') + '</span></div><div class="cf"><small>Conferido por</small><span>' + sepEsc(c.conf || '—') + '</span></div><div class="cf cf-t"><small>Turno</small><span>' + sepEsc(rotTurno(c.turno)) + '</span></div></div>';
     const tit = sepEsc(c.motivo || 'SEM MOTIVO');
     return tela
@@ -11749,7 +11750,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
       + '.cr-h{background:#000;color:#fff;font-size:46pt;font-weight:800;text-align:center;padding:5mm 6mm;text-transform:uppercase;letter-spacing:1px;line-height:1.05}'
       + '.cr-b{flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:8mm 11mm}'
       + '.cr-row{display:flex;gap:10mm}.cr-row .cf{flex:1;min-width:0}.cf small{display:block;font-size:13pt;font-weight:700;text-transform:uppercase;color:#444;letter-spacing:.6px;margin-bottom:1.5mm}'
-      + '.cr-row:first-child .cf b{font-size:42pt;line-height:1.05;display:block;overflow-wrap:anywhere}.cf-item span{font-size:30pt;font-weight:700;line-height:1.15;display:block;overflow-wrap:anywhere}.cf-item span.longo{font-size:22pt}'
+      + '.cr-row:first-child .cf b{font-size:42pt;line-height:1.05;display:block;overflow-wrap:anywhere}.cf-item span{font-size:30pt;font-weight:700;line-height:1.15;display:block;overflow-wrap:anywhere}.cf-item span.longo{font-size:22pt}.cf-qtd{margin-top:3mm;font-size:34pt;font-weight:800}'
       + '.cr-rod{border-top:1.5mm solid #000;padding-top:6mm}.cr-rod .cf span{font-size:24pt;font-weight:700;line-height:1.1;display:block;overflow-wrap:anywhere}';
     const f = document.createElement('iframe');
     f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';

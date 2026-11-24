@@ -11548,7 +11548,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     <button type="button" onclick="tvMiniMin()" title="Minimizar / restaurar" id="tvm-min">–</button>
     <button type="button" onclick="tvMiniFechar()" title="Fechar">✕</button>
   </div>
-  <div class="tvm-b"><div id="tvm-aviso"></div><div id="tvm-board"></div></div>
+  <div class="tvm-b"><div id="tvm-live"><video id="tvm-video" autoplay playsinline muted></video><div class="tvm-livebar"><span id="tvm-livest">TV sem transmissão de vídeo.</span><button type="button" id="tvm-livebtn" onclick="tvVideoAlternar()">▶ Ver vídeo ao vivo</button></div></div><div id="tvm-aviso"></div><div id="tvm-board"></div></div>
 </div>
 
 <script id="aux-patch-js">
@@ -11643,7 +11643,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
       const recentes = novos.filter(x => Date.now() - Number(x.ts || 0) <= 20 * 60000);
       if(recentes.length){
         novoId = recentes[recentes.length - 1].id;
-        if(som && typeof tvSomImpressa === 'function'){
+        if(som && !window.tvVideoAoVivo && typeof tvSomImpressa === 'function'){
           const fr = tvFrasesImpressa(recentes.reduce((l, x) => l.concat(x.cargas || []), []));
           tvSomImpressa(() => tvFalar(fr));
         }
@@ -11664,10 +11664,127 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   window.tvMiniFechar = function(){ $('tvmini').hidden = true; clearInterval(timer); };
   window.tvMiniSom = function(){
     som = !som;
-    const b = $('tvm-som'); b.textContent = som ? '🔊' : '🔇'; b.classList.toggle('on', som);
+    const b = $('tvm-som'); b.textContent = som ? '🔊' : '🔇'; b.classList.toggle('on', som); const vv = $('tvm-video'); if(vv) vv.muted = !som;
     if(som){ try{ tvAudioDestravar(); }catch(e){} if(typeof tvSomImpressa === 'function') tvSomImpressa(); }
   };
 })();
+</script>
+
+<!-- ===================== TV AO VIVO: vídeo real (WebRTC) da TV para o Administrador ===================== -->
+<style id="tvlive-css">
+  #tvm-live{ display:flex; flex-direction:column; gap:6px; }
+  #tvm-video{ display:none; width:100%; border-radius:8px; background:#000; aspect-ratio:16/9; object-fit:contain; }
+  .tvm-livebar{ display:flex; align-items:center; gap:8px; justify-content:space-between; font-size:.75rem; color:var(--text-dim); }
+  .tvm-livebar button{ border:1px solid var(--band); background:var(--band-strong); color:#000; border-radius:6px; padding:5px 10px; font-weight:800; cursor:pointer; font-size:.78rem; }
+  #tv-tx-btn{ position:fixed; right:10px; bottom:10px; z-index:2147483000; padding:10px 16px; border-radius:10px; border:2px solid #fff; background:#1b5e20; color:#fff; font-weight:800; font-size:1rem; opacity:.45; cursor:pointer; }
+  #tv-tx-btn:hover{ opacity:1; }
+</style>
+
+<script type="module" id="tvlive-patch-fb">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, collection, setDoc, updateDoc, deleteDoc, onSnapshot, arrayUnion } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+  const db = getFirestore(getApp());
+  const liveRef = doc(db, 'painelCD', 'tvLive');
+  const vCol = collection(db, 'painelCD', 'tvLive', 'viewers');
+  const ICE = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] };
+  const $ = id => document.getElementById(id);
+  const toast = (t, err) => { if(typeof showToast === 'function') showToast(t, !!err); };
+
+  /* ================= LADO DA TV: transmite a tela ================= */
+  let stream = null, conns = {}, hb = null, unsubV = null;
+
+  async function tvTransmitir(){
+    try{
+      stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:{ ideal:12 }, width:{ ideal:1280 } }, audio:true, preferCurrentTab:true, selfBrowserSurface:'include' });
+    }catch(e){ stream = null; return; }
+    stream.getVideoTracks()[0].addEventListener('ended', pararTx);
+    const b = $('tv-tx-btn'); if(b) b.remove();
+    setDoc(liveRef, { ativo:true, ts:Date.now() }).catch(() => {});
+    hb = setInterval(() => updateDoc(liveRef, { ts:Date.now() }).catch(() => {}), 15000);
+    unsubV = onSnapshot(vCol, snap => snap.docChanges().forEach(ch => {
+      if(ch.type === 'added' && !conns[ch.doc.id]) abrirConexao(ch.doc.id);
+      if(ch.type === 'removed') fecharConexao(ch.doc.id);
+    }));
+  }
+  function pararTx(){
+    clearInterval(hb); hb = null;
+    try{ unsubV && unsubV(); }catch(e){} unsubV = null;
+    Object.keys(conns).forEach(fecharConexao);
+    try{ stream && stream.getTracks().forEach(t => t.stop()); }catch(e){} stream = null;
+    setDoc(liveRef, { ativo:false, ts:Date.now() }).catch(() => {});
+  }
+  function fecharConexao(id){
+    const c = conns[id]; if(!c) return;
+    try{ c.unsub && c.unsub(); }catch(e){} try{ c.pc.close(); }catch(e){}
+    delete conns[id];
+    deleteDoc(doc(db, 'painelCD', 'tvLive', 'viewers', id)).catch(() => {});
+  }
+  async function abrirConexao(id){
+    if(!stream) return;
+    const ref = doc(db, 'painelCD', 'tvLive', 'viewers', id);
+    const pc = new RTCPeerConnection(ICE), c = conns[id] = { pc, unsub:null, nc:0, rd:false };
+    stream.getTracks().forEach(t => pc.addTrack(t, stream));
+    pc.onicecandidate = e => { if(e.candidate) updateDoc(ref, { candTv: arrayUnion(JSON.stringify(e.candidate)) }).catch(() => {}); };
+    pc.onconnectionstatechange = () => { if(pc.connectionState === 'failed' || pc.connectionState === 'closed') fecharConexao(id); };
+    const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+    await updateDoc(ref, { offer:{ type:offer.type, sdp:offer.sdp } });
+    c.unsub = onSnapshot(ref, async s => {
+      const d = s.data(); if(!d || !conns[id]) return;
+      if(d.answer && !c.rd){ c.rd = true; await pc.setRemoteDescription(d.answer); }
+      if(c.rd && d.candAdm){ for(; c.nc < d.candAdm.length; c.nc++){ try{ await pc.addIceCandidate(JSON.parse(d.candAdm[c.nc])); }catch(e){} } }
+    });
+  }
+  /* botão discreto na TV (o navegador exige um clique para liberar o compartilhamento da tela) */
+  setInterval(() => {
+    if(typeof currentUser === 'undefined' || !currentUser || currentUser.role !== 'tv' || stream || $('tv-tx-btn')) return;
+    const b = document.createElement('button'); b.id = 'tv-tx-btn'; b.type = 'button';
+    b.textContent = '📡 Transmitir tela ao Administrador'; b.onclick = tvTransmitir;
+    document.body.appendChild(b);
+  }, 3000);
+
+  /* ================= LADO DO ADMINISTRADOR: assiste ================= */
+  let vpc = null, vref = null, vunsub = null, vtimer = null, tvNoAr = false;
+  const status = t => { const e = $('tvm-livest'); if(e) e.textContent = t; };
+  const botao = t => { const e = $('tvm-livebtn'); if(e) e.textContent = t; };
+
+  onSnapshot(liveRef, s => {
+    const d = s.data(); tvNoAr = !!(d && d.ativo && Date.now() - Number(d.ts || 0) < 45000);
+    if(!vpc) status(tvNoAr ? 'TV transmitindo — clique em Ver vídeo.' : 'TV sem transmissão de vídeo (na TV, clique em 📡 Transmitir).');
+  }, () => {});
+
+  function pararVer(){
+    clearTimeout(vtimer);
+    try{ vunsub && vunsub(); }catch(e){} vunsub = null;
+    try{ vpc && vpc.close(); }catch(e){} vpc = null;
+    if(vref) deleteDoc(vref).catch(() => {}); vref = null;
+    window.tvVideoAoVivo = false;
+    const v = $('tvm-video'); if(v){ v.srcObject = null; v.style.display = 'none'; }
+    botao('▶ Ver vídeo ao vivo');
+  }
+  window.tvVideoAlternar = async function(){
+    if(vpc){ pararVer(); status(tvNoAr ? 'TV transmitindo — clique em Ver vídeo.' : 'Vídeo parado.'); return; }
+    if(typeof souAdmin !== 'function' || !souAdmin()) return;
+    const id = Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+    vref = doc(db, 'painelCD', 'tvLive', 'viewers', id);
+    status('Conectando à TV…'); botao('⏹ Cancelar');
+    const pc = vpc = new RTCPeerConnection(ICE); let rd = false, nc = 0;
+    pc.ontrack = e => {
+      const v = $('tvm-video'); v.srcObject = e.streams[0]; v.style.display = 'block';
+      v.muted = !($('tvm-som') && $('tvm-som').classList.contains('on')); v.play().catch(() => {});
+      window.tvVideoAoVivo = true; status('🔴 AO VIVO'); botao('⏹ Parar vídeo');
+    };
+    pc.onicecandidate = e => { if(e.candidate) updateDoc(vref, { candAdm: arrayUnion(JSON.stringify(e.candidate)) }).catch(() => {}); };
+    pc.onconnectionstatechange = () => { if(vpc === pc && (pc.connectionState === 'failed' || pc.connectionState === 'disconnected')){ pararVer(); status('Conexão com a TV caiu. Clique em Ver vídeo para tentar de novo.'); } };
+    try{ await setDoc(vref, { join:Date.now() }); }catch(e){ pararVer(); status('Não consegui falar com a nuvem.'); return; }
+    vtimer = setTimeout(() => { if(!window.tvVideoAoVivo){ pararVer(); status('A TV não respondeu. Confira se ela clicou em 📡 Transmitir (ou se a rede bloqueia a conexão direta).'); } }, 20000);
+    vunsub = onSnapshot(vref, async s => {
+      const d = s.data(); if(!d || vpc !== pc) return;
+      if(d.offer && !rd){ rd = true; await pc.setRemoteDescription(d.offer); const ans = await pc.createAnswer(); await pc.setLocalDescription(ans); await updateDoc(vref, { answer:{ type:ans.type, sdp:ans.sdp } }); }
+      if(rd && d.candTv){ for(; nc < d.candTv.length; nc++){ try{ await pc.addIceCandidate(JSON.parse(d.candTv[nc])); }catch(e){} } }
+    });
+  };
+  window.addEventListener('beforeunload', () => { try{ if(vref) deleteDoc(vref); }catch(e){} });
 </script>
 
 </body>

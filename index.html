@@ -11695,11 +11695,12 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   let stream = null, conns = {}, hb = null, unsubV = null;
 
   async function tvTransmitir(){
+    const b0 = $('tv-tx-btn'); if(b0) b0.style.display = 'none';      // some da tela assim que clicam
     try{
       stream = await navigator.mediaDevices.getDisplayMedia({ video:{ frameRate:{ ideal:12 }, width:{ ideal:1280 } }, audio:true, preferCurrentTab:true, selfBrowserSurface:'include' });
-    }catch(e){ stream = null; return; }
+    }catch(e){ stream = null; if(b0) b0.style.display = ''; return; }   // cancelou a permissão: o botão volta
     stream.getVideoTracks()[0].addEventListener('ended', pararTx);
-    const b = $('tv-tx-btn'); if(b) b.remove();
+    if(b0) b0.remove();                                                // permissão aceita: o botão sai da tela de vez
     setDoc(liveRef, { ativo:true, ts:Date.now() }).catch(() => {});
     hb = setInterval(() => updateDoc(liveRef, { ts:Date.now() }).catch(() => {}), 15000);
     unsubV = onSnapshot(vCol, snap => snap.docChanges().forEach(ch => {

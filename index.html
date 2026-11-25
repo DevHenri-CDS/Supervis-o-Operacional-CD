@@ -1493,6 +1493,30 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
   .rel-atualiz, .rel-toolbar{ display:none !important; }
 }
 </style>
+
+<style id="rank-patch-css">
+.rank-wrap{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:16px; align-items:start; }
+@media (max-width:900px){ .rank-wrap{ grid-template-columns:1fr; } }
+.rank-t td{ vertical-align:middle; }
+.rk-pos{ font-size:1.2rem; text-align:center; width:48px; font-weight:800; }
+.rk-nome{ font-weight:800; font-size:1.02rem; text-transform:uppercase; }
+.rk-vol{ text-align:right; font-weight:800; font-size:1.15rem; color:var(--band); }
+.rk-carga{ display:inline-block; margin:2px 6px 2px 0; padding:2px 9px; border:1px solid var(--line); border-radius:99px; font-size:.78rem; color:var(--text-dim); }
+.rk-carga b{ color:var(--text); margin-left:4px; }
+.rk-carga.pend{ border-style:dashed; }
+.rank-graf{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:rgba(255,255,255,.03); }
+.rk-gt{ font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); margin-bottom:10px; }
+.rk-linha{ margin-bottom:10px; }
+.rk-n{ font-weight:800; font-size:.9rem; text-transform:uppercase; margin-bottom:3px; }
+.rk-bar{ position:relative; height:26px; border-radius:6px; background:rgba(255,255,255,.07); overflow:hidden; }
+.rk-bar i{ position:absolute; left:0; top:0; bottom:0; background:linear-gradient(90deg, var(--band), var(--band-strong, var(--band))); border-radius:6px; }
+.rk-linha.top .rk-bar i{ background:linear-gradient(90deg,#f5b301,#ffd84d); }
+.rk-bar b{ position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:.9rem; text-shadow:0 1px 2px rgba(0,0,0,.8); }
+.rank-vazio{ padding:24px; text-align:center; color:var(--text-dim); font-style:italic; }
+.rank-pend{ margin-top:12px; font-size:.8rem; }
+.rk-pt{ font-weight:700; color:var(--text-dim); margin-right:6px; }
+@media print{ #panel-rank{ display:none !important; } }
+</style>
 </head>
 <body>
 <div id="toast-layer"></div>
@@ -2036,6 +2060,25 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
         </table>
       </div>
 </section>
+
+    <section class="panel" id="panel-rank">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>PRODUTIVIDADE DIA — AGRUPAMENTO</h2>
+          <span class="sub" id="rank-sub">Ranking de volume montado batido no relatório · zera às 06:20</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><div class="n" id="rank-st-vol">0</div><div class="l">Volume montado</div></div>
+          <div class="stat"><div class="n" id="rank-st-n">0</div><div class="l">Associados</div></div>
+        </div>
+      </div>
+      <div class="rank-wrap">
+        <div class="rank-tab table-scroll"><table class="rank-t"><thead><tr><th>#</th><th>Associado</th><th>Cargas</th><th style="text-align:right;">Volume montado</th></tr></thead><tbody id="rank-tbody"></tbody></table></div>
+        <div class="rank-graf" id="rank-graf"></div>
+      </div>
+      <div class="rank-pend" id="rank-pend"></div>
+      <span class="hint" style="display:block; margin-top:10px;">Como funciona: quem imprime o relatório fica como responsável pelas cargas selecionadas. Quando o relatório é atualizado e a carga some, o volume montado impresso dela é creditado ao último associado que imprimiu.</span>
+    </section>
 
   </div>
   <!-- fim da aba "Pendências Relatório Cross" -->
@@ -2960,6 +3003,7 @@ function switchDistTab(nome){
 
 let crossRawData = [];
 let crossMarcadas = {};
+let rankPend = {}, rankItens = {}, rankDia = '';   // Produtividade Dia (agrupamento): impressões aguardando a carga sumir e créditos do dia
 let crossAtual = null;   // { ts, por, perfil } — última atualização (colagem) do relatório
 /* Programação Expedição: lojas marcadas para expedir hoje (sincronizado na nuvem) + filtro local do painel */
 let progLojas = [];
@@ -6100,6 +6144,71 @@ function copiarRelatorioCross(){
   };
   if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok).catch(alt); else alt();
 }
+/* ===== PRODUTIVIDADE DIA (agrupamento): ranking de volume montado batido no relatório ===== */
+function rankRegistrar(itens){
+  if(!currentUser || (typeof somenteLeitura === 'function' && somenteLeitura())) return;
+  const claims = {};
+  itens.forEach(r => {
+    const k = String(r.carga).trim(); if(!k) return;
+    const c = claims[k] || (claims[k] = { nome: currentUser.nome, ts: Date.now(), volume: 0, fornecedor: r.fornecedor || '' });
+    c.volume += Number(r.qtd) || 0;
+  });
+  Object.keys(claims).forEach(k => { rankPend[k] = claims[k]; });
+  if(window.rankRegistrarImpressao) window.rankRegistrarImpressao(claims);
+  rankRender();
+}
+/* chamada ao atualizar o relatório: carga impressa que não tem mais montado no relatório novo = creditada a quem imprimiu por último */
+function rankAposAtualizar(rows){
+  const mont = {};
+  (rows || []).filter(ehCrossDocking).forEach(r => {
+    if(String(r.status || '').toUpperCase().includes('MONTAD')){ const k = String(r.carga).trim(); mont[k] = (mont[k] || 0) + (Number(r.qtd) || 0); }
+  });
+  const cred = [], rem = [];
+  Object.keys(rankPend || {}).forEach(k => {
+    const c = rankPend[k];
+    if(!c || mont[k] > 0) return;
+    rem.push(k);
+    if(Number(c.volume) > 0) cred.push({ id: k + '_' + c.ts, nome: c.nome, carga: k, fornecedor: c.fornecedor || '', volume: Number(c.volume) || 0, imp: c.ts, ts: Date.now() });
+  });
+  if((cred.length || rem.length) && window.rankSalvarCreditos) window.rankSalvarCreditos(cred, rem);
+  if(cred.length) showToast('🏆 ' + cred.length + ' carga(s) creditada(s) na Produtividade Dia (agrupamento).', false);
+}
+function rankRender(){
+  const tb = document.getElementById('rank-tbody'), gr = document.getElementById('rank-graf');
+  if(!tb || !gr) return;
+  const porNome = {};
+  Object.values(rankItens || {}).forEach(it => {
+    if(!it) return;
+    const k = String(it.nome || '—').trim().toUpperCase();
+    const o = porNome[k] || (porNome[k] = { nome: it.nome || '—', vol: 0, cargas: [] });
+    o.vol += Number(it.volume) || 0; o.cargas.push({ carga: it.carga, vol: Number(it.volume) || 0 });
+  });
+  const lista = Object.values(porNome).sort((a, b) => b.vol - a.vol || a.nome.localeCompare(b.nome, 'pt-BR'));
+  const total = lista.reduce((t, o) => t + o.vol, 0), max = lista.length ? lista[0].vol : 0;
+  const sub = document.getElementById('rank-sub');
+  if(sub) sub.textContent = fmtDia(diaOperacional()) + ' · ranking de volume montado batido no relatório · zera às 06:20 (junto com o salvamento da distribuição)';
+  document.getElementById('rank-st-vol').textContent = fmtInt(total);
+  document.getElementById('rank-st-n').textContent = lista.length;
+  const medalha = ['🥇', '🥈', '🥉'];
+  if(!lista.length){
+    tb.innerHTML = '<tr class="empty-row"><td colspan="4">Nenhum volume creditado hoje ainda.</td></tr>';
+    gr.innerHTML = '<div class="rank-vazio">O ranking aparece quando uma carga impressa sumir do relatório.</div>';
+  } else {
+    tb.innerHTML = lista.map((o, i) => `<tr>
+      <td class="rk-pos">${medalha[i] || (i + 1)}</td>
+      <td class="rk-nome">${escapeHtml(o.nome)}</td>
+      <td>${o.cargas.sort((a, b) => b.vol - a.vol).map(c => `<span class="rk-carga">${escapeHtml(c.carga)} <b>${fmtInt(c.vol)}</b></span>`).join('')}</td>
+      <td class="rk-vol">${fmtInt(o.vol)}</td></tr>`).join('');
+    gr.innerHTML = '<div class="rk-gt">Ranking · volume montado agrupado</div>' + lista.map((o, i) => `<div class="rk-linha${i === 0 ? ' top' : ''}">
+      <div class="rk-n"><span>${medalha[i] || (i + 1) + 'º'}</span> ${escapeHtml(o.nome)}</div>
+      <div class="rk-bar"><i style="width:${max ? Math.max(3, Math.round(o.vol / max * 100)) : 0}%"></i><b>${fmtInt(o.vol)}</b></div></div>`).join('');
+  }
+  const pend = document.getElementById('rank-pend');
+  if(pend){
+    const ks = Object.keys(rankPend || {}).filter(k => rankPend[k]);
+    pend.innerHTML = ks.length ? '<span class="rk-pt">⏳ Aguardando sumir do relatório:</span> ' + ks.slice(0, 40).map(k => `<span class="rk-carga pend">${escapeHtml(k)} · ${escapeHtml(rankPend[k].nome || '')} <b>${fmtInt(rankPend[k].volume || 0)}</b></span>`).join('') + (ks.length > 40 ? ` <span class="rk-pt">+ ${ks.length - 40}</span>` : '') : '';
+  }
+}
 function crossSelTodas(on){
   if(!currentUser || !PERFIS_DISTRIBUICAO.includes(currentUser.role)) return;
   computePendenciasCross().forEach(p => { if(on) crossMarcadas[p.carga] = true; else delete crossMarcadas[p.carga]; });
@@ -6288,6 +6397,7 @@ function renderCrossAll(){
   crossRenderLimite();
   renderCrossPendencias();
   renderCrossRelatorio();
+  try{ rankRender(); }catch(e){}
 }
 
 /* Impressão do relatório montado: página deitada (paisagem), frente e verso, agrupada por loja, tudo centralizado */
@@ -6295,6 +6405,7 @@ function imprimirRelatorioCross(){
   if(!currentUser) return;
   const itens = computeRelatorioCross();
   if(itens.length === 0){ showToast('Marque ao menos uma carga em "Imprimir?" para montar o relatório.', true); return; }
+  try{ rankRegistrar(itens); }catch(e){ console.error('Ranking:', e); }   // quem imprime fica responsável pelas cargas até elas sumirem do relatório
 
   const contLoja = {}, qtdLoja = {};
   const porCarga = {}, ordemCarga = [];
@@ -7288,6 +7399,7 @@ function importCrossFromPaste(){
 
   crossRawData = rows;
   crossMarcadas = {};
+  try{ rankAposAtualizar(rows); }catch(e){ console.error('Ranking:', e); }
   crossAtual = { ts: Date.now(), por: currentUser ? currentUser.nome : '', perfil: currentUser ? (ROLE_LABELS[currentUser.roleReal || currentUser.role] || currentUser.role) : '' };
   saveCross();
   try{ baseCapturar(rows); }catch(e){ console.error('Base:', e); }
@@ -8568,7 +8680,8 @@ function dockItens(){
   if(abaAtual === 'rec') return [ { l:nomeAba('rec'), t:'panel-rec' } ];
   if(abaAtual === 'cross') return [
     { l:'Pendências', t:'panel-cross-pendencias' },
-    { l:'Relatório montado', t:'panel-relatorio-cross' }
+    { l:'Relatório montado', t:'panel-relatorio-cross' },
+    { l:'Produtividade dia', t:'panel-rank' }
   ];
   if(abaAtual === 'org') return [
     { l:'Associados', t:'panel-org-assoc' },
@@ -9375,7 +9488,39 @@ function renderDistClockOnly(){
   2) Produtividade e tempo por estação (fórmulas) + novo visual da folha impressa
   3) Tabela "PRODUTIVIDADE DIA" por produtivo (com faixas de horário)
 
-  COMO APLICAR: cole TODO este bloco logo ANTES da tag </body>
+  COMO APLICAR: cole TODO este bloco logo ANTES da tag 
+<script type="module" id="rank-patch-fb">
+  import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  const db = getFirestore(getApp());
+  const pendRef = doc(db, 'painelCD', 'rankPend');   // impressões aguardando a carga sumir do relatório
+  window.rankRegistrarImpressao = function(claims){
+    setDoc(pendRef, { claims }, { merge:true }).catch(e => console.error('Ranking (impressão):', e));
+  };
+  window.rankSalvarCreditos = function(creditos, remover){
+    if(creditos.length){
+      const items = {}; creditos.forEach(c => { items[c.id] = c; });
+      setDoc(doc(db, 'painelCD', 'rank_' + diaOperacional()), { items }, { merge:true }).catch(e => console.error('Ranking (crédito):', e));
+    }
+    if(remover.length){
+      const claims = {}; remover.forEach(k => { claims[k] = deleteField(); });
+      setDoc(pendRef, { claims }, { merge:true }).catch(e => console.error('Ranking (pendência):', e));
+    }
+  };
+  onSnapshot(pendRef, snap => { rankPend = (snap.exists() && snap.data().claims) || {}; try{ rankRender(); }catch(e){} }, e => console.error('Ranking:', e));
+  /* os créditos ficam em um documento por dia operacional: ao virar o dia (06:20) a tabela e o gráfico recomeçam do zero */
+  let unsub = null, diaAtual = '';
+  function assina(){
+    const d = diaOperacional(); if(d === diaAtual) return;
+    diaAtual = d; rankDia = d; rankItens = {};
+    try{ unsub && unsub(); }catch(e){}
+    unsub = onSnapshot(doc(db, 'painelCD', 'rank_' + d), snap => { rankItens = (snap.exists() && snap.data().items) || {}; try{ rankRender(); }catch(e){} }, e => console.error('Ranking:', e));
+    try{ rankRender(); }catch(e){}
+  }
+  assina(); setInterval(assina, 60000);
+</script>
+
+</body>
   (depois do último </script> do seu arquivo). Não apague nada do site.
   ===================================================================== -->
 <style id="sep-patch-css">

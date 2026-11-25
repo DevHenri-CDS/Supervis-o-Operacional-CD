@@ -1983,7 +1983,8 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
           <span class="tn-chip tn-T1">T1</span><span class="tn-chip tn-T2">T2</span><span class="tn-chip tn-T3">T3</span><span class="tn-chip tn-none">Não distribuída</span></div>
         <div class="rel-sel"><span class="rel-sel-n" id="rel-sel-n">0 selecionadas</span>
           <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(true)">Selecionar todas</button>
-          <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(false)">Limpar seleção</button></div>
+          <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(false)">Limpar seleção</button>
+          <button class="btn btn-primary btn-sm" style="width:auto;" onclick="copiarRelatorioCross()" title="Copia o relatório inteiro (mesmas colunas da colagem) para colar no Excel ou de volta aqui">📋 Copiar relatório</button></div>
       </div>
       <div class="cross-bar no-print" data-ro-ok id="cross-regra-pedido">
         <label class="cross-est-lb">Regra do PEDIDO · nº da carga de corte
@@ -6080,6 +6081,25 @@ function relClasseTurno(r){
   const t = r && r.turno ? String(r.turno).split('/')[0].trim() : '';
   return /^T[123]$/.test(t) ? 'tn-' + t : 'tn-none';
 }
+/* copia o relatório inteiro, em colunas separadas por TAB, com cabeçalho — cola direto no Excel e também pode ser colado de volta em "Colar relatório" */
+function copiarRelatorioCross(){
+  const rows = crossRawData || [];
+  if(!rows.length){ showToast('Não há relatório para copiar. Cole o relatório primeiro.', true); return; }
+  const t = v => String(v == null ? '' : v).replace(/[\t\r\n]+/g, ' ').trim();
+  const linhas = [['AGRUPADORA','MASTER','STATUS','DESTINO','COD','DESCRIÇÃO','EMBALAGEM','QTD','CARGA','FORNECEDOR','RECEBIMENTO','PEDIDO'].join('\t')];
+  rows.forEach(r => linhas.push([r.agrupadora, r.master, r.status, r.destino, r.cod, r.descricao, r.embalagem || r.embl, r.qtd, r.carga, r.fornecedor, r.recebimento, r.pedido || r.caminho].map(t).join('\t')));
+  const texto = linhas.join('\n');
+  const ok = () => showToast('📋 Relatório copiado: ' + fmtInt(rows.length) + ' linhas. No Excel, clique na célula A1 e cole com Ctrl+V.', false);
+  const alt = () => {
+    const ta = document.createElement('textarea');
+    ta.value = texto; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let c = false; try{ c = document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    if(c) ok(); else showToast('Não deu pra copiar automaticamente neste navegador.', true);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(texto).then(ok).catch(alt); else alt();
+}
 function crossSelTodas(on){
   if(!currentUser || !PERFIS_DISTRIBUICAO.includes(currentUser.role)) return;
   computePendenciasCross().forEach(p => { if(on) crossMarcadas[p.carga] = true; else delete crossMarcadas[p.carga]; });
@@ -8619,7 +8639,7 @@ window.addEventListener('scroll', () => {
 }, { passive:true });
 
 /* ===================== SOMENTE LEITURA (fora do horário do turno) ===================== */
-const RO_PERMITIDO_ONCLICK = /abrirAuditoria|opEtiquetar|opCalcFechar|opKey|opSelItem|opInserir|opAvisoOk|fecharAuditoria|auditoria|imprimirAuditoria|switchTab|switchDistTab|setBordas|irSecao|toggleDock|toggleUsersFloat|logout|openQrModal|closeQrModal|copySiteLink|copiarDistribuicao|copiarGraficoImagem|recFiltro|toggleProgramacaoFiltro|imprimir|toggleMobilePreview|toggleSenhaVisibility|^document\./;
+const RO_PERMITIDO_ONCLICK = /abrirAuditoria|opEtiquetar|opCalcFechar|opKey|opSelItem|opInserir|opAvisoOk|fecharAuditoria|auditoria|imprimirAuditoria|switchTab|switchDistTab|setBordas|irSecao|toggleDock|toggleUsersFloat|logout|openQrModal|closeQrModal|copySiteLink|copiarDistribuicao|copiarRelatorioCross|copiarGraficoImagem|recFiltro|toggleProgramacaoFiltro|imprimir|toggleMobilePreview|toggleSenhaVisibility|^document\./;
 function roPermitido(el){
   if(!el) return true;
   if(el.closest('[data-ro-ok]') || el.closest('.tab-btn')) return true;

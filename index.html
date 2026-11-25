@@ -1966,7 +1966,7 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
       <div class="panel-header">
         <div class="title-block">
           <h2>PAINEL CARGAS MONTADAS - CD SECOS</h2>
-          <span class="sub" id="cross-pend-sub">Cargas com % de agrupamento acima de 1% · Pedido: Cross-Docking</span>
+          <span class="sub" id="cross-pend-sub">Cargas com % de agrupamento acima de 1% · Pedido: Cross-Docking · ordem: aging (maior → menor)</span>
         </div>
         <div class="stat-row">
           <div class="stat"><div class="n" id="st-cross-pend-count">0</div><div class="l">Cargas pendentes</div></div>
@@ -6038,7 +6038,12 @@ function computePendenciasCross(){
   return Object.values(grupos)
     .map(g => ({ ...g, aging: agingLabel(g.ref), pct: (g.montado + g.agrupado) > 0 ? (g.agrupado / (g.montado + g.agrupado) * 100) : 0 }))
     .filter(g => g.pct > 1 && g.pct < 100)
-    .sort((a,b) => b.pct - a.pct);
+    .sort((a,b) => {   // aging (data de recebimento) do maior para o menor; sem data por último; empate: maior % agrupado
+      const da = agingDias(a.ref), db = agingDias(b.ref);
+      if(da === null && db !== null) return 1;
+      if(db === null && da !== null) return -1;
+      return ((db || 0) - (da || 0)) || (b.pct - a.pct) || cmpNat(a.carga, b.carga);
+    });
 }
 
 /* itens montados (Cross-Docking) das cargas marcadas, organizados por loja → descrição → carga */
@@ -6140,7 +6145,7 @@ function renderCrossPendencias(){
   const sub = document.getElementById('cross-pend-sub');
   if(sub) sub.textContent = estF
     ? 'Filtrado pela Estação ' + (Number(crossEstSel) + 1) + ': ' + ((estF.lojas || []).length ? (estF.lojas || []).map(sepNomeLoja).join(', ') : 'nenhuma loja na estação')
-    : 'Cargas com % de agrupamento acima de 1% · Pedido: Cross-Docking';
+    : 'Cargas com % de agrupamento acima de 1% · Pedido: Cross-Docking · ordem: aging (maior → menor)';
 
   const tbody = document.getElementById('tbody-cross-pend');
   tbody.innerHTML = '';

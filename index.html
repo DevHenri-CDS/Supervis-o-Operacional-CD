@@ -1454,6 +1454,41 @@
   .ger-crit-p{ margin-top:8px; font-size:.72rem; color:var(--warn-text); }
   .ger-foot{ text-align:center; font-size:.64rem; color:var(--text-dim); margin-top:4px; }
 </style>
+
+<style id="rel-patch-css">
+/* ===== guia Relatório: painel organizado, linha clicável e cor por turno ===== */
+.rel-atualiz{ margin:0 0 14px; }
+.ra-card{ display:flex; align-items:center; gap:22px; flex-wrap:wrap; padding:12px 18px; border:1px solid var(--band); border-left-width:6px; border-radius:10px; background:linear-gradient(90deg, rgba(255,140,0,.16), rgba(255,140,0,.04)); }
+.ra-ico{ font-size:1.6rem; }
+.ra-bloco small{ display:block; font-size:.62rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); }
+.ra-bloco b{ display:block; font-size:1.25rem; font-weight:800; line-height:1.15; }
+.ra-bloco .ra-hora{ color:var(--band); font-size:1.6rem; letter-spacing:.02em; }
+.ra-bloco.ra-quem span{ display:inline-block; margin-top:2px; font-size:.68rem; font-weight:700; padding:1px 8px; border-radius:99px; border:1px solid var(--line); color:var(--text-dim); }
+.ra-atras{ margin-left:auto; font-size:.8rem; font-weight:700; color:var(--text-dim); }
+.ra-vazio{ padding:10px 14px; border:1px dashed var(--line); border-radius:8px; color:var(--text-dim); font-size:.85rem; }
+.rel-toolbar{ display:flex; align-items:center; justify-content:space-between; gap:10px 18px; flex-wrap:wrap; margin:0 0 12px; padding:8px 12px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.03); }
+.rel-leg, .rel-sel{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.rel-leg-t{ font-size:.72rem; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--text-dim); }
+.rel-sel-n{ font-weight:800; font-size:.9rem; color:var(--band); margin-right:4px; }
+.tn-chip{ display:inline-block; min-width:2.2em; text-align:center; padding:2px 10px; border-radius:99px; font-size:.78rem; font-weight:800; letter-spacing:.03em; border:1px solid transparent; }
+.tn-chip.tn-T1{ background:#1d6fe0; color:#fff; } .tn-chip.tn-T2{ background:#1f9d55; color:#fff; } .tn-chip.tn-T3{ background:#8a4fd6; color:#fff; }
+.tn-chip.tn-none{ background:transparent; border-color:var(--line); color:var(--text-dim); font-weight:700; }
+.rel-tabela tbody tr.pend-row{ transition:background .12s, box-shadow .12s; box-shadow:inset 5px 0 0 var(--tn, transparent); }
+.rel-tabela tbody tr.pend-row.clicavel{ cursor:pointer; }
+.rel-tabela tbody tr.pend-row.clicavel:hover{ filter:brightness(1.25); }
+.rel-tabela tbody tr.pend-row.sel{ outline:2px solid var(--band); outline-offset:-2px; }
+.rel-tabela td.pr-carga{ font-weight:800; font-size:1.02rem; padding-left:16px; }
+tr.pend-row.tn-T1, #tbody-cross-relatorio tr.tn-T1{ --tn:#1d6fe0; background:rgba(29,111,224,.16); }
+tr.pend-row.tn-T2, #tbody-cross-relatorio tr.tn-T2{ --tn:#1f9d55; background:rgba(31,157,85,.16); }
+tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgba(138,79,214,.18); }
+#tbody-cross-relatorio tr.tn-T1, #tbody-cross-relatorio tr.tn-T2, #tbody-cross-relatorio tr.tn-T3{ box-shadow:inset 4px 0 0 var(--tn); }
+.pend-chk{ display:inline-block; min-width:104px; padding:4px 12px; border-radius:99px; border:1.5px dashed var(--line); font-size:.76rem; font-weight:800; color:var(--text-dim); }
+.pend-chk.on{ border:1.5px solid var(--band); background:var(--band); color:#000; }
+@media print{
+  #tbody-cross-relatorio tr[class*="tn-"]{ background:none !important; box-shadow:none !important; }
+  .rel-atualiz, .rel-toolbar{ display:none !important; }
+}
+</style>
 </head>
 <body>
 <div id="toast-layer"></div>
@@ -1932,10 +1967,18 @@
           <div class="stat"><div class="n" id="st-cross-pend-count">0</div><div class="l">Cargas pendentes</div></div>
         </div>
       </div>
+      <div class="rel-atualiz" id="cross-atualizacao"></div>
       <div class="cross-bar no-print" data-ro-ok>
         <label class="cross-est-lb">Estação (Programação CD Secos)
           <select class="cross-est-sel" onchange="crossSetEst(this.value)" title="Mostra só as lojas da estação escolhida"></select>
         </label>
+      </div>
+      <div class="rel-toolbar no-print" data-ro-ok id="rel-toolbar">
+        <div class="rel-leg"><span class="rel-leg-t">Turno da distribuição:</span>
+          <span class="tn-chip tn-T1">T1</span><span class="tn-chip tn-T2">T2</span><span class="tn-chip tn-T3">T3</span><span class="tn-chip tn-none">Não distribuída</span></div>
+        <div class="rel-sel"><span class="rel-sel-n" id="rel-sel-n">0 selecionadas</span>
+          <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(true)">Selecionar todas</button>
+          <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(false)">Limpar seleção</button></div>
       </div>
       <div class="cross-bar no-print" data-ro-ok id="cross-regra-pedido">
         <label class="cross-est-lb">Regra do PEDIDO · nº da carga de corte
@@ -1944,10 +1987,10 @@
         <span class="hint" id="cross-limite-txt" style="margin:0; flex:1 1 260px;"></span>
       </div>
       <div class="table-scroll">
-        <table>
+        <table class="rel-tabela">
           <thead>
             <tr>
-              <th>Carga</th><th>Fornecedor</th><th>Recebimento</th><th>Aging</th><th>Vol. Montado</th><th>Vol. Agrupado</th><th>% Agrupado</th><th title="Turno em que a carga foi distribuída (Distribuição de hoje ou Fechamento de dias anteriores)">Turno distribuído</th><th>Imprimir?</th>
+              <th>Carga</th><th>Fornecedor</th><th>Recebimento</th><th>Aging</th><th>Vol. Montado</th><th>Vol. Agrupado</th><th>% Agrupado</th><th title="Turno em que a carga foi distribuída (Distribuição de hoje ou Fechamento de dias anteriores)">Turno distribuído</th><th style="text-align:center;">Imprimir? <span style="font-weight:400; text-transform:none;">(clique na linha)</span></th>
             </tr>
           </thead>
           <tbody id="tbody-cross-pend"></tbody>
@@ -2912,6 +2955,7 @@ function switchDistTab(nome){
 
 let crossRawData = [];
 let crossMarcadas = {};
+let crossAtual = null;   // { ts, por, perfil } — última atualização (colagem) do relatório
 /* Programação Expedição: lojas marcadas para expedir hoje (sincronizado na nuvem) + filtro local do painel */
 let progLojas = [];
 let progCatalogoExtra = [];   // lojas adicionadas à mão (as demais vêm do relatório colado)
@@ -4062,6 +4106,8 @@ function applySectorVisibility(){
   const ger = !!(currentUser && currentUser.role === 'gerente');
   { const ov = document.getElementById('op-view'), pp = document.getElementById('panel-piso'), gv = document.getElementById('ger-view'); if(ov) ov.style.display = op ? 'block' : 'none'; if(pp) pp.style.display = (op || ger) ? 'none' : ''; if(gv) gv.style.display = ger ? 'block' : 'none'; }
   document.getElementById('tab-btn-fech').style.display = podeVerFechamentos() ? 'inline-block' : 'none';
+  // Organizacional Operação e Inventário Rotativo: visíveis só ao Administrador
+  ['org','inv'].forEach(n => { const b = document.getElementById('tab-btn-' + n); if(b) b.style.display = souAdmin() ? '' : 'none'; });
 }
 
 function loadDemo(){
@@ -5387,6 +5433,7 @@ function parsePisoRow(raw){
   return { produtivo, doca, carga, fornecedor, liberacao, d1, volume, sku, departamento, status, obs };
 }
 
+function statusImpressa(st){ return st === 'PENDENTE DE ETIQUETAGEM' || st === 'EM PROCESSO DE ETIQUETAGEM'; }
 function importPisoFromPaste(){
   if(!podeImportar()) return;
   const raw = document.getElementById('import-textarea').value.replace(/^[\r\n]+/, '').replace(/\s+$/, '');   // mantém TAB inicial (produtivo vazio) da 1ª linha
@@ -5426,7 +5473,8 @@ function importPisoFromPaste(){
   const antigas = {};
   pisoData.forEach(r => { antigas[String(r.carga).trim()] = r; });
   // cargas NOVAS (não estavam no piso nem na distribuição) já com status PENDENTE DE ETIQUETAGEM = "IMPRESSA!" (aviso na TV, só na 1ª colagem)
-  const novasImpressas = liberadas.filter(r => r.status === 'PENDENTE DE ETIQUETAGEM' && !antigas[String(r.carga).trim()] && !cargaJaDistribuida(r.carga));
+  // só avisa com PENDENTE DE ETIQUETAGEM ou EM PROCESSO DE ETIQUETAGEM; carga em AGUARDANDO IMPRESSÃO não avisa — avisa quando o status mudar para um desses dois
+  const novasImpressas = liberadas.filter(r => statusImpressa(r.status) && !(antigas[String(r.carga).trim()] && statusImpressa(antigas[String(r.carga).trim()].status)) && !cargaJaDistribuida(r.carga));
   liberadas.forEach(r => {
     const velha = antigas[String(r.carga).trim()];
     if(velha){
@@ -5772,7 +5820,7 @@ function confirmarImportacaoFoto(){
 
   pisoData = pisoData.concat(novas);
   savePiso();
-  { const imp = novas.filter(r => r.status === 'PENDENTE DE ETIQUETAGEM'); if(imp.length && typeof publicarAvisoImpressa === 'function') publicarAvisoImpressa(imp); }
+  { const imp = novas.filter(r => statusImpressa(r.status)); if(imp.length && typeof publicarAvisoImpressa === 'function') publicarAvisoImpressa(imp); }
 
   let msg = `✅ ${novas.length} carga(s) importada(s) da foto.`;
   if(duplicadas.length) msg += ` ${duplicadas.length} já estavam no piso.`;
@@ -6011,6 +6059,40 @@ function chunkCrossRows(rows, maxBytes){
   return chunks;
 }
 
+/* classe de cor do turno (T1 azul · T2 verde · T3 roxo · sem turno cinza); aceita o retorno de turnoDistCarga */
+function relClasseTurno(r){
+  const t = r && r.turno ? String(r.turno).split('/')[0].trim() : '';
+  return /^T[123]$/.test(t) ? 'tn-' + t : 'tn-none';
+}
+function crossSelTodas(on){
+  if(!currentUser || !PERFIS_DISTRIBUICAO.includes(currentUser.role)) return;
+  computePendenciasCross().forEach(p => { if(on) crossMarcadas[p.carga] = true; else delete crossMarcadas[p.carga]; });
+  saveCross();
+  renderCrossAll();
+}
+/* faixa de destaque: quando, e quem, atualizou o relatório por último */
+function relRenderAtualizacao(){
+  const el = document.getElementById('cross-atualizacao');
+  if(!el) return;
+  if(!crossAtual || !crossAtual.ts){
+    el.innerHTML = '<div class="ra-vazio">🕒 Relatório ainda sem registro de atualização — a próxima colagem passa a registrar dia, hora e quem atualizou.</div>';
+    return;
+  }
+  const d = new Date(crossAtual.ts);
+  const dia = d.toLocaleDateString('pt-BR');
+  const hora = d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+  const min = Math.max(0, Math.round((Date.now() - crossAtual.ts) / 60000));
+  const atras = min < 1 ? 'agora há pouco' : (min < 60 ? 'há ' + min + ' min' : (min < 1440 ? 'há ' + Math.floor(min / 60) + ' h ' + (min % 60) + ' min' : 'há ' + Math.floor(min / 1440) + ' dia(s)'));
+  el.innerHTML = `<div class="ra-card">
+      <div class="ra-ico">🔄</div>
+      <div class="ra-bloco"><small>Relatório atualizado em</small><b>${escapeHtml(dia)}</b></div>
+      <div class="ra-bloco"><small>às</small><b class="ra-hora">${escapeHtml(hora)}</b></div>
+      <div class="ra-bloco ra-quem"><small>Associado</small><b>${escapeHtml(crossAtual.por || '—')}</b>${crossAtual.perfil ? `<span>${escapeHtml(crossAtual.perfil)}</span>` : ''}</div>
+      <div class="ra-atras">${escapeHtml(atras)}</div>
+    </div>`;
+}
+setInterval(() => { try{ if(currentUser && abaAtual === 'cross') relRenderAtualizacao(); }catch(e){} }, 60000);
+
 function toggleCrossMarcada(carga, checked){
   crossMarcadas[carga] = checked;
   saveCross();
@@ -6033,10 +6115,10 @@ function turnoDistCarga(carga){
 }
 function turnoDistCelula(carga){
   const r = turnoDistCarga(carga);
-  if(!r) return '<span style="color:var(--text-dim);" title="Carga ainda não distribuída (nem em Distribuição, nem em Fechamentos)">—</span>';
+  if(!r) return '<span class="tn-chip tn-none" title="Carga ainda não distribuída (nem em Distribuição, nem em Fechamentos)">—</span>';
   const hoje = r.dia === diaOperacional();
   const dm = fmtDia(r.dia).slice(0, 5);
-  return `<b style="color:var(--band);" title="Distribuída no ${escapeHtml(r.turno)} · ${escapeHtml(fmtDia(r.dia))}">${escapeHtml(r.turno)}</b>${hoje ? '' : ` <span style="color:var(--text-dim); font-size:.72rem;">${escapeHtml(dm)}</span>`}`;
+  return `<span class="tn-chip ${relClasseTurno(r)}" title="Distribuída no ${escapeHtml(r.turno)} · ${escapeHtml(fmtDia(r.dia))}">${escapeHtml(r.turno)}</span>${hoje ? '' : ` <span style="color:var(--text-dim); font-size:.72rem;">${escapeHtml(dm)}</span>`}`;
 }
 function renderCrossPendencias(){
   const canMark = PERFIS_DISTRIBUICAO.includes(currentUser.role);
@@ -6062,20 +6144,29 @@ function renderCrossPendencias(){
 
   pendencias.forEach(p => {
     const marcada = !!crossMarcadas[p.carga];
+    const tn = turnoDistCarga(p.carga);
+    const tcls = relClasseTurno(tn);
     const tr = document.createElement('tr');
+    tr.className = 'pend-row ' + tcls + (marcada ? ' sel' : '') + (canMark ? ' clicavel' : '');
+    if(canMark){
+      tr.setAttribute('onclick', "toggleCrossMarcada('" + String(p.carga).replace(/[^0-9A-Za-z_-]/g, '') + "', " + (!marcada) + ")");
+      tr.setAttribute('title', marcada ? 'Clique para desmarcar esta carga' : 'Clique para selecionar esta carga para o relatório');
+    }
     tr.innerHTML = `
-      <td>${escapeHtml(p.carga)}</td>
+      <td class="pr-carga">${escapeHtml(p.carga)}</td>
       <td>${escapeHtml(p.fornecedor)}</td>
       <td>${escapeHtml(p.recebimento)}</td>
       <td>${escapeHtml(p.aging)}</td>
       <td>${fmtInt(p.montado)}</td>
       <td>${fmtInt(p.agrupado)}</td>
-      <td>${p.pct.toFixed(0)}%</td>
+      <td><b>${p.pct.toFixed(0)}%</b></td>
       <td>${turnoDistCelula(p.carga)}</td>
-      <td style="text-align:center;"><input type="checkbox" ${marcada?'checked':''} ${canMark?'':'disabled'} onchange="toggleCrossMarcada('${p.carga}', this.checked)"></td>
+      <td style="text-align:center;"><span class="pend-chk${marcada ? ' on' : ''}">${marcada ? '✓ Selecionada' : (canMark ? 'Selecionar' : '—')}</span></td>
     `;
     tbody.appendChild(tr);
   });
+  { const n = pendencias.filter(p => crossMarcadas[p.carga]).length, e = document.getElementById('rel-sel-n'); if(e) e.textContent = n + (n === 1 ? ' selecionada' : ' selecionadas'); }
+  relRenderAtualizacao();
 
   document.getElementById('st-cross-pend-count').textContent = pendencias.length;
 }
@@ -6099,6 +6190,7 @@ function renderCrossRelatorio(){
   });
 
   let lojaAtual = null;
+  const cacheTn = {};
   itens.forEach(r => {
     const k = normLoja(r.destino) || 'SEM DESTINO';
     if(k !== lojaAtual){
@@ -6109,6 +6201,8 @@ function renderCrossRelatorio(){
       tbody.appendChild(g);
     }
     const tr = document.createElement('tr');
+    if(!(r.carga in cacheTn)) cacheTn[r.carga] = relClasseTurno(turnoDistCarga(r.carga));
+    tr.className = cacheTn[r.carga];
     const emb = r.embalagem || r.embl || '';
     const aging = agingLabel(r);
     tr.innerHTML = `
@@ -7158,6 +7252,7 @@ function importCrossFromPaste(){
 
   crossRawData = rows;
   crossMarcadas = {};
+  crossAtual = { ts: Date.now(), por: currentUser ? currentUser.nome : '', perfil: currentUser ? (ROLE_LABELS[currentUser.roleReal || currentUser.role] || currentUser.role) : '' };
   saveCross();
   try{ baseCapturar(rows); }catch(e){ console.error('Base:', e); }
   try{ spdAgendarSync(); }catch(e){}   // grava na Base as cargas que estão no piso/distribuídas
@@ -8427,7 +8522,6 @@ function dockItens(){
   if(!currentUser) return [];
   if(abaAtual === 'rec') return [ { l:nomeAba('rec'), t:'panel-rec' } ];
   if(abaAtual === 'cross') return [
-    { l:'Programação', t:'panel-programacao' },
     { l:'Pendências', t:'panel-cross-pendencias' },
     { l:'Relatório montado', t:'panel-relatorio-cross' }
   ];
@@ -8729,7 +8823,8 @@ function renderDistClockOnly(){
       await Promise.all(promessasApagar);
 
       crossNumChunksConhecido = chunks.length;
-      await setDoc(crossRef, { marcadas: crossMarcadas, numChunks: chunks.length, limiteCross: crossLimite });
+      await setDoc(crossRef, { marcadas: crossMarcadas, numChunks: chunks.length, limiteCross: crossLimite,
+        atualizadoEm: crossAtual ? crossAtual.ts : null, atualizadoPor: crossAtual ? crossAtual.por : '', atualizadoPerfil: crossAtual ? crossAtual.perfil : '' });
     } catch(err){
       reportError('Erro ao salvar relatório Cross:', err);
     }
@@ -8856,8 +8951,10 @@ function renderDistClockOnly(){
       crossMarcadas = d.marcadas || {};
       crossNumChunksConhecido = d.numChunks || 0;
       crossLimite = Number(d.limiteCross) > 0 ? Number(d.limiteCross) : 400000;
+      crossAtual = Number(d.atualizadoEm) > 0 ? { ts: Number(d.atualizadoEm), por: d.atualizadoPor || '', perfil: d.atualizadoPerfil || '' } : null;
     } else {
       crossMarcadas = {};
+      crossAtual = null;
       crossNumChunksConhecido = 0;
     }
     crossMetaReady = true;
@@ -9080,6 +9177,8 @@ function renderDistClockOnly(){
           tx.set(doc(fechCol, diaGravado), { dia: diaGravado, rows, extras, fechadoEm: new Date().toLocaleString('pt-BR') });
         }
         tx.set(distRef, { rows: [], extras: normalizeDistExtras(null) });
+        /* Separação: zera cargas, lojas desligadas e estações para o dia novo; mantém o CADASTRO (produtivos, turnos e lojas vistas) */
+        tx.set(doc(db, 'painelCD', 'separacao'), { cargas: [], lojasOff: [], estacoes: [], est: {}, nSt: 0, atualizadoPor: 'virada do dia', atualizadoEm: new Date().toLocaleString('pt-BR') }, { merge: true });
         return { arq: rows.length > 0 ? { dia: diaGravado, rows, extras } : null };
       });
       if(virada && window.baseZerar) window.baseZerar(hoje);     // a Base recomeça do zero junto com o Fechamento
@@ -11359,7 +11458,8 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   window.switchTab = function(name){
     if(currentUser && currentUser.role === 'operador') name = 'piso';
     if(name === 'fech' && !podeVerFechamentos()) name = 'piso';
-    if((name === 'sep' || name === 'org' || name === 'opor' || name === 'inv') && !sepPode()) name = 'piso';
+    if((name === 'sep' || name === 'opor') && !sepPode()) name = 'piso';
+    if((name === 'org' || name === 'inv') && !souAdmin()) name = 'piso';   // só o Administrador
     if(ABAS.indexOf(name) === -1) name = 'piso';
     abaAtual = name;
     document.body.classList.toggle('piso-view', name === 'piso');

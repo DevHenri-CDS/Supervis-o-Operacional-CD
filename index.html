@@ -6146,12 +6146,13 @@ function copiarRelatorioCross(){
 }
 /* ===== PRODUTIVIDADE DIA (agrupamento): ranking de volume montado batido no relatório ===== */
 function rankRegistrar(itens){
-  if(!currentUser || (typeof somenteLeitura === 'function' && somenteLeitura())) return;
+  if(!currentUser || currentUser.role === 'gerente' || currentUser.role === 'admin' || currentUser.roleReal === 'admin') return;   // impressão do Administrador não conta na Produtividade Dia; os demais ficam salvos como responsáveis
   const claims = {};
   itens.forEach(r => {
     const k = String(r.carga).trim(); if(!k) return;
     const c = claims[k] || (claims[k] = { nome: currentUser.nome, ts: Date.now(), volume: 0, fornecedor: r.fornecedor || '' });
     c.volume += Number(r.qtd) || 0;
+    c.perfil = currentUser.roleReal || currentUser.role || '';
   });
   Object.keys(claims).forEach(k => { rankPend[k] = claims[k]; });
   if(window.rankRegistrarImpressao) window.rankRegistrarImpressao(claims);
@@ -6170,7 +6171,11 @@ function rankAposAtualizar(rows){
     rem.push(k);
     if(Number(c.volume) > 0) cred.push({ id: k + '_' + c.ts, nome: c.nome, carga: k, fornecedor: c.fornecedor || '', volume: Number(c.volume) || 0, imp: c.ts, ts: Date.now() });
   });
-  if((cred.length || rem.length) && window.rankSalvarCreditos) window.rankSalvarCreditos(cred, rem);
+  if(cred.length || rem.length){
+    if(window.rankSalvarCreditos) window.rankSalvarCreditos(cred, rem);
+    else { cred.forEach(c => { rankItens[c.id] = c; }); rem.forEach(k => { delete rankPend[k]; }); }   // plano B local
+    rankRender();
+  }
   if(cred.length) showToast('🏆 ' + cred.length + ' carga(s) creditada(s) na Produtividade Dia (agrupamento).', false);
 }
 function rankRender(){
@@ -9489,6 +9494,11 @@ function renderDistClockOnly(){
   3) Tabela "PRODUTIVIDADE DIA" por produtivo (com faixas de horário)
 
   COMO APLICAR: cole TODO este bloco logo ANTES da tag 
+
+
+</body>
+  (depois do último </script> do seu arquivo). Não apague nada do site.
+  ===================================================================== -->
 <script type="module" id="rank-patch-fb">
   import { getApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getFirestore, doc, setDoc, onSnapshot, deleteField } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -9519,10 +9529,6 @@ function renderDistClockOnly(){
   }
   assina(); setInterval(assina, 60000);
 </script>
-
-</body>
-  (depois do último </script> do seu arquivo). Não apague nada do site.
-  ===================================================================== -->
 <style id="sep-patch-css">
 /* ---------- folha de separação: cabeçalho, produtividade e tempo ---------- */
 .sep-head-top{ display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; }

@@ -2856,6 +2856,13 @@ const ROLE_PASSWORDS = {
   'TVSECOS': 'tv',
   'GG30SECOS': 'gerente'
 };
+/* acha o perfil pela senha ignorando espaços nas pontas e maiúsculas/minúsculas (teclado do celular costuma mexer nisso) */
+function roleDaSenha(senha){
+  const t = String(senha == null ? '' : senha).trim();
+  if(ROLE_PASSWORDS[t]) return ROLE_PASSWORDS[t];
+  const k = Object.keys(ROLE_PASSWORDS).find(x => x.toLowerCase() === t.toLowerCase());
+  return k ? ROLE_PASSWORDS[k] : undefined;
+}
 const ROLE_LABELS = { admin:'Administrador', encarregado:'Encarregado', conferente:'Conferente', supervisor:'Supervisor', operador:'Operador', tv:'TV · Apresentação', gerente:'Gerente' };
 
 /* quais status cada perfil enxerga em "Cargas no Piso" (perfil ausente = vê tudo) */
@@ -3087,13 +3094,13 @@ async function doLogin(){
 
   let nome = document.getElementById('in-nome').value.trim();
   const senha = document.getElementById('in-senha').value;
-  if(!nome && ROLE_PASSWORDS[senha] === 'tv') nome = 'TV'; // a TV entra só com a senha
+  if(!nome && roleDaSenha(senha) === 'tv') nome = 'TV'; // a TV entra só com a senha
   const celular = ''; // campo "Tipo de acesso" removido da tela de login
   const errBox = document.getElementById('login-error');
   turnoLogin = document.getElementById('in-turno').value || turnoPorHorario();
 
   if(!nome){ errBox.textContent = 'Digite seu nome.'; return; }
-  const role = ROLE_PASSWORDS[senha];
+  const role = roleDaSenha(senha);
   if(!role){
     const novoEstado = { tentativas: (state.tentativas || 0) + 1, bloqueadoAte: 0 };
     if(novoEstado.tentativas >= LOGIN_MAX_TENTATIVAS){
@@ -9425,6 +9432,12 @@ function renderDistClockOnly(){
     try{
       const snap = await getDoc(ref);
       const statusAtual = snap.exists() ? snap.data().status : null;
+
+      /* senha de Administrador: qualquer nome entra — não passa pela trava de banido/expulso (e o registro volta a ativo) */
+      if(role === 'admin' && (statusAtual === 'banido' || statusAtual === 'expulso')){
+        await setDoc(ref, { nome, celular, role, turno: turno || '', status: 'ativo', ultimoAcesso: new Date().toLocaleString('pt-BR') }, { merge:true });
+        return { ok:true };
+      }
 
       if(statusAtual === 'banido' || statusAtual === 'expulso'){
         await setDoc(doc(solicitacoesCol, id), {

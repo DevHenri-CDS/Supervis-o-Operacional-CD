@@ -1495,6 +1495,7 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
 </style>
 
 <style id="rank-patch-css">
+body.role-operador .btn-baixar-relprod{ display:none !important; }
 .rank-wrap{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:16px; align-items:start; }
 @media (max-width:900px){ .rank-wrap{ grid-template-columns:1fr; } }
 .rank-t td{ vertical-align:middle; }
@@ -2008,7 +2009,8 @@ tr.pend-row.tn-T3, #tbody-cross-relatorio tr.tn-T3{ --tn:#8a4fd6; background:rgb
         <div class="rel-sel"><span class="rel-sel-n" id="rel-sel-n">0 selecionadas</span>
           <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(true)">Selecionar todas</button>
           <button class="btn btn-ghost btn-sm" onclick="crossSelTodas(false)">Limpar seleção</button>
-          <button class="btn btn-primary btn-sm" style="width:auto;" onclick="copiarRelatorioCross()" title="Copia o relatório inteiro (mesmas colunas da colagem) para colar no Excel ou de volta aqui">📋 Copiar relatório</button></div>
+          <button class="btn btn-primary btn-sm" style="width:auto;" onclick="copiarRelatorioCross()" title="Copia o relatório inteiro (mesmas colunas da colagem) para colar no Excel ou de volta aqui">📋 Copiar relatório</button>
+          <button class="btn btn-ghost btn-sm btn-baixar-relprod" id="btn-baixar-relprod" onclick="baixarImagemRelProd()" title="Baixa uma imagem (PNG) do PAINEL CARGAS MONTADAS e, logo abaixo, da PRODUTIVIDADE DIA — AGRUPAMENTO">📥 Baixar imagem (Painel + Produtividade)</button></div>
       </div>
       <div class="cross-bar no-print" data-ro-ok id="cross-regra-pedido">
         <label class="cross-est-lb">Regra do PEDIDO · nº da carga de corte
@@ -8562,6 +8564,66 @@ async function copiarPrintPainel(id, nome){
     } catch(e2){
       showToast('⚠️ Não consegui gerar a imagem (confira a internet e tente de novo).', true);
     }
+  }
+}
+
+/* ===== RELATÓRIO: baixa UMA imagem com o PAINEL CARGAS MONTADAS e, logo abaixo, a PRODUTIVIDADE DIA — AGRUPAMENTO (todos os perfis, menos Operador) ===== */
+let _relProdOcupado = false;
+async function baixarImagemRelProd(){
+  if(_relProdOcupado) return;
+  if(currentUser && currentUser.role === 'operador'){ showToast('Opção indisponível para o perfil Operador.', true); return; }
+  const ids = ['panel-cross-pendencias', 'panel-rank'];
+  const els = ids.map(i => document.getElementById(i));
+  if(els.some(e => !e)){ showToast('Não achei os painéis para gerar a imagem.', true); return; }
+  _relProdOcupado = true;
+  showToast('📷 Gerando a imagem do Painel + Produtividade…', false);
+  const LARGURA = 1500;
+  const fundo = getComputedStyle(document.body).backgroundColor;
+  const corFundo = (fundo && fundo !== 'rgba(0, 0, 0, 0)') ? fundo : '#0a0a0a';
+  const gerar = async (escalaMax) => {
+    const altTotal = els.reduce((t, e) => t + Math.max(e.scrollHeight, 200), 0);
+    const escala = Math.max(0.6, Math.min(escalaMax, Math.sqrt(16000000 / (LARGURA * altTotal))));
+    const canvases = [];
+    for(const id of ids){
+      const el = document.getElementById(id);
+      canvases.push(await html2canvas(el, {
+        backgroundColor: corFundo, scale: escala, useCORS: true, logging: false,
+        windowWidth: LARGURA, windowHeight: 1000, scrollX: 0, scrollY: 0,
+        ignoreElements: n => !!(n.classList && n.classList.contains('no-print')),
+        onclone: (doc) => {
+          const st = doc.createElement('style');
+          st.textContent = '#' + id + ' .table-scroll{ overflow:visible !important; max-height:none !important; }';
+          doc.head.appendChild(st);
+        }
+      }));
+    }
+    const gap = Math.round(16 * escala);
+    const w = Math.max(...canvases.map(c => c.width));
+    const h = canvases.reduce((t, c) => t + c.height, 0) + gap * (canvases.length - 1);
+    const out = document.createElement('canvas');
+    out.width = w; out.height = h;
+    const ctx = out.getContext('2d');
+    ctx.fillStyle = corFundo; ctx.fillRect(0, 0, w, h);
+    let y = 0;
+    canvases.forEach(c => { ctx.drawImage(c, 0, y); y += c.height + gap; });
+    return await new Promise((ok, erro) => out.toBlob(b => b ? ok(b) : erro(new Error('imagem vazia')), 'image/png'));
+  };
+  try{
+    await carregarScript(LIB_H2C);
+    let blob;
+    try{ blob = await gerar(2); }
+    catch(e1){ blob = await gerar(1); }
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = 'painel-cargas-montadas-produtividade-' + diaOperacional() + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 8000);
+    showToast('✅ Imagem baixada: ' + a.download, false);
+  } catch(err){
+    showToast('⚠️ Não consegui gerar a imagem (confira a internet e tente de novo).', true);
+  } finally {
+    _relProdOcupado = false;
   }
 }
 

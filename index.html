@@ -1620,6 +1620,7 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
     <button class="tab-btn" id="tab-btn-rec" onclick="switchTab('rec')">Recebimento</button>
     <button class="tab-btn active" id="tab-btn-piso" onclick="switchTab('piso')">Cargas no Piso</button>
     <button class="tab-btn" id="tab-btn-cross" onclick="switchTab('cross')">Relatório</button>
+    <button class="tab-btn" id="tab-btn-exp" onclick="switchTab('exp')">Expedição</button>
     <button class="tab-btn" id="tab-btn-sep" onclick="switchTab('sep')">Separação</button>
     <button class="tab-btn" id="tab-btn-org" onclick="switchTab('org')">Organizacional Operação</button>
     <button class="tab-btn" id="tab-btn-opor" onclick="switchTab('opor')">Oportunidades</button>
@@ -2030,6 +2031,7 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
       </div>
       <div class="panel-footer-actions no-print" id="cross-pend-actions" style="display:none;">
         <button class="btn btn-ghost btn-sm" onclick="openCrossImportModal()">Colar relatório (Consinco WMS / Excel)</button>
+        <button class="btn btn-ghost btn-sm" onclick="expAbrirColar()" title="Cola a base Estocado (agrupadoras A… e masters M…) usada na guia Expedição">Colar relatório Estocado (agrupadoras)</button>
       </div>
     </section>
 
@@ -2084,6 +2086,27 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
 
   </div>
   <!-- fim da aba "Pendências Relatório Cross" -->
+
+  <div id="tab-exp" style="display:none;">
+    <section class="panel" id="panel-exp">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>EXPEDIÇÃO</h2>
+          <span class="sub" id="exp-sub">Conferência de agrupadoras · base do relatório Estocado + dados do relatório Cross</span>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-ghost btn-sm no-print" id="exp-btn-colar" style="display:none;" onclick="expAbrirColar()">📋 Colar relatório Estocado</button>
+          <button type="button" class="btn btn-primary btn-sm no-print" style="width:auto;" onclick="expImprimir()">🖨 Imprimir conferência</button>
+        </div>
+      </div>
+      <div class="exp-filtros no-print">
+        <label>Loja<select id="exp-f-loja" onchange="expFiltrar()"><option value="">Todas</option></select></label>
+        <label class="exp-chk"><input type="checkbox" id="exp-f-item" onchange="expFiltrar()"> Só com item no Cross</label>
+      </div>
+      <div id="exp-kpis"></div>
+      <div id="exp-lista"></div>
+    </section>
+  </div>
 
   <div id="tab-sep" style="display:none;">
 
@@ -9243,6 +9266,18 @@ function renderDistClockOnly(){
     if(currentUser) renderAllSoon();
   }, err => reportError('Erro ao ler a Portaria:', err));
 
+  // ---------- EXPEDIÇÃO (relatório Estocado: agrupadoras e masters) ----------
+  const estocadoRef = doc(db, 'painelCD', 'estocado');
+  window.saveEstocado = function(){
+    if(typeof somenteLeitura === 'function' && somenteLeitura()) return;
+    const e = window.expEst || {};
+    setDoc(estocadoRef, { texto: e.texto || '', texto2: e.texto2 || '', por: e.por || '', em: e.em || '' })
+      .catch(err => reportError('Erro ao salvar o relatório Estocado:', err));
+  };
+  onSnapshot(estocadoRef, snap => {
+    if(typeof window.expAplicarRemoto === 'function') window.expAplicarRemoto(snap.exists() ? snap.data() : {});
+  }, err => reportError('Erro ao ler o relatório Estocado:', err));
+
   // ---------- SEPARAÇÃO (cargas montadas → estações → folha) ----------
   const sepRef = doc(db, 'painelCD', 'separacao');
   window.saveSep = function(){
@@ -11725,7 +11760,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
 <script id="opor-patch-js">
 (function(){
   /* ---- guias novas: Oportunidades e Inventário Rotativo ---- */
-  const ABAS = ['rec','piso','cross','sep','org','opor','inv','fech'];
+  const ABAS = ['rec','piso','cross','exp','sep','org','opor','inv','fech'];
   window.switchTab = function(name){
     if(currentUser && currentUser.role === 'operador') name = 'piso';
     if(name === 'fech' && !podeVerFechamentos()) name = 'piso';
@@ -11743,6 +11778,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     if(name === 'sep') renderSep();
     if(name === 'org') renderOrg();
     if(name === 'opor') oporRender();
+    if(name === 'exp') expRender();
     if(name === 'cross') renderCrossAll();
     if(name === 'fech') renderFechamentos();
     renderDock();
@@ -11850,6 +11886,318 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('org') + 1, 0, 'opor', 'inv');
   const _apl = aplicarNomesAbas;
   aplicarNomesAbas = function(){ _apl.apply(this, arguments); ['opor','inv'].forEach(n => { const e = document.getElementById('tab-btn-' + n); if(e) e.textContent = nomeAba(n); }); };
+  try{ aplicarNomesAbas(); }catch(e){}
+})();
+</script>
+
+<!-- ===================== MODAL: COLAR RELATÓRIO ESTOCADO (agrupadoras / masters) ===================== -->
+<div class="modal-overlay" id="exp-modal">
+  <div class="modal-box" style="max-width:640px;">
+    <div class="login-band">
+      <h1>Colar relatório Estocado (agrupadoras)</h1>
+      <p>Cole a lista com a agrupadora (A…) e, logo abaixo, os masters dela (M…): ID, loja e data/hora.</p>
+    </div>
+    <div class="modal-body">
+      <textarea id="exp-ta-base" placeholder="A3166096&#9;LOJA 01&#10;M3164109&#9;LOJA 01&#9;25/11/26 07:12&#10;M3164110&#9;LOJA 01&#9;25/11/26 07:12"></textarea>
+      <p class="hint">Substitui a base Estocado salva. O item, a embalagem, a qtd e a qtd de itens vêm do relatório Cross já colado na guia Relatório (casando pelo master).</p>
+      <details style="margin:8px 0;">
+        <summary class="hint" style="cursor:pointer;">Complemento opcional: relatório com "Master: M…" (Carga, Destino, Produto, Etiqueta, Qtd…)</summary>
+        <textarea id="exp-ta-comp" style="margin-top:6px;" placeholder="Cole aqui só se os masters não estiverem no relatório Cross da guia Relatório. Vazio = mantém o que já estava salvo."></textarea>
+      </details>
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-sm" onclick="expFecharColar()">Cancelar</button>
+        <button class="btn btn-danger btn-sm" onclick="expLimpar()">Limpar base</button>
+        <button class="btn btn-primary" style="width:auto;" onclick="expSalvarColar()">Salvar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PATCH — guia Expedição (conferência de agrupadoras) ===================== -->
+<style id="exp-css">
+  #panel-exp .exp-filtros{ display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin:10px 0; }
+  #panel-exp .exp-filtros label{ font-size:.62rem; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); display:flex; flex-direction:column; gap:3px; }
+  #panel-exp .exp-filtros select{ padding:8px 9px; background:var(--input-bg); color:var(--text); border:1px solid var(--line); border-radius:7px; font-size:.9rem; min-width:150px; }
+  #panel-exp .exp-filtros .exp-chk{ flex-direction:row; align-items:center; gap:7px; padding-bottom:9px; }
+  .exp-kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:10px 0 14px; }
+  .exp-kpi{ border:1px solid var(--line); border-left:4px solid var(--band-strong); border-radius:8px; padding:9px 12px; background:var(--panel); }
+  .exp-kpi small{ display:block; font-size:.6rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); }
+  .exp-kpi b{ font-size:1.5rem; font-family:'Oswald',sans-serif; color:var(--band); }
+  .exp-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:8px; }
+  #exp-lista{ overflow-x:auto; }
+  #exp-lista .ex-t{ width:100%; border-collapse:collapse; font-size:.92rem; }
+  #exp-lista .ex-t th{ text-align:left; font-size:.62rem; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); padding:7px 8px; border-bottom:2px solid var(--line); }
+  #exp-lista .ex-t td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
+  #exp-lista .ex-loja td{ background:#140c04; color:var(--band); font-family:'Oswald',sans-serif; letter-spacing:.06em; border-left:4px solid var(--band-strong); }
+  #exp-lista .ex-loja td span{ margin-left:12px; font-size:.78rem; color:var(--text-dim); font-family:'Inter',sans-serif; letter-spacing:0; }
+  #exp-lista .ex-ag{ font-weight:800; letter-spacing:.03em; }
+  #exp-lista .ex-cod{ display:block; font-size:.72rem; color:var(--text-dim); }
+  #exp-lista .ex-dias{ font-weight:800; text-align:center; }
+  #exp-lista .ex-dias.crit{ color:var(--danger); }
+  #exp-lista .ex-n{ text-align:right; font-weight:700; }
+  #exp-lista .ex-sem{ color:var(--text-dim); font-style:italic; }
+  #exp-lista .ex-cont .ex-ag, #exp-lista .ex-cont .ex-seq{ color:var(--text-dim); font-weight:400; }
+  #exp-lista .ex-box, #exp-lista .ex-obs{ display:none; }
+</style>
+
+<script id="exp-patch-js">
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => escapeHtml(String(s == null ? '' : s));
+  const st = { texto:'', texto2:'', por:'', em:'' };
+  window.expEst = st;
+  let fLoja = '', fSoItem = false;
+  let cache = null, cacheKey = '';
+
+  const AG = /^A\d+$/i;
+  const normM = s => { const m = /M\d+/i.exec(String(s == null ? '' : s)); return m ? m[0].toUpperCase() : ''; };
+  const pad2 = n => String(n).padStart(2, '0');
+  const fmtD = d => pad2(d.getDate()) + '/' + pad2(d.getMonth() + 1) + '/' + d.getFullYear();
+  const fmtH = d => pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  const lojaKey = l => { const m = /(\d+)/.exec(l || ''); return m ? Number(m[1]) : 99999; };
+
+  function parseData(s){
+    const m = /(\d{1,2})\/(\d{1,2})\/(\d{2,4})(?:\s+(\d{1,2}):(\d{2}))?/.exec(s || '');
+    if(!m) return null;
+    let y = +m[3]; if(y < 100) y += 2000;
+    return new Date(y, +m[2] - 1, +m[1], m[4] ? +m[4] : 0, m[5] ? +m[5] : 0);
+  }
+
+  /* base Estocado: linha "A…" abre a agrupadora; as linhas "M…" abaixo são os masters dela */
+  const RE_LIN = /^\s*([AM]\d+)\s+(.*?)\s*(\d{1,2}\/\d{1,2}\/\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)?\s*$/i;
+  function parseBase(texto){
+    const grupos = []; let atual = null;
+    String(texto || '').split(/\r?\n/).forEach(l => {
+      if(!l.trim()) return;
+      const m = RE_LIN.exec(l.replace(/\t/g, ' '));
+      if(!m) return;
+      const id = m[1].toUpperCase(), loja = (m[2] || '').trim(), dt = m[3] || '';
+      if(AG.test(id)){ atual = { agrupadora:id, loja, dataTxt:dt, masters:[] }; grupos.push(atual); return; }
+      if(!atual){ atual = { agrupadora:'(sem agrupadora)', loja, dataTxt:'', masters:[] }; grupos.push(atual); }
+      atual.masters.push({ master:id, loja, data:parseData(dt) });
+    });
+    return grupos;
+  }
+
+  /* complemento: relatório com "Master: M…" (… | cód | descrição | Master: M… | embalagem | qtd solicit | qtd separada | …) */
+  function parseComp(texto){
+    const out = [];
+    String(texto || '').split(/\r?\n/).forEach(l => {
+      if(!l.trim()) return;
+      const c = l.split('\t').map(x => x.trim());
+      const k = c.findIndex(x => /Master:\s*M\d+/i.test(x));
+      if(k < 2) return;
+      out.push({ master:normM(c[k]), cod:c[k - 2], descricao:c[k - 1], embalagem:c[k + 1] || '',
+        qtd:(toNumberBR(c[k + 3]) || toNumberBR(c[k + 2]) || 0), destino:c[1] || '' });
+    });
+    return out;
+  }
+
+  function crossIndex(){
+    const porMaster = {}, porAgr = {};
+    const add = r => {
+      const m = normM(r.master); if(m) (porMaster[m] = porMaster[m] || []).push(r);
+      const a = String(r.agrupadora || '').trim().toUpperCase(); if(AG.test(a)) (porAgr[a] = porAgr[a] || []).push(r);
+    };
+    (crossRawData || []).forEach(add);                       // relatório Cross atual (Cross-Docking e Estocado)
+    try{ (baseRows || []).forEach(add); }catch(e){}           // Base salva (cargas do piso/distribuídas): segura o item mesmo depois que o master sai do relatório
+    parseComp(st.texto2).forEach(add);
+    return { porMaster, porAgr };
+  }
+
+  function modelo(){
+    const key = st.texto.length + '|' + st.texto2.length + '|' + (crossRawData || []).length + '|' + ((typeof baseRows !== 'undefined' && baseRows) ? baseRows.length : 0) + '|' + new Date().toDateString();
+    if(cache && key === cacheKey) return cache;
+    const grupos = parseBase(st.texto), ix = crossIndex();
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const gs = grupos.map(g => {
+      const vistos = new Set(), linhas = [];
+      const push = r => { const k = normM(r.master) + '|' + (r.cod || r.descricao); if(vistos.has(k)) return; vistos.add(k); linhas.push(r); };
+      g.masters.forEach(m => (ix.porMaster[m.master] || []).forEach(push));
+      if(!linhas.length) (ix.porAgr[g.agrupadora] || []).forEach(push);
+      const mp = {};
+      linhas.forEach(r => {
+        const k = String(r.cod || '') + '|' + String(r.descricao || '');
+        const it = mp[k] = mp[k] || { cod:r.cod || '', descricao:r.descricao || '', embs:new Set(), qtd:0, ms:new Set(), n:0 };
+        if(r.embalagem) it.embs.add(r.embalagem);
+        it.qtd += Number(r.qtd) || 0;
+        const mm = normM(r.master); if(mm) it.ms.add(mm);
+        it.n++;
+      });
+      const itens = Object.values(mp).map(it => ({ cod:it.cod, descricao:it.descricao, emb:[...it.embs].join(' / '), qtd:it.qtd, etq:it.ms.size || it.n }));
+      const datas = g.masters.map(m => m.data).filter(Boolean).sort((a, b) => a - b);
+      const rec = datas[0] || parseData(g.dataTxt);
+      let dias = null;
+      if(rec){ const d0 = new Date(rec); d0.setHours(0, 0, 0, 0); dias = Math.round((hoje - d0) / 86400000); }
+      const loja = g.loja || (g.masters[0] && g.masters[0].loja) || '';
+      return { agrupadora:g.agrupadora, loja, rec, dias, nMasters:g.masters.length, itens, etq:itens.reduce((s, i) => s + i.etq, 0) };
+    });
+    cache = gs; cacheKey = key;
+    return gs;
+  }
+  function filtrado(){
+    return modelo().filter(g => (!fLoja || g.loja === fLoja) && (!fSoItem || g.itens.length));
+  }
+
+  function kpisHtml(gs, cls){
+    const com = gs.filter(g => g.itens.length).length;
+    const K = [['Agrupadoras', gs.length], ['Masters na base', gs.reduce((s, g) => s + g.nMasters, 0)], ['Etiquetas (Cross)', gs.reduce((s, g) => s + g.etq, 0)], ['Com item / sem item', com + ' / ' + (gs.length - com)]];
+    return '<div class="' + cls + 's">' + K.map(k => '<div class="' + cls + '"><small>' + k[0] + '</small><b>' + (typeof k[1] === 'number' ? fmtInt(k[1]) : k[1]) + '</b></div>').join('') + '</div>';
+  }
+
+  function tabelaHtml(gs){
+    const porLoja = new Map();
+    gs.forEach(g => { const k = g.loja || 'SEM LOJA'; if(!porLoja.has(k)) porLoja.set(k, []); porLoja.get(k).push(g); });
+    const lojas = [...porLoja.entries()].sort((a, b) => lojaKey(a[0]) - lojaKey(b[0]) || a[0].localeCompare(b[0]));
+    let seq = 0;
+    const corpo = lojas.map(([loja, lista]) => {
+      lista.sort((a, b) => ((b.dias == null ? -99 : b.dias) - (a.dias == null ? -99 : a.dias)) || a.agrupadora.localeCompare(b.agrupadora));
+      let h = '<tr class="ex-loja"><td colspan="10"><b>' + esc(loja) + '</b><span>' + lista.length + ' agrupadora(s) · ' + fmtInt(lista.reduce((s, g) => s + g.etq, 0)) + ' etiqueta(s)</span></td></tr>';
+      lista.forEach(g => {
+        seq++;
+        const its = g.itens.length ? g.itens : [null];
+        its.forEach((it, i) => {
+          const crit = g.dias != null && g.dias >= 3;
+          h += '<tr class="' + (i ? 'ex-cont' : '') + '">'
+            + '<td class="ex-seq">' + (i ? '' : seq) + '</td>'
+            + '<td class="ex-ag">' + (i ? '↳' : esc(g.agrupadora)) + '</td>'
+            + '<td>' + (g.rec ? fmtD(g.rec) + (g.rec.getHours() || g.rec.getMinutes() ? '<span class="ex-cod">' + fmtH(g.rec) + '</span>' : '') : '—') + '</td>'
+            + '<td class="ex-dias' + (crit ? ' crit' : '') + '">' + (g.dias == null ? '—' : g.dias) + '</td>'
+            + (it
+              ? '<td>' + esc(it.descricao || '—') + (it.cod ? '<span class="ex-cod">cód. ' + esc(it.cod) + '</span>' : '') + '</td><td>' + esc(it.emb || '—') + '</td><td class="ex-n">' + fmtInt(it.qtd) + '</td><td class="ex-n">' + fmtInt(it.etq) + '</td>'
+              : '<td colspan="4" class="ex-sem">sem dados no relatório Cross (' + g.nMasters + ' master' + (g.nMasters === 1 ? '' : 's') + ' na base)</td>')
+            + '<td class="ex-box"><i class="sq"></i></td><td class="ex-obs"></td></tr>';
+        });
+      });
+      return h;
+    }).join('');
+    return '<table class="ex-t"><thead><tr><th>#</th><th>Agrupadora</th><th>Recebido</th><th style="text-align:center">Dias no piso</th><th>Item</th><th>Emb.</th><th style="text-align:right">Qtd</th><th style="text-align:right">Etq</th><th class="ex-box">Conf.</th><th class="ex-obs">Observação</th></tr></thead><tbody>' + corpo + '</tbody></table>';
+  }
+
+  window.expRender = function(){
+    const lista = $('exp-lista'); if(!lista) return;
+    const btn = $('exp-btn-colar'); if(btn) btn.style.display = ehAdminLike(currentUser && currentUser.role) ? '' : 'none';
+    const todos = modelo();
+    const sel = $('exp-f-loja');
+    if(sel){
+      const lojas = [...new Set(todos.map(g => g.loja).filter(Boolean))].sort((a, b) => lojaKey(a) - lojaKey(b) || a.localeCompare(b));
+      const sig = lojas.join('|');
+      if(sel.dataset.sig !== sig){ sel.dataset.sig = sig; sel.innerHTML = '<option value="">Todas</option>' + lojas.map(l => '<option value="' + esc(l) + '">' + esc(l) + '</option>').join(''); }
+      if(fLoja && !lojas.includes(fLoja)) fLoja = '';
+      sel.value = fLoja;
+    }
+    $('exp-sub').textContent = st.texto
+      ? 'Base Estocado atualizada ' + (st.em || '') + (st.por ? ' por ' + st.por : '') + ' · Cross: ' + fmtInt((crossRawData || []).length) + ' linhas'
+      : 'Conferência de agrupadoras · base do relatório Estocado + dados do relatório Cross';
+    if(!todos.length){
+      $('exp-kpis').innerHTML = '';
+      lista.innerHTML = '<div class="exp-vazio">Nenhuma base Estocado colada ainda. Use "Colar relatório Estocado" aqui ou na guia Relatório.</div>';
+      return;
+    }
+    const gs = filtrado();
+    $('exp-kpis').innerHTML = kpisHtml(gs, 'exp-kpi');
+    lista.innerHTML = gs.length ? tabelaHtml(gs) : '<div class="exp-vazio">Nada com esses filtros.</div>';
+  };
+  window.expFiltrar = function(){ fLoja = $('exp-f-loja').value; fSoItem = $('exp-f-item').checked; expRender(); };
+
+  /* ---------- colar / limpar ---------- */
+  function podeEditar(){
+    if(!currentUser || !ehAdminLike(currentUser.role)){ showToast('Só Administrador, Conferente e Encarregado podem colar o relatório Estocado.', true); return false; }
+    if(typeof somenteLeitura === 'function' && somenteLeitura()){ showToast('Modo somente leitura.', true); return false; }
+    return true;
+  }
+  window.expAbrirColar = function(){ if(!podeEditar()) return; $('exp-ta-base').value = ''; $('exp-ta-comp').value = ''; $('exp-modal').classList.add('open'); };
+  window.expFecharColar = function(){ $('exp-modal').classList.remove('open'); };
+  function gravar(){
+    st.por = currentUser ? currentUser.nome : '';
+    st.em = new Date().toLocaleString('pt-BR');
+    cache = null;
+    if(window.saveEstocado) window.saveEstocado();
+    expRender();
+  }
+  window.expSalvarColar = function(){
+    if(!podeEditar()) return;
+    const base = $('exp-ta-base').value.trim(), comp = $('exp-ta-comp').value.trim();
+    if(!base && !comp){ expFecharColar(); return; }
+    let novoBase = st.texto;
+    if(base){
+      const g = parseBase(base);
+      if(!g.length || !g.some(x => AG.test(x.agrupadora))){
+        uiAlert('Não encontrei agrupadoras (A…) no que foi colado. Confira se colou as colunas ID, Loja e Data/hora.\n\nNada foi alterado.');
+        return;
+      }
+      novoBase = base;
+    }
+    const novoComp = comp || st.texto2;
+    if(novoBase.length + novoComp.length > 900000){ uiAlert('O texto colado é grande demais para salvar. Cole só as agrupadoras atuais.'); return; }
+    st.texto = novoBase; st.texto2 = novoComp;
+    gravar();
+    expFecharColar();
+    const g = modelo();
+    showToast('Relatório Estocado salvo: ' + fmtInt(g.length) + ' agrupadoras · ' + fmtInt(g.filter(x => x.itens.length).length) + ' com item no Cross.', false);
+  };
+  window.expLimpar = async function(){
+    if(!podeEditar()) return;
+    if(!(await uiConfirm('Apagar a base Estocado salva (e o complemento)?'))) return;
+    st.texto = ''; st.texto2 = '';
+    gravar(); expFecharColar();
+  };
+  window.expAplicarRemoto = function(d){
+    st.texto = d.texto || ''; st.texto2 = d.texto2 || ''; st.por = d.por || ''; st.em = d.em || '';
+    cache = null;
+    try{ if(abaAtual === 'exp') expRender(); }catch(e){}
+  };
+
+  /* ---------- impressão: layout próprio, A4 paisagem, preto e branco, fonte grande ---------- */
+  window.expImprimir = function(){
+    const gs = filtrado();
+    if(!gs.length){ showToast('Não há agrupadoras para imprimir. Cole o relatório Estocado primeiro.', true); return; }
+    const agora = new Date();
+    const etqTot = gs.reduce((s, g) => s + g.etq, 0);
+    const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff}'
+      + '.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3mm solid #000;padding-bottom:3mm;margin-bottom:3mm}'
+      + '.top h1{margin:0;font-size:25pt;letter-spacing:1px;line-height:1}.top h1 small{display:block;font-size:11pt;font-weight:700;letter-spacing:2px;margin-top:1.5mm}'
+      + '.top .meta{text-align:right;font-size:10.5pt;line-height:1.35}.top .meta b{font-size:13pt}'
+      + '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-bottom:3mm}.kpi{border:.6mm solid #000;padding:1.5mm 3mm}.kpi small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase}.kpi b{font-size:19pt}'
+      + '.ex-t{width:100%;border-collapse:collapse;font-size:11.5pt}'
+      + '.ex-t thead{display:table-header-group}.ex-t th{font-size:8.5pt;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:1.6mm 1.8mm;border-bottom:.8mm solid #000}'
+      + '.ex-t td{padding:1.6mm 1.8mm;border-bottom:.25mm solid #777;vertical-align:top}.ex-t tr{break-inside:avoid;page-break-inside:avoid}'
+      + '.ex-loja td{border:.6mm solid #000;background:#e6e6e6;font-size:13pt;padding:1.5mm 2.5mm}.ex-loja td span{font-size:9.5pt;margin-left:4mm;font-weight:400}'
+      + '.ex-ag{font-weight:800;font-size:12.5pt;white-space:nowrap}.ex-cod{display:block;font-size:8.5pt;color:#333;font-weight:400}'
+      + '.ex-dias{text-align:center;font-weight:800;font-size:13pt}.ex-dias.crit{outline:.6mm solid #000;outline-offset:-1.2mm}'
+      + '.ex-n{text-align:right;font-weight:800}.ex-sem{font-style:italic;color:#333}.ex-cont .ex-ag,.ex-cont .ex-seq{font-weight:400}'
+      + '.ex-box{width:14mm;text-align:center}.sq{display:inline-block;width:6mm;height:6mm;border:.5mm solid #000;vertical-align:middle}.ex-obs{width:48mm}'
+      + '.rod{break-inside:avoid;page-break-inside:avoid;margin-top:5mm;display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}'
+      + '.bx{border:.6mm solid #000;min-height:19mm;padding:1.5mm 3mm;font-size:10.5pt}.bx small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase}'
+      + '.bx .opc{margin-top:3mm;display:flex;gap:6mm;font-weight:700}.bx .opc .sq{margin-right:2mm}.bx.big{grid-column:span 3;min-height:21mm}';
+    const quad = n => '<span><i class="sq"></i>' + n + '</span>';
+    const html = '<div class="top"><h1>EXPEDIÇÃO<small>CONFERÊNCIA DE AGRUPADORAS</small></h1>'
+      + '<div class="meta"><b>' + fmtD(agora) + ' · ' + fmtH(agora) + '</b><br>Emitido por ' + esc(currentUser ? currentUser.nome : '') + (st.em ? '<br>Base Estocado: ' + esc(st.em) : '') + (fLoja ? '<br>Filtro: ' + esc(fLoja) : '') + '</div></div>'
+      + kpisHtml(gs, 'kpi') + tabelaHtml(gs)
+      + '<div class="rod">'
+      + '<div class="bx"><small>PBR</small></div><div class="bx"><small>CHEP</small></div><div class="bx"><small>Transportadora</small></div>'
+      + '<div class="bx"><small>Conjugado Hortifruti</small><div class="opc">' + quad('1ª viagem') + quad('2ª viagem') + '</div></div>'
+      + '<div class="bx"><small>Auditoria</small><div class="opc">' + quad('Sim') + quad('Não') + '</div></div>'
+      + '<div class="bx"><small>Qtd ETQ conferida</small><div style="margin-top:2mm;font-size:13pt;font-weight:800">_______ de ' + fmtInt(gs.length) + ' agrupadoras</div></div>'
+      + '<div class="bx big"><small>Assinatura</small></div></div>';
+    const f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    document.body.appendChild(f);
+    f.contentDocument.open();
+    f.contentDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Expedição — Conferência de agrupadoras</title><style>' + css + '</style></head><body>' + html + '</body></html>');
+    f.contentDocument.close();
+    setTimeout(() => { try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} setTimeout(() => f.remove(), 60000); }, 300);
+  };
+
+  /* redesenha a guia quando o relatório Cross muda (nuvem) */
+  const _ra = renderAll;
+  renderAll = function(){ _ra.apply(this, arguments); try{ if(abaAtual === 'exp') expRender(); }catch(e){} };
+
+  /* nome editável da guia */
+  ABAS_PADRAO.exp = 'Expedição';
+  ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('cross') + 1, 0, 'exp');
+  const _apl = aplicarNomesAbas;
+  aplicarNomesAbas = function(){ _apl.apply(this, arguments); const e = $('tab-btn-exp'); if(e) e.textContent = nomeAba('exp'); };
   try{ aplicarNomesAbas(); }catch(e){}
 })();
 </script>

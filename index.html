@@ -1252,6 +1252,10 @@
   body.tv-mode .fila-card.critico, body.tv-mode .tva-sec.c3 .tva-card, body.tv-mode .tv-live{ animation:none !important; }
   body.tv-mode .tv-dots i{ transition:none; }
   body.tv-mode .pc, body.tv-mode .fila-card, body.tv-mode .tva-card{ transition:none !important; }
+  /* TV: slide da guia LAYOUT (docas → distribuição) — sem botões, sem rolagem interna (a página inteira rola sozinha) e sem animação contínua */
+  body.tv-mode #panel-layout .panel-header .btn{ display:none !important; }
+  body.tv-mode #panel-layout .lay-sc{ max-height:none !important; overflow:visible !important; }
+  body.tv-mode .lay-doca .lay-v, body.tv-mode .lay-c.trab, body.tv-mode .lay-fluxo{ animation:none !important; }
 
   /* ===== TV: cargas no piso em cartões, várias colunas (aproveita a tela grande) ===== */
   body.tv-mode #tbody-piso{ overflow:visible; }
@@ -2032,7 +2036,6 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
       </div>
       <div class="panel-footer-actions no-print" id="cross-pend-actions" style="display:none;">
         <button class="btn btn-ghost btn-sm" onclick="openCrossImportModal()">Colar relatório (Consinco WMS / Excel)</button>
-        <button class="btn btn-ghost btn-sm" onclick="expAbrirColar()" title="Cola a base Estocado (agrupadoras A… e masters M…) usada na guia Expedição">Colar relatório Estocado (agrupadoras)</button>
       </div>
     </section>
 
@@ -2715,6 +2718,7 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
         <div><div class="k">Volume total</div><div class="v" id="aud-voltotal">0</div></div>
       </div>
       <div class="aud-aviso" id="aud-aviso" style="display:none;"></div>
+      <div class="aud-aviso" id="aud-confere" style="display:none;"></div>
       <div class="aud-bar">
         <input type="search" id="aud-busca" placeholder="Buscar por código ou descrição" autocomplete="off" oninput="renderAuditoria()">
         <button class="btn btn-ghost btn-sm" onclick="auditoriaMarcar(true)">Marcar todos</button>
@@ -3242,13 +3246,13 @@ const TV_TELA_MAX_MS = 40000;     // tempo máximo de cada tela (telas longas ro
 const TV_PAUSA_BORDA_MS = 2500;   // parada no topo e no fim antes de trocar
 const TV_ROLAGEM_PX_S = 80;
 const TV_REC = { min:30000, max:75000, vel:40 };   // tela do Recebimento: fica mais tempo e rola mais devagar       // velocidade da rolagem automática
-const TV_PAINEIS = ['panel-rec','panel-piso','panel-fila','panel-tv-aging','panel-dist-T1','panel-dist-T2','panel-dist-T3','panel-dist-resumo','panel-tv-fech'];
+const TV_PAINEIS = ['panel-rec','panel-piso','panel-fila','panel-layout','panel-tv-aging','panel-dist-T1','panel-dist-T2','panel-dist-T3','panel-dist-resumo','panel-tv-fech'];
 let tvScrollUlt = -1, tvSigAnt = '';
 let tvAtivo = false, tvPausado = false, tvIdx = -1, tvTimer = 0, tvRaf = 0, tvClockTimer = 0, tvCtlTimer = 0, tvWake = null;
 
 function tvSlides(){
   const sl = [];
-  sl.push({ id:'panel-piso', l:nomeAba('piso') }, { id:'panel-fila', l:nomeAba('fila') });
+  sl.push({ id:'panel-piso', l:nomeAba('piso') }, { id:'panel-fila', l:nomeAba('fila') }, { id:'panel-layout', l:nomeAba('layout') });
   if(pisoData.some(r => Math.abs(Number(r.d1) || 0) >= 2)) sl.push({ id:'panel-tv-aging', l:'Aging 2 e 3 dias' });
   let algum = false;
   TURNOS.forEach(t => {
@@ -3265,10 +3269,12 @@ function tvMostrar(i){
   tvIdx = ((i % sl.length) + sl.length) % sl.length;
   const s = sl[tvIdx];
   if(s.id.indexOf('panel-dist-') === 0){ distTabAtiva = s.id.replace('panel-dist-', ''); renderDist(); }
-  { const emRec = s.id === 'panel-rec';          // a guia Recebimento é uma aba própria: mostra ela e esconde a aba do piso
+  { const emRec = s.id === 'panel-rec', emLay = s.id === 'panel-layout';   // Recebimento e Layout são abas próprias: mostra a aba e esconde a do piso
     document.getElementById('tab-rec').style.display = emRec ? 'block' : 'none';
-    document.getElementById('tab-piso').style.display = emRec ? 'none' : 'block';
-    if(emRec) renderRecebimento(); }
+    const tl = document.getElementById('tab-layout'); if(tl) tl.style.display = emLay ? 'block' : 'none';
+    document.getElementById('tab-piso').style.display = (emRec || emLay) ? 'none' : 'block';
+    if(emRec) renderRecebimento();
+    if(emLay){ try{ layRender(true); }catch(e){ console.error('Layout na TV:', e); } } }
   if(s.id === 'panel-tv-aging') renderTvAging();
   if(s.id === 'panel-tv-fech') renderTvFech();
   TV_PAINEIS.forEach(id => { const e = document.getElementById(id); if(e) e.classList.toggle('tv-off', id !== s.id); });
@@ -3917,6 +3923,7 @@ function tvStop(){
   document.body.classList.remove('tv-mode', 'tv-ctl');
   TV_PAINEIS.forEach(id => { const e = document.getElementById(id); if(e) e.classList.remove('tv-off', 'tv-enter'); });
   document.getElementById('tab-rec').style.display = 'none';
+  { const tl = document.getElementById('tab-layout'); if(tl) tl.style.display = 'none'; }
   document.getElementById('tab-piso').style.display = 'block';
   clearTimeout(tvAvisoTimer); tvAvisoAberto = false; tvAvisoCargas = [];
   { const b = document.getElementById('tv-aviso'); if(b) b.classList.remove('on'); }
@@ -7766,6 +7773,53 @@ const auditoriaAbertos = new Set(); // itens com a lista de lojas expandida
 /* todos os perfis, menos Operador e TV */
 function podeAuditar(){ return !!currentUser && ehAdminLike(currentUser.role); }
 
+/* ---- ANTI-DUPLICIDADE ----
+   A Base é gravada em pedaços (chunks) e, se dois acessos gravam ao mesmo tempo, ou o relatório é colado/completado de novo,
+   as MESMAS linhas de uma carga podem aparecer 2x — e o volume da auditoria dobra. Estas funções tiram as repetições. */
+function linhaSig(r, comMaster){
+  return [String(r.carga == null ? '' : r.carga).trim(), normLoja(r.destino), String(r.cod || '').trim(), String(r.embalagem || r.embl || '').trim(),
+    Number(r.qtd) || 0, String(r.status || '').toUpperCase().trim(),
+    comMaster ? String(r.master || '').trim() + '~' + String(r.agrupadora || '').trim() : ''].join('|');
+}
+function linhaTemId(r){ return !!(String(r.master || '').trim() || String(r.agrupadora || '').trim()); }
+/* comMaster=true  (seguro): linha com master/agrupadora idêntica = cópia → fica só a 1ª; linha sem id repetida em lote (captadoEm) posterior = cópia.
+   comMaster=false (usado só com conferência de volume): ignora o master e compara loja+item+emb.+qtd+status entre lotes. */
+function linhasSemRepeticao(rows, comMaster){
+  const porCarga = new Map();
+  rows.forEach(r => {
+    const k = String(r.carga == null ? '' : r.carga).trim(), lote = String(r.captadoEm || '');
+    let c = porCarga.get(k); if(!c){ c = { lotes:new Map() }; porCarga.set(k, c); }
+    let L = c.lotes.get(lote); if(!L){ L = { n:c.lotes.size, cont:new Map() }; c.lotes.set(lote, L); }
+    const sg = linhaSig(r, comMaster); L.cont.set(sg, (L.cont.get(sg) || 0) + 1);
+  });
+  const vistos = new Set(), consumo = new Map();
+  return rows.filter(r => {
+    const k = String(r.carga == null ? '' : r.carga).trim(), lote = String(r.captadoEm || '');
+    const c = porCarga.get(k), L = c.lotes.get(lote), sg = linhaSig(r, comMaster);
+    if(comMaster && linhaTemId(r)){ if(vistos.has(sg)) return false; vistos.add(sg); return true; }
+    let ant = 0; c.lotes.forEach(o => { if(o.n < L.n) ant += o.cont.get(sg) || 0; });
+    if(ant > 0){
+      const kk = k + '#' + lote + '#' + sg, j = consumo.get(kk) || 0;
+      if(j < Math.min(ant, L.cont.get(sg))){ consumo.set(kk, j + 1); return false; }
+    }
+    return true;
+  });
+}
+/* relatório colado em dobro: se TODA linha aparece um nº par de vezes, fica metade */
+function linhasMetade(rows){
+  const cont = new Map();
+  rows.forEach(r => { const sg = linhaSig(r, true); cont.set(sg, (cont.get(sg) || 0) + 1); });
+  for(const n of cont.values()) if(n % 2) return rows;
+  const usado = new Map();
+  return rows.filter(r => { const sg = linhaSig(r, true), j = usado.get(sg) || 0; if(j >= cont.get(sg) / 2) return false; usado.set(sg, j + 1); return true; });
+}
+function auditoriaVolumeAlvo(carga){
+  const k = String(carga).trim();
+  const r = (pisoData || []).concat(distData || []).find(x => String(x.carga).trim() === k);
+  return r ? (Number(r.volume) || 0) : 0;
+}
+const somaQtd = ls => ls.reduce((t, r) => t + (Number(r.qtd) || 0), 0);
+
 /* Agrupa TODO o relatório Cross da carga (Montada + Agrupada = volume total):
    item (cód + embalagem) → quantidade por loja, marcando o que está AGRUPADO. */
 function auditoriaItens(carga){
@@ -7773,8 +7827,15 @@ function auditoriaItens(carga){
   const mapa = new Map();
   /* a carga salva na Base (montada) é a fonte da auditoria; sem Base, usa o relatório colado */
   const fonte = (typeof baseRows !== 'undefined' && baseRows.some(r => String(r.carga).trim() === alvo)) ? baseRows : crossRawData;
-  fonte.forEach(r => {
-    if(String(r.carga).trim() !== alvo) return;
+  const brutas = fonte.filter(r => String(r.carga).trim() === alvo);
+  const volAlvo = auditoriaVolumeAlvo(alvo);
+  /* 1) tira cópias seguras; 2) se o volume ainda passa do volume da carga, tenta as outras limpezas e fica com a que mais se aproxima */
+  let linhas = linhasSemRepeticao(brutas, true);
+  if(volAlvo > 0 && somaQtd(linhas) > volAlvo * 1.01){
+    const cands = [linhas, linhasSemRepeticao(linhas, false), linhasMetade(linhas)];
+    cands.forEach(c => { if(Math.abs(somaQtd(c) - volAlvo) < Math.abs(somaQtd(linhas) - volAlvo)) linhas = c; });
+  }
+  linhas.forEach(r => {
     const cod = String(r.cod || '').trim();
     const emb = String(r.embalagem || r.embl || '').trim();
     const k = cod + '|' + emb;
@@ -7789,7 +7850,10 @@ function auditoriaItens(carga){
       it.totalAgrup += q;
     }
   });
-  return Array.from(mapa.values()).sort((a, b) => cmpNat(a.cod, b.cod));
+  const res = Array.from(mapa.values()).sort((a, b) => cmpNat(a.cod, b.cod));
+  res.volAlvo = volAlvo;
+  res.descartadas = brutas.length - linhas.length;
+  return res;
 }
 
 /* resumo de agrupados da carga inteira: lojas distintas, volume e itens afetados */
@@ -7838,6 +7902,14 @@ function renderAuditoria(){
     av.innerHTML = '';
   }
 
+  /* conferência: volume dos itens x volume da carga */
+  { const cf = document.getElementById('aud-confere');
+    const tot = itens.reduce((t, it) => t + it.total, 0), alvoV = itens.volAlvo || 0, desc = itens.descartadas || 0;
+    let msg = '';
+    if(alvoV > 0 && tot > alvoV * 1.01) msg = `⚠ CONFIRA — o volume dos itens (${fmtInt(tot)}) está acima do volume da carga (${fmtInt(alvoV)}). Possível linha repetida no relatório: não imprima sem conferir.`;
+    else if(desc > 0) msg = `✔ ${fmtInt(desc)} linha(s) repetida(s) desta carga foram ignoradas automaticamente — o volume abaixo já está corrigido.`;
+    if(cf){ cf.style.display = msg ? 'block' : 'none'; cf.textContent = msg; }
+  }
   const q = (document.getElementById('aud-busca').value || '').trim().toLowerCase();
   const lista = document.getElementById('aud-list');
   if(itens.length === 0){
@@ -10329,12 +10401,13 @@ function baseCapturar(rows){
   /* limpeza: linha lixo (sem carga, sem status Montada ou sem quantidade) vinda de uma colagem errada não pode segurar a carga como "já salva" */
   const antes = baseRows.length;
   baseRows = baseRows.filter(r => sepNorm(r.carga) && String(r.status || '').toUpperCase().includes('MONTAD') && Number(r.qtd) > 0);
+  baseRows = linhasSemRepeticao(baseRows, true);   // tira linhas repetidas (gravação simultânea / colagem em dobro)
   const limpou = antes - baseRows.length;
   const jaSalvas = new Set(baseRows.map(r => sepNorm(r.carga)));
   const porCarga = {};
   rows.forEach(r => { const k = sepNorm(r.carga); if(k) (porCarga[k] = porCarga[k] || []).push(r); });
   const add = []; let novas = 0, jaTinha = 0, aguardando = 0, completadas = 0;
-  const assin = r => [sepKey(r.destino), String(r.cod || '').trim(), String(r.embalagem || '').trim(), String(r.master || '').trim()].join('|');
+  const assin = r => [sepKey(r.destino), String(r.cod || '').trim(), String(r.embalagem || '').trim(), Number(r.qtd) || 0].join('|');   // sem o master: master refeito no WMS não pode "completar" a carga de novo (dobrava o volume)
   Object.keys(porCarga).forEach(k => {
     const p = noPiso.has(k), d = naDist.has(k);
     if(!p && !d) return;                                   // só cargas que estão no piso ou na distribuição
@@ -10634,7 +10707,7 @@ renderSep = function(soft){ _renderSepBase(soft); try{ baseRender(); }catch(e){}
       if(ch.type === 'removed') delete baseMapa[ch.doc.id];
       else baseMapa[ch.doc.id] = ch.doc.data().rows || [];
     });
-    baseRows = Object.keys(baseMapa).sort((a, b) => Number(a) - Number(b)).flatMap(k => baseMapa[k]);
+    baseRows = linhasSemRepeticao(Object.keys(baseMapa).sort((a, b) => Number(a) - Number(b)).flatMap(k => baseMapa[k]), true);   // pedaços gravados ao mesmo tempo podem repetir linhas: aqui já entram sem cópia
     baseVer++;
     if(currentUser && typeof baseRender === 'function') baseRender();
   }, err => reportErro('Erro ao ler as linhas da Base:', err));
@@ -12111,7 +12184,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
       : 'Conferência de agrupadoras · base do relatório Estocado + dados do relatório Cross';
     if(!todos.length){
       $('exp-kpis').innerHTML = '';
-      lista.innerHTML = '<div class="exp-vazio">Nenhuma base Estocado colada ainda. Use "Colar relatório Estocado" aqui ou na guia Relatório.</div>';
+      lista.innerHTML = '<div class="exp-vazio">Nenhuma base Estocado colada ainda. Use "Colar relatório Estocado" aqui.</div>';
       return;
     }
     const gs = filtrado();
@@ -12318,6 +12391,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   const STC = { 'NÃO ANALISADO':'#888', 'AGUARDANDO IMPRESSÃO':'#9aa0a6', 'PENDENTE DE ETIQUETAGEM':'#ff8a1f', 'EM PROCESSO DE ETIQUETAGEM':'#ffd23f', 'PARCIALMENTE ETIQUETADA':'#4cc3ff', 'CARGA ETIQUETADA':'#3ddc84', 'PARCIALMENTE DISTRIBUIDA':'#b794f6', 'EM CONFERÊNCIA':'#f783ac' };
   let sig = '', prevPiso = null, prevDist = null, prevDocas = null;
   const prevVals = {};
+  const layVisivel = () => abaAtual === 'layout' || (typeof tvAtivo !== 'undefined' && tvAtivo && ((tvSlides()[tvIdx] || {}).id === 'panel-layout'));
 
   const RODA = x => '<g class="lay-rd" style="transform-origin:' + x + 'px 58px"><circle cx="' + x + '" cy="58" r="8" fill="#111" stroke="#ddd" stroke-width="2"/><path d="M' + (x - 6) + ' 58h12M' + x + ' 52v12" stroke="#ddd" stroke-width="2"/></g>';
   function svgVeic(tipo){
@@ -12452,11 +12526,11 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     try{ if(document.fullscreenElement) document.exitFullscreen(); else if(p.requestFullscreen) p.requestFullscreen(); }catch(e){}
   };
   document.addEventListener('fullscreenchange', () => { sig = ''; try{ if(abaAtual === 'layout') layRender(true); }catch(e){} });
-  setInterval(() => { const h = $('lay-hora'); if(h && abaAtual === 'layout') h.textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+  setInterval(() => { const h = $('lay-hora'); if(h && layVisivel()) h.textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
 
   /* atualizações da nuvem: só redesenha se algo mudou e a guia está aberta */
   const _ra2 = renderAll;
-  renderAll = function(){ _ra2.apply(this, arguments); try{ if(abaAtual === 'layout') layRender(); }catch(e){} };
+  renderAll = function(){ _ra2.apply(this, arguments); try{ if(layVisivel()) layRender(); }catch(e){} };
 
   ABAS_PADRAO.layout = 'Layout';
   ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('exp') + 1, 0, 'layout');

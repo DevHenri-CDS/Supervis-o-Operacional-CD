@@ -1621,6 +1621,7 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
     <button class="tab-btn active" id="tab-btn-piso" onclick="switchTab('piso')">Cargas no Piso</button>
     <button class="tab-btn" id="tab-btn-cross" onclick="switchTab('cross')">Relatório</button>
     <button class="tab-btn" id="tab-btn-exp" onclick="switchTab('exp')">Expedição</button>
+    <button class="tab-btn" id="tab-btn-layout" onclick="switchTab('layout')">Layout</button>
     <button class="tab-btn" id="tab-btn-sep" onclick="switchTab('sep')">Separação</button>
     <button class="tab-btn" id="tab-btn-org" onclick="switchTab('org')">Organizacional Operação</button>
     <button class="tab-btn" id="tab-btn-opor" onclick="switchTab('opor')">Oportunidades</button>
@@ -2102,9 +2103,26 @@ body.role-operador .btn-baixar-relprod{ display:none !important; }
       <div class="exp-filtros no-print">
         <label>Loja<select id="exp-f-loja" onchange="expFiltrar()"><option value="">Todas</option></select></label>
         <label class="exp-chk"><input type="checkbox" id="exp-f-item" onchange="expFiltrar()"> Só com item no Cross</label>
+        <label>Impressão (paisagem)<select id="exp-f-pag"><option value="1">1 página por folha</option><option value="2">2 páginas por folha (duas vias)</option></select></label>
       </div>
       <div id="exp-kpis"></div>
       <div id="exp-lista"></div>
+    </section>
+  </div>
+
+  <div id="tab-layout" style="display:none;">
+    <section class="panel" id="panel-layout">
+      <div class="panel-header">
+        <div class="title-block">
+          <h2>LAYOUT</h2>
+          <span class="sub">Cargas no piso (docas e veículos) → Distribuição · volume do relatório montado · ao vivo</span>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <span class="lay-live"><i></i>AO VIVO · <span id="lay-hora"></span></span>
+          <button type="button" class="btn btn-ghost btn-sm no-print" onclick="layTelaCheia()">⛶ Tela cheia</button>
+        </div>
+      </div>
+      <div id="lay-cena"></div>
     </section>
   </div>
 
@@ -11760,7 +11778,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
 <script id="opor-patch-js">
 (function(){
   /* ---- guias novas: Oportunidades e Inventário Rotativo ---- */
-  const ABAS = ['rec','piso','cross','exp','sep','org','opor','inv','fech'];
+  const ABAS = ['rec','piso','cross','exp','layout','sep','org','opor','inv','fech'];
   window.switchTab = function(name){
     if(currentUser && currentUser.role === 'operador') name = 'piso';
     if(name === 'fech' && !podeVerFechamentos()) name = 'piso';
@@ -11779,6 +11797,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     if(name === 'org') renderOrg();
     if(name === 'opor') oporRender();
     if(name === 'exp') expRender();
+    if(name === 'layout') layRender(true);
     if(name === 'cross') renderCrossAll();
     if(name === 'fech') renderFechamentos();
     renderDock();
@@ -11899,7 +11918,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     </div>
     <div class="modal-body">
       <textarea id="exp-ta-base" placeholder="A3166096&#9;LOJA 01&#10;M3164109&#9;LOJA 01&#9;25/11/26 07:12&#10;M3164110&#9;LOJA 01&#9;25/11/26 07:12"></textarea>
-      <p class="hint">Substitui a base Estocado salva. O item, a embalagem, a qtd e a qtd de itens vêm do relatório Cross já colado na guia Relatório (casando pelo master).</p>
+      <p class="hint">Substitui a base Estocado salva. Na guia aparecem só as agrupadoras (A…); os masters servem apenas para achar a data e o item de maior volume no relatório Cross / Base.</p>
       <details style="margin:8px 0;">
         <summary class="hint" style="cursor:pointer;">Complemento opcional: relatório com "Master: M…" (Carga, Destino, Produto, Etiqueta, Qtd…)</summary>
         <textarea id="exp-ta-comp" style="margin-top:6px;" placeholder="Cole aqui só se os masters não estiverem no relatório Cross da guia Relatório. Vazio = mantém o que já estava salvo."></textarea>
@@ -11926,7 +11945,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   .exp-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; border:1px dashed var(--line); border-radius:8px; }
   #exp-lista{ overflow-x:auto; }
   #exp-lista .ex-t{ width:100%; border-collapse:collapse; font-size:.92rem; }
-  #exp-lista .ex-t th{ text-align:left; font-size:.62rem; letter-spacing:.07em; text-transform:uppercase; color:var(--text-dim); padding:7px 8px; border-bottom:2px solid var(--line); }
+  #exp-lista .ex-t th{ text-align:left; font-size:.7rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; background:var(--band-strong); color:#000; padding:8px; border-bottom:2px solid #000; }
   #exp-lista .ex-t td{ padding:7px 8px; border-bottom:1px solid var(--line); vertical-align:top; }
   #exp-lista .ex-loja td{ background:#140c04; color:var(--band); font-family:'Oswald',sans-serif; letter-spacing:.06em; border-left:4px solid var(--band-strong); }
   #exp-lista .ex-loja td span{ margin-left:12px; font-size:.78rem; color:var(--text-dim); font-family:'Inter',sans-serif; letter-spacing:0; }
@@ -12024,7 +12043,8 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
         const mm = normM(r.master); if(mm) it.ms.add(mm);
         it.n++;
       });
-      const itens = Object.values(mp).map(it => ({ cod:it.cod, descricao:it.descricao, emb:[...it.embs].join(' / '), qtd:it.qtd, etq:it.ms.size || it.n }));
+      /* só o item de MAIOR VOLUME da agrupadora */
+      const itens = Object.values(mp).map(it => ({ cod:it.cod, descricao:it.descricao, emb:[...it.embs].join(' / '), qtd:it.qtd, etq:it.ms.size || it.n })).sort((a, b) => (b.qtd - a.qtd) || (b.etq - a.etq)).slice(0, 1);
       const datas = g.masters.map(m => m.data).filter(Boolean).sort((a, b) => a - b);
       const rec = datas[0] || parseData(g.dataTxt);
       let dias = null;
@@ -12041,7 +12061,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
 
   function kpisHtml(gs, cls){
     const com = gs.filter(g => g.itens.length).length;
-    const K = [['Agrupadoras', gs.length], ['Masters na base', gs.reduce((s, g) => s + g.nMasters, 0)], ['Etiquetas (Cross)', gs.reduce((s, g) => s + g.etq, 0)], ['Com item / sem item', com + ' / ' + (gs.length - com)]];
+    const K = [['Agrupadoras', gs.length], ['Críticas (3+ dias)', gs.filter(g => g.dias != null && g.dias >= 3).length], ['Etiquetas (Cross)', gs.reduce((s, g) => s + g.etq, 0)], ['Com item / sem item', com + ' / ' + (gs.length - com)]];
     return '<div class="' + cls + 's">' + K.map(k => '<div class="' + cls + '"><small>' + k[0] + '</small><b>' + (typeof k[1] === 'number' ? fmtInt(k[1]) : k[1]) + '</b></div>').join('') + '</div>';
   }
 
@@ -12065,7 +12085,7 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
             + '<td class="ex-dias' + (crit ? ' crit' : '') + '">' + (g.dias == null ? '—' : g.dias) + '</td>'
             + (it
               ? '<td>' + esc(it.descricao || '—') + (it.cod ? '<span class="ex-cod">cód. ' + esc(it.cod) + '</span>' : '') + '</td><td>' + esc(it.emb || '—') + '</td><td class="ex-n">' + fmtInt(it.qtd) + '</td><td class="ex-n">' + fmtInt(it.etq) + '</td>'
-              : '<td colspan="4" class="ex-sem">sem dados no relatório Cross (' + g.nMasters + ' master' + (g.nMasters === 1 ? '' : 's') + ' na base)</td>')
+              : '<td colspan="4" class="ex-sem">sem dados no relatório Cross nem na Base</td>')
             + '<td class="ex-box"><i class="sq"></i></td><td class="ex-obs"></td></tr>';
         });
       });
@@ -12148,30 +12168,31 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
     try{ if(abaAtual === 'exp') expRender(); }catch(e){}
   };
 
-  /* ---------- impressão: layout próprio, A4 paisagem, preto e branco, fonte grande ---------- */
+  /* ---------- impressão: layout próprio, A4 paisagem, 1 ou 2 páginas por folha, sempre cabendo numa folha ---------- */
   window.expImprimir = function(){
     const gs = filtrado();
     if(!gs.length){ showToast('Não há agrupadoras para imprimir. Cole o relatório Estocado primeiro.', true); return; }
+    const n = ($('exp-f-pag') && $('exp-f-pag').value === '2') ? 2 : 1;
     const agora = new Date();
-    const etqTot = gs.reduce((s, g) => s + g.etq, 0);
-    const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}html,body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff}'
-      + '.top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3mm solid #000;padding-bottom:3mm;margin-bottom:3mm}'
-      + '.top h1{margin:0;font-size:25pt;letter-spacing:1px;line-height:1}.top h1 small{display:block;font-size:11pt;font-weight:700;letter-spacing:2px;margin-top:1.5mm}'
-      + '.top .meta{text-align:right;font-size:10.5pt;line-height:1.35}.top .meta b{font-size:13pt}'
-      + '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-bottom:3mm}.kpi{border:.6mm solid #000;padding:1.5mm 3mm}.kpi small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase}.kpi b{font-size:19pt}'
+    const css = '@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}html,body{margin:0;font-family:Arial,Helvetica,sans-serif;color:#000;background:#fff}'
+      + '.top{display:flex;justify-content:space-between;align-items:flex-end;background:#000;color:#fff;padding:3mm 4mm;border-bottom:2mm solid #ff8a1f;margin-bottom:3mm}'
+      + '.top h1{margin:0;font-size:25pt;letter-spacing:1px;line-height:1;color:#ff8a1f}.top h1 small{display:block;font-size:11pt;font-weight:700;letter-spacing:2px;margin-top:1.5mm;color:#fff}'
+      + '.top .meta{text-align:right;font-size:10.5pt;line-height:1.35}.top .meta b{font-size:13pt;color:#ff8a1f}'
+      + '.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:3mm;margin-bottom:3mm}.kpi{border:.6mm solid #000;border-left:2.5mm solid #ff8a1f;padding:1.5mm 3mm}.kpi small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase}.kpi b{font-size:19pt}'
       + '.ex-t{width:100%;border-collapse:collapse;font-size:11.5pt}'
-      + '.ex-t thead{display:table-header-group}.ex-t th{font-size:8.5pt;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:1.6mm 1.8mm;border-bottom:.8mm solid #000}'
+      + '.ex-t thead{display:table-header-group}.ex-t th{background:#ff8a1f;color:#000;font-weight:800;font-size:9pt;letter-spacing:.8px;text-transform:uppercase;text-align:left;padding:1.8mm;border:.4mm solid #000}'
       + '.ex-t td{padding:1.6mm 1.8mm;border-bottom:.25mm solid #777;vertical-align:top}.ex-t tr{break-inside:avoid;page-break-inside:avoid}'
-      + '.ex-loja td{border:.6mm solid #000;background:#e6e6e6;font-size:13pt;padding:1.5mm 2.5mm}.ex-loja td span{font-size:9.5pt;margin-left:4mm;font-weight:400}'
+      + '.ex-loja td{border:.6mm solid #000;background:#000;color:#fff;font-size:13pt;padding:1.5mm 2.5mm}.ex-loja td span{font-size:9.5pt;margin-left:4mm;font-weight:400;color:#ff8a1f}'
       + '.ex-ag{font-weight:800;font-size:12.5pt;white-space:nowrap}.ex-cod{display:block;font-size:8.5pt;color:#333;font-weight:400}'
       + '.ex-dias{text-align:center;font-weight:800;font-size:13pt}.ex-dias.crit{outline:.6mm solid #000;outline-offset:-1.2mm}'
-      + '.ex-n{text-align:right;font-weight:800}.ex-sem{font-style:italic;color:#333}.ex-cont .ex-ag,.ex-cont .ex-seq{font-weight:400}'
-      + '.ex-box{width:14mm;text-align:center}.sq{display:inline-block;width:6mm;height:6mm;border:.5mm solid #000;vertical-align:middle}.ex-obs{width:48mm}'
+      + '.ex-n{text-align:right;font-weight:800}.ex-sem{font-style:italic;color:#333}'
+      + '.ex-box{width:14mm;text-align:center}.sq{display:inline-block;width:6mm;height:6mm;border:.5mm solid #000;vertical-align:middle}.ex-obs{width:36mm}'
       + '.rod{break-inside:avoid;page-break-inside:avoid;margin-top:5mm;display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}'
       + '.bx{border:.6mm solid #000;min-height:19mm;padding:1.5mm 3mm;font-size:10.5pt}.bx small{display:block;font-size:8.5pt;font-weight:700;letter-spacing:1px;text-transform:uppercase}'
-      + '.bx .opc{margin-top:3mm;display:flex;gap:6mm;font-weight:700}.bx .opc .sq{margin-right:2mm}.bx.big{grid-column:span 3;min-height:21mm}';
-    const quad = n => '<span><i class="sq"></i>' + n + '</span>';
-    const html = '<div class="top"><h1>EXPEDIÇÃO<small>CONFERÊNCIA DE AGRUPADORAS</small></h1>'
+      + '.bx .opc{margin-top:3mm;display:flex;gap:6mm;font-weight:700}.bx .opc .sq{margin-right:2mm}.bx.big{grid-column:span 3;min-height:21mm}'
+      + '.folha{display:flex;gap:12px;width:1060px;height:730px;overflow:hidden;page-break-after:avoid;break-after:avoid}.fit{flex:none;overflow:hidden}.paper{transform-origin:0 0}';
+    const quad = t => '<span><i class="sq"></i>' + t + '</span>';
+    const conteudo = '<div class="top"><h1>EXPEDIÇÃO<small>CONFERÊNCIA DE AGRUPADORAS</small></h1>'
       + '<div class="meta"><b>' + fmtD(agora) + ' · ' + fmtH(agora) + '</b><br>Emitido por ' + esc(currentUser ? currentUser.nome : '') + (st.em ? '<br>Base Estocado: ' + esc(st.em) : '') + (fLoja ? '<br>Filtro: ' + esc(fLoja) : '') + '</div></div>'
       + kpisHtml(gs, 'kpi') + tabelaHtml(gs)
       + '<div class="rod">'
@@ -12180,12 +12201,32 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
       + '<div class="bx"><small>Auditoria</small><div class="opc">' + quad('Sim') + quad('Não') + '</div></div>'
       + '<div class="bx"><small>Qtd ETQ conferida</small><div style="margin-top:2mm;font-size:13pt;font-weight:800">_______ de ' + fmtInt(gs.length) + ' agrupadoras</div></div>'
       + '<div class="bx big"><small>Assinatura</small></div></div>';
+    const WA = n === 2 ? 524 : 1060, HA = 730;   // área útil de uma folha A4 paisagem (menos margem) em px; 2 por folha = metade da largura
     const f = document.createElement('iframe');
-    f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;';
+    f.style.cssText = 'position:fixed;left:0;top:0;width:1200px;height:900px;border:0;opacity:0;pointer-events:none;';
     document.body.appendChild(f);
-    f.contentDocument.open();
-    f.contentDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Expedição — Conferência de agrupadoras</title><style>' + css + '</style></head><body>' + html + '</body></html>');
-    f.contentDocument.close();
+    const d = f.contentDocument;
+    d.open();
+    d.write('<!doctype html><html><head><meta charset="utf-8"><title>Expedição — Conferência de agrupadoras</title><style>' + css + '</style></head><body><div id="probe" style="position:absolute;left:0;top:0;width:' + WA + 'px">' + conteudo + '</div></body></html>');
+    d.close();
+    /* cabe tudo em UMA página: reduz a escala (e alarga o texto na mesma proporção) até a altura e a largura caberem */
+    const pr = d.getElementById('probe');
+    let s = 1;
+    for(let k = 0; k < 14; k++){
+      const wl = Math.round(WA / s);
+      pr.style.width = wl + 'px';
+      const h = pr.scrollHeight, w = pr.scrollWidth;
+      let ns = s;
+      if(w > wl + 1) ns = s * wl / w * 0.99;
+      else if(h * s > HA) ns = Math.min(s, HA / h * 0.985);
+      else break;
+      if(Math.abs(ns - s) < 0.002) break;
+      s = Math.max(0.12, ns);
+    }
+    if(pr.scrollHeight * s > HA) s = Math.max(0.12, HA / pr.scrollHeight * 0.985);
+    const copia = '<div class="fit" style="width:' + WA + 'px;height:' + HA + 'px"><div class="paper" style="width:' + Math.round(WA / s) + 'px;transform:scale(' + s.toFixed(4) + ')">' + conteudo + '</div></div>';
+    d.body.innerHTML = '<div class="folha">' + copia + (n === 2 ? copia : '') + '</div>';
+    if(s < 0.45) showToast('Muitas agrupadoras para uma folha: o texto ficou pequeno. Filtre por loja para imprimir em partes.', true);
     setTimeout(() => { try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){} setTimeout(() => f.remove(), 60000); }, 300);
   };
 
@@ -12198,6 +12239,229 @@ body.tv-mode #tbody-piso .piso-grp{ grid-column:1 / -1; }
   ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('cross') + 1, 0, 'exp');
   const _apl = aplicarNomesAbas;
   aplicarNomesAbas = function(){ _apl.apply(this, arguments); const e = $('tab-btn-exp'); if(e) e.textContent = nomeAba('exp'); };
+  try{ aplicarNomesAbas(); }catch(e){}
+})();
+</script>
+
+<!-- ===================== PATCH — guia Layout (docas, veículos e distribuição ao vivo) ===================== -->
+<style id="lay-css">
+  #lay-cena{ display:grid; gap:12px; }
+  .lay-grid{ display:grid; grid-template-columns:minmax(0,1.75fr) 56px minmax(0,1fr); gap:0 10px; align-items:stretch; }
+  .lay-k{ border:1px solid var(--line); border-left:5px solid var(--band-strong); background:var(--panel); border-radius:10px; padding:10px 16px; }
+  .lay-k small{ display:block; font-size:.72rem; font-weight:800; letter-spacing:.16em; color:var(--band); }
+  .lay-k b{ display:block; font-family:'Oswald',sans-serif; font-size:2.4rem; line-height:1.05; color:#fff; }
+  .lay-k > span{ font-size:.82rem; color:var(--text-dim); }
+  .lay-k.dir{ grid-column:3; border-left:1px solid var(--line); border-right:5px solid var(--band-strong); text-align:right; }
+  .lay-k.esq{ grid-column:1; }
+  .lay-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .lay-chip{ font-size:.68rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; padding:3px 8px; border-radius:999px; border:1px solid var(--sc); color:var(--sc); background:#111; }
+  .lay-bar{ height:12px; border-radius:6px; background:#2a2a2a; overflow:hidden; margin-top:8px; }
+  .lay-bar i{ display:block; height:100%; background:linear-gradient(90deg,var(--band-strong),#ffd23f); transition:width 1s ease; }
+  .lay-piso, .lay-dist{ background:#0b0b0b; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  .lay-cab{ display:grid; grid-template-columns:86px 190px minmax(0,1fr); background:var(--band-strong); color:#000; font-family:'Oswald',sans-serif; letter-spacing:.12em; font-size:.8rem; }
+  .lay-cab span{ padding:6px 10px; font-weight:700; }
+  .lay-sc{ max-height:62vh; overflow:auto; }
+  #panel-layout:fullscreen{ background:#0a0a0a; padding:14px; overflow:auto; }
+  #panel-layout:fullscreen .lay-sc{ max-height:64vh; }
+  .lay-doca{ display:grid; grid-template-columns:86px 190px minmax(0,1fr); align-items:stretch; border-bottom:1px solid #1d1d1d; min-height:84px; }
+  .lay-dn{ display:flex; flex-direction:column; align-items:center; justify-content:center; background:linear-gradient(#262626,#111); border-right:4px solid var(--band-strong); }
+  .lay-dn small{ font-size:.62rem; font-weight:800; letter-spacing:.16em; color:var(--band); }
+  .lay-dn b{ font-family:'Oswald',sans-serif; font-size:1.9rem; color:#fff; line-height:1; }
+  .lay-vc{ overflow:hidden; padding:8px; display:flex; align-items:center; }
+  .lay-vm{ width:100%; }
+  .lay-v{ width:100%; height:64px; display:block; }
+  .lay-doca.sem .lay-v{ opacity:.35; filter:grayscale(1); }
+  .lay-doca:nth-child(-n+10) .lay-v{ animation:layIdle 2.4s ease-in-out infinite; }
+  .lay-chao{ display:flex; flex-wrap:wrap; align-content:center; gap:8px; padding:8px 10px; background:repeating-linear-gradient(135deg,#151515 0 14px,#101010 14px 28px); border-left:2px dashed rgba(255,210,63,.45); }
+  .lay-c{ display:flex; gap:8px; align-items:center; background:#1b1b1b; border:2px solid var(--sc); border-radius:8px; padding:6px 10px; min-width:170px; max-width:300px; }
+  .lay-c .lay-ct{ min-width:0; }
+  .lay-c b{ display:block; font-size:.95rem; text-transform:uppercase; letter-spacing:.03em; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:220px; }
+  .lay-c small{ display:block; font-size:.72rem; color:#bbb; }
+  .lay-c em{ font-style:normal; font-size:.62rem; font-weight:800; color:var(--sc); text-transform:uppercase; letter-spacing:.05em; }
+  .lay-pal{ width:28px; height:24px; flex:none; }
+  .lay-c.trab{ animation:layPulse 1.6s ease-in-out infinite; }
+  .lay-c.nova{ animation:layPop 1.8s ease-out; }
+  .lay-doca.arrive .lay-vm{ animation:layChega 1.8s cubic-bezier(.2,.7,.2,1) both; }
+  .lay-doca.arrive .lay-rd{ animation:laySpin .4s linear 5 reverse; }
+  .lay-rd{ transform-box:view-box; }
+  @keyframes layIdle{ 50%{ transform:translateY(-1.5px); } }
+  @keyframes layPulse{ 50%{ box-shadow:0 0 14px var(--sc); } }
+  @keyframes layChega{ from{ transform:translateX(130%); } to{ transform:none; } }
+  @keyframes laySpin{ to{ transform:rotate(360deg); } }
+  @keyframes layPop{ 0%{ background:var(--band-strong); transform:scale(1.06); } 100%{ background:#1b1b1b; transform:none; } }
+  .lay-fluxo{ align-self:center; height:34px; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Cpath d='M8 5l9 9-9 9' fill='none' stroke='%23ff8a1f' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") repeat-x center/28px 28px; animation:layFlow 1s linear infinite; }
+  @keyframes layFlow{ to{ background-position-x:28px; } }
+  .lay-dist{ padding:10px; display:flex; flex-direction:column; gap:8px; }
+  .lay-dh{ font-family:'Oswald',sans-serif; letter-spacing:.12em; color:#000; background:var(--band-strong); padding:7px 12px; border-radius:6px; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+  .lay-tcols{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+  .lay-tc{ background:#111; border:1px solid var(--line); border-radius:8px; padding:6px; min-height:120px; }
+  .lay-th{ display:flex; justify-content:space-between; font-family:'Oswald',sans-serif; color:var(--band); letter-spacing:.08em; font-size:.85rem; }
+  .lay-th span{ color:var(--text-dim); font-family:'Inter',sans-serif; font-size:.7rem; letter-spacing:0; }
+  .lay-d{ background:#1b1b1b; border-left:4px solid var(--band-strong); padding:4px 8px; margin-top:5px; border-radius:5px; }
+  .lay-d b{ display:block; font-size:.8rem; color:#fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lay-d small{ color:#aaa; font-size:.68rem; }
+  .lay-d.pop{ animation:layPop 1.8s ease-out; }
+  .lay-mais{ font-size:.7rem; color:var(--text-dim); text-align:center; margin-top:5px; }
+  .lay-vazio{ padding:26px; text-align:center; color:var(--text-dim); font-style:italic; }
+  .lay-fly{ position:fixed; z-index:9999; pointer-events:none; background:#1b1b1b; border:2px solid var(--band-strong); border-radius:8px; padding:6px 10px; color:#fff; font-weight:800; font-size:.9rem; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+  .lay-live{ display:inline-flex; align-items:center; gap:6px; font-size:.72rem; font-weight:800; letter-spacing:.12em; color:#000; background:var(--band-strong); padding:5px 10px; border-radius:999px; }
+  .lay-live i{ width:8px; height:8px; border-radius:50%; background:#000; animation:layBlink 1s steps(2) infinite; }
+  @keyframes layBlink{ 50%{ opacity:.15; } }
+  @media (max-width:900px){ .lay-grid{ grid-template-columns:1fr; gap:10px; } .lay-fluxo{ display:none; } .lay-k.dir, .lay-k.esq{ grid-column:1; text-align:left; } .lay-doca,.lay-cab{ grid-template-columns:64px 130px minmax(0,1fr); } }
+</style>
+
+<script id="lay-patch-js">
+(function(){
+  const $ = id => document.getElementById(id);
+  const esc = s => escapeHtml(String(s == null ? '' : s));
+  const num = v => Number(v) || 0;
+  const STC = { 'NÃO ANALISADO':'#888', 'AGUARDANDO IMPRESSÃO':'#9aa0a6', 'PENDENTE DE ETIQUETAGEM':'#ff8a1f', 'EM PROCESSO DE ETIQUETAGEM':'#ffd23f', 'PARCIALMENTE ETIQUETADA':'#4cc3ff', 'CARGA ETIQUETADA':'#3ddc84', 'PARCIALMENTE DISTRIBUIDA':'#b794f6', 'EM CONFERÊNCIA':'#f783ac' };
+  let sig = '', prevPiso = null, prevDist = null, prevDocas = null;
+  const prevVals = {};
+
+  const RODA = x => '<g class="lay-rd" style="transform-origin:' + x + 'px 58px"><circle cx="' + x + '" cy="58" r="8" fill="#111" stroke="#ddd" stroke-width="2"/><path d="M' + (x - 6) + ' 58h12M' + x + ' 52v12" stroke="#ddd" stroke-width="2"/></g>';
+  function svgVeic(tipo){
+    if(tipo === 'carreta') return '<svg viewBox="0 0 270 72" class="lay-v" aria-hidden="true"><rect x="4" y="6" width="190" height="46" rx="3" fill="#ececec" stroke="#222" stroke-width="2"/><rect x="4" y="26" width="190" height="9" fill="#ff8a1f"/><path d="M200 52V14h40l22 18v20z" fill="#ff8a1f" stroke="#222" stroke-width="2"/><path d="M208 20h26l14 12h-40z" fill="#bfe6ff" stroke="#222" stroke-width="1.5"/>' + RODA(34) + RODA(58) + RODA(160) + RODA(232) + '</svg>';
+    if(tipo === 'caminhao') return '<svg viewBox="0 0 220 72" class="lay-v" aria-hidden="true"><rect x="4" y="8" width="136" height="44" rx="3" fill="#ececec" stroke="#222" stroke-width="2"/><rect x="4" y="26" width="136" height="9" fill="#ff8a1f"/><path d="M146 52V16h34l24 18v18z" fill="#ff8a1f" stroke="#222" stroke-width="2"/><path d="M154 22h22l12 12h-34z" fill="#bfe6ff" stroke="#222" stroke-width="1.5"/>' + RODA(32) + RODA(54) + RODA(178) + '</svg>';
+    return '<svg viewBox="0 0 130 72" class="lay-v" aria-hidden="true"><path d="M6 52V16h66l22 16h26v20z" fill="#ff8a1f" stroke="#222" stroke-width="2"/><path d="M78 21l14 11H72z" fill="#bfe6ff" stroke="#222" stroke-width="1.5"/>' + RODA(32) + RODA(98) + '</svg>';
+  }
+  const PAL = '<svg class="lay-pal" viewBox="0 0 28 24" aria-hidden="true"><rect x="3" y="3" width="10" height="8" fill="#c8913f" stroke="#000"/><rect x="15" y="3" width="10" height="8" fill="#c8913f" stroke="#000"/><rect x="9" y="11" width="10" height="8" fill="#e0a850" stroke="#000"/><rect x="1" y="19" width="26" height="3" fill="#8a6a3a" stroke="#000"/></svg>';
+
+  function montadoTot(){
+    let vol = 0, agr = 0; const cargas = new Set();
+    (crossRawData || []).forEach(r => {
+      if(!ehCrossDocking(r)) return;
+      const s = String(r.status || '').toUpperCase(), q = num(r.qtd);
+      if(s.includes('MONTAD')){ vol += q; cargas.add(sepNorm(r.carga)); }
+      else if(s.includes('AGRUPAD')) agr += q;
+    });
+    return { vol, agr, n:cargas.size };
+  }
+
+  function tile(r, nova){
+    const stt = String(r.status || ''), cor = STC[stt] || '#ff8a1f', trab = /PENDENTE|PROCESSO/.test(stt);
+    const k = sepNorm(r.carga);
+    const tip = (r.fornecedor || '') + ' · carga ' + r.carga + ' · ' + fmtInt(num(r.volume)) + ' vol';
+    return '<div class="lay-c' + (trab ? ' trab' : '') + (nova ? ' nova' : '') + '" data-k="' + esc(k) + '" style="--sc:' + cor + '" title="' + esc(tip) + '">' + PAL
+      + '<div class="lay-ct"><b>' + esc(r.fornecedor || '—') + '</b><small>#' + esc(r.carga) + ' · ' + fmtInt(num(r.volume)) + ' vol · ' + fmtInt(num(r.sku)) + ' sku' + (num(r.d1) < 0 ? ' · D' + num(r.d1) : '') + '</small><em>' + esc(STATUS_LABELS[stt] || stt || '') + '</em></div></div>';
+  }
+
+  function linhaDoca(k, cargas){
+    const vol = cargas.reduce((s, r) => s + num(r.volume), 0);
+    const tipo = vol >= 1500 ? 'carreta' : (vol >= 400 ? 'caminhao' : 'van');
+    const id = k || '_sem';
+    const chega = prevDocas && !prevDocas.has(id);
+    return '<div class="lay-doca' + (k ? '' : ' sem') + (chega ? ' arrive' : '') + '" data-d="' + esc(id) + '">'
+      + '<div class="lay-dn"><small>' + (k ? 'DOCA' : 'PÁTIO') + '</small><b>' + (k ? esc(k) : '—') + '</b></div>'
+      + '<div class="lay-vc"><div class="lay-vm">' + svgVeic(tipo) + '</div></div>'
+      + '<div class="lay-chao">' + cargas.map(r => tile(r, prevPiso && !prevPiso.has(sepNorm(r.carga)))).join('') + '</div></div>';
+  }
+
+  function pisoHtml(){
+    const mp = new Map();
+    (pisoData || []).forEach(r => { const d = String(r.doca || '').trim(); if(!mp.has(d)) mp.set(d, []); mp.get(d).push(r); });
+    const arr = [...mp.entries()].sort((a, b) => !a[0] ? 1 : (!b[0] ? -1 : cmpNat(a[0], b[0])));
+    return { arr, html: arr.length ? arr.map(([k, c]) => linhaDoca(k, c)).join('') : '<div class="lay-vazio">Nenhuma carga no piso agora.</div>' };
+  }
+
+  function distHtml(){
+    const por = { T1:[], T2:[], T3:[], '':[] };
+    (distData || []).forEach(r => { const t = TURNOS.includes(r.turno) ? r.turno : ''; por[t].push(r); });
+    const vol = (distData || []).reduce((s, r) => s + num(r.volume), 0);
+    const cols = ['T1', 'T2', 'T3'].concat(por[''].length ? [''] : []).map(t => {
+      const L = por[t].slice().reverse(), v = L.reduce((s, r) => s + num(r.volume), 0);
+      return '<div class="lay-tc" data-t="' + t + '"><div class="lay-th">' + (t || 'SEM TURNO') + '<span>' + L.length + ' · ' + fmtInt(v) + ' vol</span></div>'
+        + L.slice(0, 9).map(r => '<div class="lay-d' + (prevDist && !prevDist.has(sepNorm(r.carga)) ? ' pop' : '') + '" data-k="' + esc(sepNorm(r.carga)) + '"><b>' + esc(r.descricao || r.fornecedor || '—') + '</b><small>#' + esc(r.carga) + ' · ' + fmtInt(num(r.volume)) + ' vol' + (r.horaDist ? ' · ' + esc(r.horaDist) : '') + '</small></div>').join('')
+        + (L.length > 9 ? '<div class="lay-mais">+' + (L.length - 9) + ' cargas</div>' : '') + '</div>';
+    }).join('');
+    return '<div class="lay-dist"><div class="lay-dh"><span>DISTRIBUIÇÃO</span><span>' + fmtInt((distData || []).length) + ' cargas · ' + fmtInt(vol) + ' vol</span></div><div class="lay-tcols">' + cols + '</div></div>';
+  }
+
+  function tween(el){
+    const key = el.dataset.nv, to = Number(el.dataset.to) || 0, from = prevVals[key];
+    prevVals[key] = to;
+    if(from == null || from === to){ el.textContent = fmtInt(to); return; }
+    const t0 = performance.now();
+    const step = t => { const p = Math.min(1, (t - t0) / 800), e = 1 - Math.pow(1 - p, 3); el.textContent = fmtInt(from + (to - from) * e); if(p < 1 && el.isConnected) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+
+  function voar(r, rect, turno){
+    try{
+      const alvo = document.querySelector('.lay-tc[data-t="' + (turno || '') + '"]') || document.querySelector('.lay-dist');
+      if(!alvo || !rect) return;
+      const a = alvo.getBoundingClientRect();
+      const el = document.createElement('div');
+      el.className = 'lay-fly'; el.textContent = (r.descricao || r.fornecedor || ('#' + r.carga));
+      el.style.cssText = 'left:' + rect.left + 'px;top:' + rect.top + 'px;width:' + rect.width + 'px;height:' + rect.height + 'px;';
+      (document.fullscreenElement || document.body).appendChild(el);
+      const dx = a.left + a.width / 2 - (rect.left + rect.width / 2), dy = a.top + 50 - (rect.top + rect.height / 2);
+      const an = el.animate([{ transform:'translate(0,0) scale(1)', opacity:1 }, { transform:'translate(' + dx + 'px,' + dy + 'px) scale(.5)', opacity:.85 }], { duration:1600, easing:'cubic-bezier(.5,0,.2,1)' });
+      an.onfinish = () => el.remove();
+      setTimeout(() => el.remove(), 2600);
+    }catch(e){}
+  }
+
+  window.layRender = function(force){
+    const cena = $('lay-cena'); if(!cena) return;
+    const mont = montadoTot();
+    const s = JSON.stringify([(pisoData || []).map(r => [r.carga, r.doca, r.fornecedor, r.volume, r.sku, r.status, r.d1]), (distData || []).map(r => [r.carga, r.turno, r.descricao, r.volume, r.horaDist]), mont]);
+    if(!force && s === sig) return;
+    sig = s;
+
+    const rects = new Map();
+    cena.querySelectorAll('.lay-c[data-k]').forEach(e => rects.set(e.dataset.k, e.getBoundingClientRect()));
+    const sc = cena.querySelector('.lay-sc'), scTop = sc ? sc.scrollTop : 0;
+
+    const piso = pisoHtml();
+    const volPiso = (pisoData || []).reduce((t, r) => t + num(r.volume), 0);
+    const velhas = (pisoData || []).filter(r => num(r.d1) < 0).length;
+    const porSt = {}; (pisoData || []).forEach(r => { const k = String(r.status || ''); porSt[k] = (porSt[k] || 0) + 1; });
+    const chips = Object.keys(porSt).map(k => '<span class="lay-chip" style="--sc:' + (STC[k] || '#ff8a1f') + '">' + porSt[k] + ' ' + esc(STATUS_LABELS[k] || k) + '</span>').join('') + (velhas ? '<span class="lay-chip" style="--sc:#ff5a5a">' + velhas + ' com D-1 ou mais</span>' : '');
+    const pct = (mont.vol + mont.agr) > 0 ? Math.round(mont.vol / (mont.vol + mont.agr) * 100) : 0;
+    const nDocas = piso.arr.filter(a => a[0]).length;
+
+    const kTopE = '<div class="lay-k esq"><small>CARGAS NO PISO</small><b data-nv="piso" data-to="' + volPiso + '">0</b><span>' + fmtInt((pisoData || []).length) + ' cargas · ' + nDocas + ' doca(s) ocupada(s)</span></div>';
+    const kTopD = '<div class="lay-k dir"><small>RELATÓRIO MONTADO</small><b data-nv="mont" data-to="' + mont.vol + '">0</b><span>' + (crossRawData && crossRawData.length ? fmtInt(mont.n) + ' cargas montadas · ' + fmtInt(mont.agr) + ' agrupado' : 'cole o relatório na guia Relatório') + '</span></div>';
+    const kBaixoE = '<div class="lay-k esq"><small>CARGAS NO PISO</small><div class="lay-chips">' + (chips || '<span class="lay-chip" style="--sc:#888">sem cargas</span>') + '</div></div>';
+    const kBaixoD = '<div class="lay-k dir"><small>RELATÓRIO MONTADO</small><b>' + pct + '%</b><span>montado ÷ (montado + agrupado)</span><div class="lay-bar"><i style="width:' + pct + '%"></i></div></div>';
+
+    cena.innerHTML = '<div class="lay-grid">' + kTopE + kTopD + '</div>'
+      + '<div class="lay-grid"><div class="lay-piso"><div class="lay-cab"><span>DOCA</span><span>VEÍCULO</span><span>CARGAS</span></div><div class="lay-sc">' + piso.html + '</div></div>'
+      + '<div class="lay-fluxo" title="Piso → Distribuição"></div>' + distHtml() + '</div>'
+      + '<div class="lay-grid">' + kBaixoE + kBaixoD + '</div>';
+
+    const sc2 = cena.querySelector('.lay-sc'); if(sc2) sc2.scrollTop = scTop;
+    cena.querySelectorAll('[data-nv]').forEach(tween);
+
+    /* carga que saiu do piso e entrou na distribuição: o cartão voa até o turno dela */
+    const curPiso = new Set((pisoData || []).map(r => sepNorm(r.carga)));
+    if(prevPiso && prevDist){
+      (distData || []).forEach(r => {
+        const k = sepNorm(r.carga);
+        if(!prevDist.has(k) && prevPiso.has(k) && rects.has(k)) voar(r, rects.get(k), TURNOS.includes(r.turno) ? r.turno : '');
+      });
+    }
+    prevPiso = curPiso;
+    prevDist = new Set((distData || []).map(r => sepNorm(r.carga)));
+    prevDocas = new Set(piso.arr.map(a => a[0] || '_sem'));
+  };
+
+  window.layTelaCheia = function(){
+    const p = $('panel-layout'); if(!p) return;
+    try{ if(document.fullscreenElement) document.exitFullscreen(); else if(p.requestFullscreen) p.requestFullscreen(); }catch(e){}
+  };
+  document.addEventListener('fullscreenchange', () => { sig = ''; try{ if(abaAtual === 'layout') layRender(true); }catch(e){} });
+  setInterval(() => { const h = $('lay-hora'); if(h && abaAtual === 'layout') h.textContent = new Date().toLocaleTimeString('pt-BR'); }, 1000);
+
+  /* atualizações da nuvem: só redesenha se algo mudou e a guia está aberta */
+  const _ra2 = renderAll;
+  renderAll = function(){ _ra2.apply(this, arguments); try{ if(abaAtual === 'layout') layRender(); }catch(e){} };
+
+  ABAS_PADRAO.layout = 'Layout';
+  ABAS_ORDEM.splice(ABAS_ORDEM.indexOf('exp') + 1, 0, 'layout');
+  const _apl2 = aplicarNomesAbas;
+  aplicarNomesAbas = function(){ _apl2.apply(this, arguments); const e = $('tab-btn-layout'); if(e) e.textContent = nomeAba('layout'); };
   try{ aplicarNomesAbas(); }catch(e){}
 })();
 </script>
